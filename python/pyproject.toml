@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "base-node"
 version = "0.7.0"
-description = "Universal declarative node graph language (.bn) and tooling"
+description = "Base Node (.bn) parser, formatter, and profile validator"
 readme = "../README.md"
 authors = [{ name = "Marc Gardent" }]
 license = { text = "MIT OR Apache-2.0" }

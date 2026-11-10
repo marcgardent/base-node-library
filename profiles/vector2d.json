@@ -1,7 +1,7 @@
 {
   "name": "vector2d",
   "version": 1,
-  "description": "Profil 2D vectoriel (courbes, maillages 2D, semis de points, attributs), étend sdf2d",
+  "description": "2D curves, meshes, point distributions, and attributes (extends sdf2d)",
   "extends": "sdf2d",
   "types": [
     "Geometry",

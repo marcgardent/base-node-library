@@ -1,0 +1,28 @@
+{
+  "version": "v1",
+  "blocklist": [],
+  "assetlib_auth_method": "PER_LIBRARY",
+  "data": [
+    {
+      "schema_version": "1.0.0",
+      "id": "base_node",
+      "name": "Base Node for Blender",
+      "tagline": "Nodes as Text (.bn) \u2014 Read and write node trees as functions",
+      "version": "0.7.0",
+      "type": "add-on",
+      "maintainer": "Marc Gardent",
+      "license": [
+        "SPDX:GPL-3.0-or-later"
+      ],
+      "blender_version_min": "5.2.0",
+      "website": "https://github.com/marcgardent/base-node-library",
+      "tags": [
+        "Node",
+        "Geometry Nodes"
+      ],
+      "archive_url": "./base_node-0.7.0.zip",
+      "archive_size": 104120,
+      "archive_hash": "sha256:f2b1504deb4076111bb587552ea5f8f338ecd2910482780026b3a2869f04f494"
+    }
+  ]
+}

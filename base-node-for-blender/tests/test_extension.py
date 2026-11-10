@@ -6,19 +6,23 @@ Exécuté dans Blender via :
 
 from __future__ import annotations
 
+import importlib.util
 import sys
 import traceback
 from pathlib import Path
 
-# Configuration des chemins d'import
 EXT_DIR = Path(__file__).resolve().parents[1]
 LIB_ROOT = EXT_DIR.parent
 STDLIB_DIR = LIB_ROOT / "stdlib"
 
-sys.path.insert(0, str(EXT_DIR))
+_spec = importlib.util.spec_from_file_location(
+    "base_node", EXT_DIR / "__init__.py", submodule_search_locations=[str(EXT_DIR)]
+)
+base_node = importlib.util.module_from_spec(_spec)
+sys.modules["base_node"] = base_node
+_spec.loader.exec_module(base_node)
 
 import bpy
-import base_node
 import bnodes
 
 

@@ -1,7 +1,7 @@
 {
   "name": "core",
   "version": 1,
-  "description": "Profil mathématique et logique pur, universellement portable",
+  "description": "Scalar/vector math, logic, noise, and repeat zone",
   "extends": null,
   "kinds": [
     "geometry",

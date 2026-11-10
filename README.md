@@ -1,103 +1,97 @@
-# Base Node Library (`.bn`)
+# base-node-library
 
-> **Nodes as Text** — Format de texte déclaratif universel et bibliothèque de graphes de nœuds pour le graphisme procédural 2D/3D (Blender Geometry Nodes, Blade, Graphite).
+Text format (`.bn`) for node graphs. Reads and writes node trees as functions.
 
-`base-node-library` fournit la spécification du langage `.bn`, un corpus de conformité multi-implémentation, des profils de compatibilité hiérarchiques, ainsi que des implémentations de référence en Python et en Rust.
+```bn
+use maths (bosse)
 
----
+geometry graph relief(geometry: Geometry, height: Float = 0.4 in 0.0..2.0) -> Geometry {
+  "Displaces vertices along Z using a radial bump"
+  h = bosse(length(Position()) / 3.0, 0.5, 0.2) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: h))
+}
+```
 
-## Architecture du dépôt
+## Layout
 
-Le dépôt est organisé en plusieurs sous-projets indépendants et interopérables :
+| Path | Description | License |
+|---|---|---|
+| [`spec/reference.md`](spec/reference.md) | `.bn` grammar and semantics | MIT OR Apache-2.0 |
+| [`profiles/`](profiles/) | Target profiles (`core`, `sdf2d`, `vector2d`, `raster2d`, `blender-geometry`) | MIT OR Apache-2.0 |
+| [`stdlib/`](stdlib/) | Standard `.bn` modules (`maths`, `sdf2d`, `courbes2d`, `motifs2d`, `gp_outils2d`) | MIT OR Apache-2.0 |
+| [`conformance/`](conformance/) | Shared `.bn` test corpus and expected ASTs | MIT OR Apache-2.0 |
+| [`python/`](python/) | Zero-dependency Python parser, formatter, and CLI (`base_node`) | MIT OR Apache-2.0 |
+| [`rust/`](rust/) | `wasm32`-compatible Rust parser, formatter, and profile checker (`base-node`) | MIT OR Apache-2.0 |
+| [`base-node-for-blender/`](base-node-for-blender/) | Blender 5.2+ extension (`Tree ⇄ Text` live sync) | GPL-3.0-or-later |
 
-- **`spec/`** : Spécification formelle du langage `.bn` (grammaire, règles sémantiques, types, zones, panneaux).
-- **`conformance/`** : Corpus de conformité et suites de tests multi-implémentation avec manifeste JSON (`manifest.json`) partagé entre `pytest` et `cargo test`.
-- **`profiles/`** : Profils de compatibilité déclaratifs hiérarchiques (`core`, `sdf2d`, `vector2d`, `raster2d`, `blender-geometry`).
-- **`stdlib/`** : Bibliothèque standard sous double licence MIT / Apache-2.0 :
-  - `maths.bn` : fonctions scalaires, vectorielles, bruit et SDF analytiques universelles.
-  - `sdf2d.bn` : primitives et opérations 2D pour champs de distance signée.
-  - `courbes2d.bn` : primitives, profils, échantillonnage et déformation de courbes.
-  - `motifs2d.bn` : pavages, grilles, distributions régulières et semis de points.
-  - `gp_outils2d.bn` : outils de stylisation et habillage vectoriel.
-- **`python/`** : Package Python pur zéro-dépendance (`base_node`) incluant le lexer, parser, formateur, vérificateur de type, validateur de profil et la CLI `base-node`.
-- **`rust/`** : Bibliothèque Rust haute performance pour l'analyse lexicale, syntaxique et la validation de profils dans les moteurs natifs (Blade, Graphite).
-- **`base-node-for-blender/`** : Extension Blender 5.2+ / 5.3+ (`base_node`, alias `bnodes`) synchronisée avec le cœur `base_node` et offrant l'éditeur bidirectionnel texte ⇄ graphe.
+## Profiles
 
----
+Each profile extends its parent and restricts allowed types, implicit inputs, zones, and nodes:
 
-## Profils de compatibilité
+```text
+core              Scalar/vector math, logic, noise, repeat (maths.bn)
+ └─ sdf2d         + 2D spatial context: Position, Normal, Index, ID (sdf2d.bn)
+     ├─ vector2d  + Geometry, 2D curves/meshes/points/instances, foreach (courbes2d.bn, motifs2d.bn)
+     │   └─ blender-geometry  + Full Blender 5.2+ Geometry Nodes (3D, volumes, closures, bundles)
+     └─ raster2d  + Image buffers, blend modes, filters, rasterize/vectorize
+```
 
-Les profils hiérarchiques permettent de restreindre et valider le sous-ensemble de fonctionnalités utilisable selon la cible d'exécution :
-
-1. **`core`** (`profiles/core.json`) :
-   - Socle mathématique et logique pur (`Float`, `Int`, `Bool`, `Vector`, `Color`, `Rotation`, `Matrix`, `String`, `Menu`).
-   - Opérateurs arithmétiques, comparaisons, bruit, switches, zone `repeat`.
-   - Universellement portable (Blender Geometry/Shader/Compositor, Blade, Graphite, shaders). 100 % compatible avec `stdlib/maths.bn`.
-2. **`sdf2d`** (`profiles/sdf2d.json`, étend `core`) :
-   - Ajoute les entrées contextuelles et nœuds spatiaux 2D (`Position`, `Normal`, `Index`, `ID`).
-   - Cible les shaders 2D et les graphes de pixels/vecteurs. 100 % compatible avec `stdlib/sdf2d.bn`.
-3. **`vector2d`** (`profiles/vector2d.json`, étend `sdf2d`) :
-   - Ajoute les types `Geometry`, `Material` et tous les opérateurs 2D courbes, maillages, points, instances et attributs.
-   - Zone `foreach`.
-   - Cible `bf-vector` de Blade, Graphite et Blender. 100 % compatible avec `stdlib/courbes2d.bn`, `stdlib/motifs2d.bn` et `stdlib/gp_outils2d.bn`.
-4. **`raster2d`** (`profiles/raster2d.json`, étend `sdf2d`) :
-   - Ajoute le type `Image` et les opérateurs raster (modes de fusion, flous, classification, vectorisation, pixellisation).
-   - Cible `bf-raster` de Blade et Blender Compositor.
-5. **`blender-geometry`** (`profiles/blender-geometry.json`, étend `vector2d`) :
-   - Profil hôte complet Geometry Nodes Blender 5.2+ / 5.3+ (`allow_all_blender_nodes: true`).
-   - Supporte la 3D, les volumes, les zones `simulate`, `closure` et les `Bundle`.
-
----
-
-## Utilisation rapide en Python
+## Python (`python/`)
 
 ```bash
-cd python
-pip install -e .
+pip install -e ./python
 
-# Formater un fichier .bn
 base-node fmt file.bn
-
-# Vérifier le formatage canonique
 base-node fmt --check file.bn
-
-# Vérifier la syntaxe et un profil de compatibilité
 base-node check --profile vector2d stdlib/courbes2d.bn
-
-# Inspecter l'AST en JSON
 base-node ast file.bn
 ```
 
-En code Python :
 ```python
 import base_node as bn
 
-# Analyse syntaxique
-ast = bn.parse("geometry graph f(x: Float) -> Float { return x * 2.0 }")
-
-# Formatage
-code = bn.format_source(text)
-
-# Vérification de profil
-profile = bn.load_profile("vector2d")
+ast = bn.parse(source)
+formatted = bn.format_source(source)
 errors = bn.check_profile(graphs, profile="vector2d")
 ```
 
----
+Run tests:
 
-## Extension Blender
+```bash
+PYTHONPATH=python pytest python/tests
+```
 
-L'extension Blender se trouve dans `base-node-for-blender/` (identifiant `base_node`, alias `bnodes`). Elle offre :
-- Rétrocompatibilité complète avec `import bnodes` et `NodeTree.bnodes`.
-- Intégration dans le volet latéral de l'éditeur de texte et de l'éditeur de nœuds.
-- Aller-retour bidirectionnel immédiat `Tree → Text` et `Text → Tree`.
-- Raccourcis clavier (`Ctrl+Entrée` pour synchroniser, `Ctrl+Espace` pour la complétion).
+## Rust (`rust/`)
 
----
+```rust
+use base_node::{check_profile, format_source, parse, ProfileKind};
 
-## Licences
+let file = parse(src, "example.bn")?;
+let formatted = format_source(src, "example.bn")?;
+let errors = check_profile(&file, ProfileKind::Vector2d);
+```
 
-- Cœur de la bibliothèque (`spec/`, `conformance/`, `profiles/`, `stdlib/`, `python/`, `rust/`) :  
-  Double licence **MIT** (`LICENSE-MIT`) ou **Apache-2.0** (`LICENSE-APACHE`), au choix de l'utilisateur (`SPDX-License-Identifier: MIT OR Apache-2.0`).
-- Connecteur d'extension Blender (`base-node-for-blender/host/`, `ui/`) :  
-  Licence **GPL-3.0-or-later** conformément aux exigences de l'API Python de Blender.
+Run tests and check WebAssembly target:
+
+```bash
+cd rust
+cargo test
+cargo check --target wasm32-unknown-unknown
+```
+
+## Blender Extension (`base-node-for-blender/`)
+
+Add-on for Blender 5.2+ (`id = "base_node"`, backwards-compatible with `import bnodes`).
+Provides live two-way sync between the Node Editor and Text Editor (`Ctrl+Enter` to apply, `Ctrl+Space` to autocomplete).
+
+Run headless Blender tests:
+
+```bash
+blender --background --factory-startup --python-exit-code 1 \
+  --python base-node-for-blender/tests/test_extension.py
+```
+
+## License
+
+- `spec/`, `profiles/`, `stdlib/`, `conformance/`, `python/`, `rust/`: [MIT](LICENSE-MIT) OR [Apache-2.0](LICENSE-APACHE).
+- `base-node-for-blender/`: GPL-3.0-or-later.

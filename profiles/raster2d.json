@@ -1,7 +1,7 @@
 {
   "name": "raster2d",
   "version": 1,
-  "description": "Profil 2D matriciel / image (traitement et composition de pixels), étend sdf2d",
+  "description": "2D image buffers, blend modes, filters, and vectorize/rasterize (extends sdf2d)",
   "extends": "sdf2d",
   "types": [
     "Image"
