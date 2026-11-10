@@ -1,20 +1,18 @@
-"""Socle portable Blender ⇄ Blade et contrat d'alias.
+"""Portable subset of the .bn language and alias contract.
 
-Définit le sous-ensemble portable du langage .bn partagé entre Blender (addons/bnodes)
-et Blade (bf-nodes / bf-vector / bf-raster) :
-- Types canoniques portables ;
-- Entrées implicites portables ;
-- Contrat d'alias (nom portable / nom Blender) ;
-- Nœuds portables du socle commun (calcul, logique, courbes 2D, maillage 2D,
-  attributs, switches, zones repeat et foreach, groupes) ;
-- Fonction de validation check_portable(graphs) ;
-- Fonction d'export dump_portable_schema(schema).
+Defines the portable subset of .bn shared across host runtimes:
+- Canonical portable types;
+- Portable implicit inputs;
+- Alias contract (portable name / host name);
+- Core 2D portable nodes;
+- Validation via check_portable(graphs);
+- Schema export via dump_portable_schema(schema).
 """
 
 import math
 from typing import Any
 
-# Types canoniques portables partagés entre Blender et Blade
+# Canonical portable types
 PORTABLE_TYPES = (
     "Float",
     "Int",
@@ -207,7 +205,7 @@ def _plain(value: Any) -> Any:
 
 
 class PortableSchema(dict):
-    """Schéma portable Blender ⇄ Blade avec accès direct ou imbriqué."""
+    """Portable node schema with direct or nested node lookup."""
 
     @property
     def nodes(self) -> dict:
@@ -234,11 +232,11 @@ class PortableSchema(dict):
 
 
 def check_portable(graphs: Any) -> list[str]:
-    """Vérifie qu'une liste de ir.Graph compilés n'emploie que des types et des nœuds
+    """Check that compiled ir.Graph objects only use types and nodes
 
-    du contrat portable Blender ⇄ Blade.
+    from the portable contract.
 
-    Retourne [] si tout est portable, sinon la liste des erreurs.
+    Returns [] if portable, or a list of error strings.
     """
     errors: list[str] = []
     if not isinstance(graphs, (list, tuple)):

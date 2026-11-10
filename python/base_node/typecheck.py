@@ -247,7 +247,7 @@ class GraphChecker:
     def run(self):
         g = self.g
         if g.kind == "pixel":
-            self.error(g, "pixel est un type d'arbre de Blade ; dans Blender : geometry, shader, compositor")
+            self.error(g, "pixel n'est pas un type d'arbre Blender ; attendus : geometry, shader, compositor")
             return None
         if g.kind not in TREE_KINDS:
             self.error(g, f"type d'arbre « {g.kind} » inconnu ; types : {', '.join(TREE_KINDS)}")

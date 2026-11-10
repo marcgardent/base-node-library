@@ -123,8 +123,8 @@ def test_record_return(schema):
     assert out.values == {"n": 3}
 
 
-def test_pixel_is_blade_only(schema):
-    assert "Blade" in errors("pixel graph p(i: Color) -> Color {\n  return i\n}", schema)[0]
+def test_pixel_kind_rejected_by_blender_schema(schema):
+    assert "pixel" in errors("pixel graph p(i: Color) -> Color {\n  return i\n}", schema)[0]
 
 
 def test_layout_goes_left_to_right(schema, fixture_text):

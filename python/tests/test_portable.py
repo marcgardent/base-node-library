@@ -1,8 +1,4 @@
-"""Tests du socle portable Blender ⇄ Blade (addons/bnodes/lang/portable.py).
-
-Exécuté sans Blender via :
-    uv run --with pytest python -m pytest -q tests/bnodes/lang/test_portable.py
-"""
+"""Tests for the portable .bn subset (base_node.portable)."""
 
 import pytest
 
@@ -165,7 +161,7 @@ def test_check_portable_rejects_non_portable_node():
 
 
 def test_check_portable_rejects_simulation_zone():
-    """Les zones de simulation ne font pas partie du socle commun Blade ⇄ Blender."""
+    """Simulation zones are not part of the portable 2D subset."""
     g = Graph(
         kind="geometry",
         name="test_sim",
