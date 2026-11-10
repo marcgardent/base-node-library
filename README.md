@@ -38,14 +38,34 @@ core              Scalar/vector math, logic, noise, repeat (math.bn)
 
 ## Python (`python/`)
 
-```bash
-pip install -e ./python
+Install from GitHub or a local checkout:
 
+```bash
+# From GitHub (pip / uv)
+pip install "base-node @ git+https://github.com/marcgardent/base-node-library.git#subdirectory=python"
+
+# From a local clone
+pip install -e ./python
+```
+
+Or in `pyproject.toml`:
+
+```toml
+dependencies = [
+  "base-node @ git+https://github.com/marcgardent/base-node-library.git#subdirectory=python",
+]
+```
+
+CLI:
+
+```bash
 base-node fmt file.bn
 base-node fmt --check file.bn
 base-node check --profile vector2d stdlib/curves2d.bn
 base-node ast file.bn
 ```
+
+Library API:
 
 ```python
 import base_node as bn
@@ -62,6 +82,25 @@ PYTHONPATH=python pytest python/tests
 ```
 
 ## Rust (`rust/`)
+
+Add to `Cargo.toml` (Cargo discovers `rust/Cargo.toml` in the repository automatically):
+
+```toml
+[dependencies]
+# From GitHub
+base-node = { git = "https://github.com/marcgardent/base-node-library.git", branch = "main" }
+
+# Or from a local checkout
+# base-node = { path = "../base-node-library/rust" }
+```
+
+Or via `cargo add`:
+
+```bash
+cargo add --git https://github.com/marcgardent/base-node-library.git base-node
+```
+
+Library API:
 
 ```rust
 use base_node::{check_profile, format_source, parse, ProfileKind};

@@ -385,20 +385,31 @@ geometry graph scatter(
       <div class="box">
         <h3>1. Python (<code>python/base_node</code>)</h3>
         <p>Zero-dependency lexer, parser, canonical formatter, typechecker, profile validator, and CLI.</p>
-        <pre><code>pip install -e ./python
+        <pre><code># Install from GitHub
+pip install "base-node @ git+https://github.com/marcgardent/base-node-library.git#subdirectory=python"
+
+# CLI
 base-node fmt file.bn
-base-node check --profile vector2d file.bn
-base-node ast file.bn</code></pre>
+base-node check --profile vector2d file.bn</code></pre>
+        <pre><code>import base_node as bn
+
+ast = bn.parse(source)
+code = bn.format_source(source)
+errs = bn.check_profile(graphs, profile="vector2d")</code></pre>
         <p>License: <code>MIT OR Apache-2.0</code></p>
       </div>
       <div class="box">
         <h3>2. Rust / WASM (<code>rust/</code>)</h3>
         <p><code>wasm32-unknown-unknown</code> compatible crate with byte-for-byte identical canonical formatting and embedded JSON profiles.</p>
+        <pre><code># Cargo.toml
+[dependencies]
+base-node = { git = "https://github.com/marcgardent/base-node-library.git" }</code></pre>
         <pre><code>use base_node::{
   parse, format_source,
   check_profile, ProfileKind
 };
 let f = parse(src, "a.bn")?;
+let code = format_source(src, "a.bn")?;
 let err = check_profile(&amp;f, ProfileKind::Vector2d);</code></pre>
         <p>License: <code>MIT OR Apache-2.0</code></p>
       </div>
