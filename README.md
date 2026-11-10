@@ -12,6 +12,12 @@ geometry graph relief(geometry: Geometry, height: Float = 0.4 in 0.0..2.0) -> Ge
 }
 ```
 
+| `stdlib/sdf2d.bn` | `stdlib/curves2d.bn` |
+|---|---|
+| ![sdf2d](site/images/sdf2d.png) | ![curves2d](site/images/curves2d.png) |
+| **`stdlib/patterns2d.bn`** | **`stdlib/math.bn`** |
+| ![patterns2d](site/images/patterns2d.png) | ![math-sdf](site/images/math-sdf.png) |
+
 ## Layout
 
 | Path | Description | License |

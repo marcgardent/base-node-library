@@ -141,10 +141,47 @@
     }
     .tab-panel {
       display: none;
+    }
+    .tab-panel.active { display: block; }
+    .tab-panel pre {
       margin-top: 0;
       border-top-left-radius: 0;
     }
-    .tab-panel.active { display: block; }
+    .preview-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin: 0.5rem 0 0;
+      background: var(--panel);
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.85rem;
+      margin: 1rem 0;
+    }
+    .gallery figure {
+      margin: 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .gallery img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      object-fit: cover;
+    }
+    .gallery figcaption {
+      padding: 0.45rem 0.7rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -245,7 +282,8 @@
         <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-panels">panels &amp; @</button>
       </div>
 
-      <pre id="ex-sdf" class="tab-panel active"><code>// 2D rounded box signed distance field (profile: sdf2d)
+      <div id="ex-sdf" class="tab-panel active">
+        <pre><code>// 2D rounded box signed distance field (profile: sdf2d)
 geometry graph "sdf rounded box 2d"(
     p: Vector = Position(),
     "half size": Vector = (0.6, 0.4, 0.0),
@@ -255,8 +293,11 @@ geometry graph "sdf rounded box 2d"(
   d = CombineXYZ(abs(p.x) - half_size.x + radius, abs(p.y) - half_size.y + radius)
   return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - radius
 }</code></pre>
+        <img class="preview-img" src="images/sdf2d.png" alt="2D SDF shapes rendered from stdlib/sdf2d.bn" width="1200" height="800">
+      </div>
 
-      <pre id="ex-curves" class="tab-panel"><code>use math (bump)
+      <div id="ex-curves" class="tab-panel">
+        <pre><code>use math (bump)
 
 // Parallel 2D offset along XY curve normal (profile: vector2d)
 geometry graph "parallel contour 2d"(curve: Geometry, offset: Float = 0.1) -> Geometry {
@@ -279,8 +320,11 @@ geometry graph "ribbon 2d"(
   c = SetCurveRadius(curve, radius: radius)
   return CurveToMesh(c, profile, Radius())
 }</code></pre>
+        <img class="preview-img" src="images/curves2d.png" alt="2D curve operators rendered from stdlib/curves2d.bn" width="1200" height="800" loading="lazy">
+      </div>
 
-      <pre id="ex-grid" class="tab-panel"><code>// Vogel golden-angle phyllotaxis spiral (profile: vector2d)
+      <div id="ex-grid" class="tab-panel">
+        <pre><code>// Vogel golden-angle phyllotaxis spiral (profile: vector2d)
 geometry graph "phyllotaxis spiral 2d"(
     count: Int = 200 in 1..100000,
     radius: Float = 1.0 in 0.001..
@@ -295,8 +339,11 @@ geometry graph "phyllotaxis spiral 2d"(
   pts = Points(count, CombineXYZ(x, y))
   return (Points: pts, Factor: f)
 }</code></pre>
+        <img class="preview-img" src="images/patterns2d.png" alt="2D grids and patterns rendered from stdlib/patterns2d.bn" width="1200" height="800" loading="lazy">
+      </div>
 
-      <pre id="ex-repeat" class="tab-panel"><code>// Fractal Brownian Motion using a repeat zone (profile: core)
+      <div id="ex-repeat" class="tab-panel">
+        <pre><code>// Fractal Brownian Motion using a repeat zone (profile: core)
 geometry graph fbm(
     p: Vector = Position(),
     octaves: Int = 5 in 1..16,
@@ -313,8 +360,11 @@ geometry graph fbm(
   }
   return r.sum
 }</code></pre>
+        <img class="preview-img" src="images/math-noise.png" alt="Fractal terrain displaced with fbm from stdlib/math.bn" width="1200" height="600" loading="lazy">
+      </div>
 
-      <pre id="ex-panels" class="tab-panel"><code>// Interface panels, item keys (as), frames, and node presentation (@)
+      <div id="ex-panels" class="tab-panel">
+        <pre><code>// Interface panels, item keys (as), frames, and node presentation (@)
 geometry graph scatter(
     geometry: Geometry,
     "Density" {
@@ -331,6 +381,8 @@ geometry graph scatter(
   }
   return out
 }</code></pre>
+        <img class="preview-img" src="images/rocks.png" alt="Procedural rock scatter built from .bn graph" width="1200" height="1000" loading="lazy">
+      </div>
     </section>
 
     <h2 id="profiles">Compatibility Profiles</h2>
@@ -471,6 +523,33 @@ let err = check_profile(&amp;f, ProfileKind::Vector2d);</code></pre>
         </tr>
       </tbody>
     </table>
+
+    <div class="gallery">
+      <figure>
+        <img src="images/sdf2d.png" alt="stdlib/sdf2d.bn preview" loading="lazy">
+        <figcaption>stdlib/sdf2d.bn — 2D SDF primitives &amp; chamfer booleans</figcaption>
+      </figure>
+      <figure>
+        <img src="images/curves2d.png" alt="stdlib/curves2d.bn preview" loading="lazy">
+        <figcaption>stdlib/curves2d.bn — 2D curve morphing, offset &amp; ribbons</figcaption>
+      </figure>
+      <figure>
+        <img src="images/patterns2d.png" alt="stdlib/patterns2d.bn preview" loading="lazy">
+        <figcaption>stdlib/patterns2d.bn — Hexagonal, triangular &amp; phyllotaxis grids</figcaption>
+      </figure>
+      <figure>
+        <img src="images/math-sdf.png" alt="stdlib/math.bn 3D SDF preview" loading="lazy">
+        <figcaption>stdlib/math.bn — Analytic SDFs &amp; smooth booleans</figcaption>
+      </figure>
+      <figure>
+        <img src="images/grass.png" alt="Grass scatter example" loading="lazy">
+        <figcaption>Slope-filtered procedural grass scatter</figcaption>
+      </figure>
+      <figure>
+        <img src="images/wave-curve.png" alt="Sine wave curve example" loading="lazy">
+        <figcaption>Parametric curve deformation along normal</figcaption>
+      </figure>
+    </div>
 
     <footer>
       <span>base-node-library — MIT OR Apache-2.0 (Blender host binding: GPL-3.0-or-later)</span>
