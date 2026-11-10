@@ -1,0 +1,94 @@
+use maths (bosse, fbm)
+
+// ---- Courbes et contours 2D ----
+
+geometry graph "morph courbes 2d"(
+    départ: Geometry,
+    arrivée: Geometry,
+    facteur: Float = 0.5 in 0.0..1.0,
+    points: Int = 128 in 4..4096
+) -> Geometry {
+  "Interpole les positions entre deux courbes rééchantillonnées au même nombre de points"
+  c_départ = ResampleCurve(départ, count: points)
+  c_arrivée = ResampleCurve(arrivée, count: points)
+  pos_arrivée = SampleIndex(c_arrivée, Position(), Index(), data_type: FLOAT_VECTOR)
+  pos = Mix(facteur, Position(), pos_arrivée, data_type: VECTOR)
+  return SetPosition(c_départ, position: pos)
+}
+
+geometry graph "contour parallèle 2d"(courbe: Geometry, décalage: Float = 0.1) -> Geometry {
+  "Décale chaque point le long de la normale 2D dans le plan XY"
+  t = Tangent()
+  normale = CombineXYZ(-t.y, t.x)
+  return SetPosition(courbe, offset: normale * décalage)
+}
+
+geometry graph "bruit contour 2d"(
+    courbe: Geometry,
+    amplitude: Float = 0.08,
+    fréquence: Float = 2.0 in 0.0..,
+    octaves: Int = 4 in 1..8,
+    résolution: Int = 128 in 8..2048
+) -> Geometry {
+  "Déforme un contour 2D le long de sa normale par un bruit fractal"
+  c = ResampleCurve(courbe, count: résolution)
+  t = Tangent()
+  normale = CombineXYZ(-t.y, t.x)
+  bruit = fbm(Position() * fréquence, octaves) * amplitude
+  return SetPosition(c, offset: normale * bruit)
+}
+
+geometry graph "ondulation courbe 2d"(
+    courbe: Geometry,
+    amplitude: Float = 0.06,
+    périodes: Float = 8.0,
+    phase: Float,
+    résolution: Int = 128 in 8..2048
+) -> Geometry {
+  "Ondule une courbe 2D selon une sinusoïde le long de sa normale"
+  c = ResampleCurve(courbe, count: résolution)
+  t = Tangent()
+  normale = CombineXYZ(-t.y, t.x)
+  onde = sin((SplineParameter().factor * périodes + phase) * 6.283185) * amplitude
+  return SetPosition(c, offset: normale * onde)
+}
+
+geometry graph "ruban 2d"(
+    courbe: Geometry,
+    largeur: Float = 0.15 in 0.0..,
+    effilement: Float in 0.0..1.0
+) -> Geometry {
+  "Génère un ruban 2D plat le long de la courbe avec effilement optionnel aux extrémités"
+  demi = largeur * 0.5
+  profil = CurvePrimitiveLine(CombineXYZ(-demi), CombineXYZ(demi))
+  rayon = Mix(effilement, 1.0, bosse(SplineParameter().factor, demi_largeur: 0.5))
+  c = SetCurveRadius(courbe, radius: rayon)
+  return CurveToMesh(c, profil, Radius())
+}
+
+geometry graph "flèche 2d"(
+    courbe: Geometry,
+    "largeur corps": Float = 0.08 in 0.0..,
+    "largeur tête": Float = 0.24 in 0.0..,
+    "part tête": Float = 0.2 in 0.01..0.95
+) -> Geometry {
+  "Génère une flèche 2D plate le long de la courbe avec corps et tête triangulaire"
+  f = SplineParameter()
+  seuil = 1.0 - part_tête
+  tête = (1.0 - f.factor) / part_tête * largeur_tête
+  rayon = Switch(f.factor < seuil, tête, largeur_corps)
+  c = SetCurveRadius(courbe, radius: rayon)
+  profil = CurvePrimitiveLine((-0.5, 0.0, 0.0), (0.5, 0.0, 0.0))
+  return CurveToMesh(c, profil, Radius())
+}
+
+geometry graph "anneau 2d"(
+    rayon_externe: Float = 1.0 in 0.001..,
+    rayon_interne: Float = 0.6 in 0.0..,
+    résolution: Int = 64 in 3..512
+) -> Geometry {
+  "Génère un anneau plat 2D délimité par deux rayons"
+  c_ext = CurvePrimitiveCircle(résolution, rayon_externe)
+  c_int = CurvePrimitiveCircle(résolution, rayon_interne)
+  return FillCurve(c_ext + c_int)
+}

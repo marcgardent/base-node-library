@@ -1,0 +1,233 @@
+// Boîte à outils de champs de distance signée 2D (SDF) pour Geometry Nodes :
+// primitives 2D élémentaires, booléens chanfreinés, répétitions et isolignes.
+// Les formules suivent les définitions d'Inigo Quilez (iquilezles.org).
+// Toutes les fonctions opèrent dans le plan XY (z ignoré).
+
+// ---- Primitives 2D ----
+
+geometry graph "sdf segment 2d"(
+    p: Vector = Position(),
+    a: Vector = (-0.5, 0.0, 0.0),
+    b: Vector = (0.5, 0.0, 0.0),
+    épaisseur: Float = 0.1 in 0.0..
+) -> Float {
+  "Distance signée à un segment du plan XY, épaissi de l'épaisseur donnée (2D : z ne compte pas)"
+  p2 = CombineXYZ(p.x, p.y)
+  a2 = CombineXYZ(a.x, a.y)
+  b2 = CombineXYZ(b.x, b.y)
+  ba = b2 - a2
+  pa = p2 - a2
+  h = Clamp((pa ⋅ ba) / (ba ⋅ ba))
+  return distance(pa, ba * h) - épaisseur * 0.5
+}
+
+geometry graph "sdf boîte arrondie 2d"(
+    p: Vector = Position(),
+    "demi taille": Vector = (0.6, 0.4, 0.0),
+    rayon: Float = 0.15 in 0.0..
+) -> Float {
+  "Un rectangle du plan XY aux coins arrondis de demi-taille donnée (2D : z ne compte pas)"
+  d = CombineXYZ(abs(p.x) - demi_taille.x + rayon, abs(p.y) - demi_taille.y + rayon)
+  return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - rayon
+}
+
+geometry graph "sdf losange 2d"(
+    p: Vector = Position(),
+    "demi taille": Vector = (0.6, 0.4, 0.0)
+) -> Float {
+  "Un losange du plan XY centré sur l'origine (2D : z ne compte pas)"
+  q = CombineXYZ(abs(p.x), abs(p.y))
+  b = CombineXYZ(demi_taille.x, demi_taille.y)
+  f = (-2.0 * (q.x * b.x - q.y * b.y) + (b.x * b.x - b.y * b.y)) / (b ⋅ b)
+  h = Clamp(f, -1.0)
+  proj = b * CombineXYZ(1.0 - h, 1.0 + h) * 0.5
+  d = length(q - proj)
+  return d * sign(q.x * b.y + q.y * b.x - b.x * b.y)
+}
+
+geometry graph "sdf triangle équilatéral 2d"(
+    p: Vector = Position(),
+    rayon: Float = 0.7 in 0.0..
+) -> Float {
+  "Un triangle équilatéral du plan XY centré sur l'origine (2D : z ne compte pas)"
+  px0 = abs(p.x) - rayon
+  py0 = p.y + rayon * 0.5773503
+  cond = px0 + 1.732051 * py0 > 0.0
+  ppx = (px0 - 1.732051 * py0) * 0.5
+  ppy = (-1.732051 * px0 - py0) * 0.5
+  px1 = Switch(cond, px0, ppx)
+  py1 = Switch(cond, py0, ppy)
+  px2 = px1 - Clamp(px1, -2.0 * rayon, 0.0)
+  return -length(CombineXYZ(px2, py1)) * sign(py1)
+}
+
+geometry graph "sdf hexagone 2d"(p: Vector = Position(), rayon: Float = 0.6 in 0.0..) -> Float {
+  "Un hexagone régulier du plan XY centré sur l'origine (2D : z ne compte pas)"
+  p0 = CombineXYZ(abs(p.x), abs(p.y))
+  dot_kp = min((-0.8660254, 0.5, 0.0) ⋅ p0, 0.0)
+  p1 = p0 - (-0.8660254, 0.5, 0.0) * (2.0 * dot_kp)
+  bound = 0.5773503 * rayon
+  p2 = p1 - CombineXYZ(Clamp(p1.x, -bound, bound), rayon)
+  return length(p2) * sign(p2.y)
+}
+
+geometry graph "sdf polygone régulier 2d"(
+    p: Vector = Position(),
+    rayon: Float = 0.6 in 0.0..,
+    côtés: Int = 5 in 3..64
+) -> Float {
+  "Un polygone régulier à N côtés du plan XY centré sur l'origine (2D : z ne compte pas)"
+  an = 3.141593 / côtés
+  acs = CombineXYZ(rayon * cos(an), rayon * sin(an))
+  ang = atan2(p.y, p.x)
+  pas = 2.0 * an
+  bn = ang - pas * floor(ang / pas + 0.5)
+  r = length(CombineXYZ(p.x, p.y))
+  q = CombineXYZ(cos(bn), abs(sin(bn))) * r
+  dx = q.x - acs.x
+  dy = q.y - Clamp(q.y, max: acs.y)
+  return length(CombineXYZ(dx, dy)) * sign(dx)
+}
+
+geometry graph "sdf étoile 2d"(
+    p: Vector = Position(),
+    rayon: Float = 0.7 in 0.0..,
+    branches: Int = 5 in 3..32,
+    creux: Float = 0.5 in 0.05..1.0
+) -> Float {
+  "Une étoile régulière à N branches du plan XY (2D : z ne compte pas)"
+  an = 3.141593 / branches
+  a = CombineXYZ(rayon * cos(an), rayon * sin(an))
+  b = CombineXYZ(rayon * creux)
+  ang = atan2(p.y, p.x)
+  pas = 2.0 * an
+  bn = ang - pas * floor(ang / pas + 0.5)
+  r = length(CombineXYZ(p.x, p.y))
+  q = CombineXYZ(cos(bn), abs(sin(bn))) * r
+  ba = b - a
+  pa = q - a
+  h = Clamp((pa ⋅ ba) / (ba ⋅ ba))
+  d = length(pa - ba * h)
+  det = (a.x - b.x) * q.y - a.y * (q.x - b.x)
+  return d * sign(-det)
+}
+
+geometry graph "sdf arc 2d"(
+    p: Vector = Position(),
+    ouverture: Float = 2.0 in 0.0..3.141593,
+    rayon: Float = 0.6 in 0.0..,
+    épaisseur: Float = 0.1 in 0.0..
+) -> Float {
+  "Un arc de cercle du plan XY centré sur l'origine (2D : z ne compte pas)"
+  sc = CombineXYZ(sin(ouverture), cos(ouverture))
+  p0 = CombineXYZ(abs(p.x), p.y)
+  bout = length(p0 - sc * rayon)
+  arc = abs(length(p0) - rayon)
+  d = Switch(sc.y * p0.x > sc.x * p0.y, arc, bout)
+  return d - épaisseur * 0.5
+}
+
+geometry graph "sdf secteur 2d"(
+    p: Vector = Position(),
+    ouverture: Float = 1.0 in 0.0..3.141593,
+    rayon: Float = 0.7 in 0.0..
+) -> Float {
+  "Un secteur angulaire du plan XY centré sur l'origine (2D : z ne compte pas)"
+  c = CombineXYZ(sin(ouverture), cos(ouverture))
+  p0 = CombineXYZ(abs(p.x), p.y)
+  l = length(p0) - rayon
+  h = Clamp((p0 ⋅ c) / rayon)
+  m = length(p0 - c * (h * rayon))
+  return max(l, m * sign(c.y * p0.x - c.x * p0.y))
+}
+
+geometry graph "sdf croix 2d"(
+    p: Vector = Position(),
+    longueur: Float = 0.7 in 0.0..,
+    épaisseur: Float = 0.25 in 0.0..,
+    arrondi: Float in 0.0..
+) -> Float {
+  "Une croix du plan XY aux bras de longueur et épaisseur données (2D : z ne compte pas)"
+  p0 = CombineXYZ(abs(p.x), abs(p.y))
+  cond = p0.y > p0.x
+  p1 = CombineXYZ(Switch(cond, p0.x, p0.y), Switch(cond, p0.y, p0.x))
+  b = CombineXYZ(longueur, épaisseur)
+  q = p1 - b
+  k = max(q.y, q.x)
+  cond_k = k > 0.0
+  wx = Switch(cond_k, b.y - p1.x, q.x)
+  wy = Switch(cond_k, -k, q.y)
+  w = max(CombineXYZ(wx, wy), 0.0)
+  return sign(k) * length(w) + arrondi
+}
+
+// ---- Opérateurs ----
+
+geometry graph "sdf anneau 2d"(distance: Float, épaisseur: Float = 0.1 in 0.0..) -> Float {
+  "Une bande ou coque 2D d'épaisseur donnée centrée sur le contour d'un SDF"
+  return abs(distance) - épaisseur * 0.5
+}
+
+geometry graph "sdf union chanfrein"(
+    a: Float,
+    b: Float,
+    chanfrein: Float = 0.15 in 0.0..
+) -> Float {
+  "Union de deux formes avec raccord en biseau chanfreiné"
+  return min(min(a, b), (a + b - chanfrein) * 0.7071068)
+}
+
+geometry graph "sdf soustraction chanfrein"(
+    a: Float,
+    b: Float,
+    chanfrein: Float = 0.15 in 0.0..
+) -> Float {
+  "Soustraction de b dans a avec raccord en biseau chanfreiné"
+  return max(max(a, -b), (a - b + chanfrein) * 0.7071068)
+}
+
+// ---- Domaines et répétitions ----
+
+geometry graph "sdf répétition 2d"(
+    p: Vector = Position(),
+    cellule: Vector = (1.0, 1.0, 0.0)
+) -> Vector {
+  "Répète le plan XY en grille infinie : ramène p dans sa cellule centrée sur l'origine"
+  p2 = CombineXYZ(p.x, p.y)
+  c2 = CombineXYZ(cellule.x, cellule.y)
+  return p2 - c2 * floor(p2 / c2 + 0.5)
+}
+
+geometry graph "sdf répétition limitée 2d"(
+    p: Vector = Position(),
+    pas: Float = 1.0 in 0.0001..,
+    limite: Vector = (2.0, 2.0, 0.0)
+) -> Vector {
+  "Répète le plan XY en grille finie centrée sur l'origine, sans discontinuité de distance"
+  p2 = CombineXYZ(p.x, p.y)
+  lim = CombineXYZ(limite.x, limite.y)
+  idx = floor(p2 / pas + 0.5)
+  return p2 - min(max(idx, -lim), lim) * pas
+}
+
+geometry graph "sdf répétition polaire 2d"(
+    p: Vector = Position(),
+    secteurs: Int = 6 in 1..128
+) -> Vector {
+  "Répète le plan XY par symétrie radiale en N secteurs angulaires"
+  an = 6.283185 / secteurs
+  a = atan2(p.y, p.x) + an * 0.5
+  a_mod = a - an * floor(a / an) - an * 0.5
+  r = length(CombineXYZ(p.x, p.y))
+  return CombineXYZ(r * cos(a_mod), r * sin(a_mod))
+}
+
+geometry graph "sdf isolignes"(
+    distance: Float,
+    pas: Float = 0.2 in 0.001..,
+    largeur: Float = 0.03 in 0.0..
+) -> Float {
+  "Champ de distance aux courbes de niveau (isolignes) espacées de « pas »"
+  d_line = abs(distance - pas * floor(distance / pas + 0.5))
+  return d_line - largeur * 0.5
+}

@@ -1,0 +1,263 @@
+{
+  "version": "1.0",
+  "description": "Corpus de conformité syntaxique et sémantique Base Node (.bn)",
+  "files": [
+    {
+      "file": "formes.bn",
+      "graphs_count": 1,
+      "canonically_formatted": false,
+      "graphs": [
+        {
+          "name": "formes",
+          "kind": "geometry",
+          "inputs": [
+            {
+              "name": "u",
+              "type": "Vector"
+            },
+            {
+              "name": "v",
+              "type": "Vector"
+            },
+            {
+              "name": "a",
+              "type": "Bool"
+            },
+            {
+              "name": "b",
+              "type": "Bool"
+            },
+            {
+              "name": "geometry",
+              "type": "Geometry"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Geometry",
+              "type": "Geometry"
+            },
+            {
+              "name": "d",
+              "type": "Float"
+            },
+            {
+              "name": "x",
+              "type": "Bool"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "outils.bn",
+      "graphs_count": 2,
+      "canonically_formatted": true,
+      "graphs": [
+        {
+          "name": "double",
+          "kind": "geometry",
+          "inputs": [
+            {
+              "name": "x",
+              "type": "Float"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Float",
+              "type": "Float"
+            }
+          ]
+        },
+        {
+          "name": "décale",
+          "kind": "geometry",
+          "inputs": [
+            {
+              "name": "geometry",
+              "type": "Geometry"
+            },
+            {
+              "name": "hauteur",
+              "type": "Float"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Geometry",
+              "type": "Geometry"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "tout.bn",
+      "graphs_count": 4,
+      "canonically_formatted": true,
+      "graphs": [
+        {
+          "name": "entrées",
+          "kind": "geometry",
+          "inputs": [
+            {
+              "name": "geometry",
+              "type": "Geometry"
+            },
+            {
+              "name": "force",
+              "type": "Float"
+            },
+            {
+              "name": "Nombre de tours",
+              "type": "Int"
+            },
+            {
+              "name": "p",
+              "type": "Vector"
+            },
+            {
+              "name": "id",
+              "type": "Int"
+            },
+            {
+              "name": "uv",
+              "type": "Vector"
+            },
+            {
+              "name": "teinte",
+              "type": "Color"
+            },
+            {
+              "name": "actif",
+              "type": "Bool"
+            },
+            {
+              "name": "nom",
+              "type": "String"
+            },
+            {
+              "name": "matière",
+              "type": "Material"
+            },
+            {
+              "name": "mode",
+              "type": "Menu"
+            },
+            {
+              "name": "taille",
+              "type": "Float"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Geometry",
+              "type": "Geometry"
+            },
+            {
+              "name": "Hauteur",
+              "type": "Float"
+            },
+            {
+              "name": "Choisi",
+              "type": "Bool"
+            }
+          ]
+        },
+        {
+          "name": "formules",
+          "kind": "geometry",
+          "inputs": [
+            {
+              "name": "a",
+              "type": "Float"
+            },
+            {
+              "name": "b",
+              "type": "Float"
+            },
+            {
+              "name": "u",
+              "type": "Vector"
+            },
+            {
+              "name": "v",
+              "type": "Vector"
+            },
+            {
+              "name": "i",
+              "type": "Int"
+            },
+            {
+              "name": "j",
+              "type": "Int"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "nombre",
+              "type": "Float"
+            },
+            {
+              "name": "vecteur",
+              "type": "Vector"
+            },
+            {
+              "name": "vrai",
+              "type": "Bool"
+            }
+          ]
+        },
+        {
+          "name": "nœuds",
+          "kind": "geometry",
+          "inputs": [
+            {
+              "name": "geometry",
+              "type": "Geometry"
+            },
+            {
+              "name": "densité",
+              "type": "Float"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Geometry",
+              "type": "Geometry"
+            }
+          ]
+        },
+        {
+          "name": "zones",
+          "kind": "geometry",
+          "inputs": [
+            {
+              "name": "geometry",
+              "type": "Geometry"
+            },
+            {
+              "name": "n",
+              "type": "Int"
+            },
+            {
+              "name": "i",
+              "type": "Int"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "Geometry",
+              "type": "Geometry"
+            },
+            {
+              "name": "Somme",
+              "type": "Float"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

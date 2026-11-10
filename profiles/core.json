@@ -1,0 +1,55 @@
+{
+  "name": "core",
+  "version": 1,
+  "description": "Profil mathématique et logique pur, universellement portable",
+  "extends": null,
+  "kinds": [
+    "geometry",
+    "vector",
+    "pixel"
+  ],
+  "types": [
+    "Float",
+    "Int",
+    "Bool",
+    "Vector",
+    "Color",
+    "Rotation",
+    "Matrix",
+    "String",
+    "Menu"
+  ],
+  "implicit": [
+    "Position",
+    "Normal",
+    "Index",
+    "ID"
+  ],
+  "aliases": {
+    "WhiteNoise": "TexWhiteNoise",
+    "TransformGeometry": "Transform",
+    "CurveCircle": "CurvePrimitiveCircle",
+    "CurveQuadrilateral": "CurvePrimitiveQuadrilateral",
+    "CurveLine": "CurvePrimitiveLine",
+    "BoundingBox": "BoundBox"
+  },
+  "zones": [
+    "repeat"
+  ],
+  "nodes": [
+    "Math",
+    "VectorMath",
+    "Compare",
+    "BooleanMath",
+    "Switch",
+    "Mix",
+    "MapRange",
+    "Clamp",
+    "CombineXYZ",
+    "SeparateXYZ",
+    "TexNoise",
+    "WhiteNoise",
+    "RandomValue",
+    "VectorRotate"
+  ]
+}

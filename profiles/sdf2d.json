@@ -1,0 +1,18 @@
+{
+  "name": "sdf2d",
+  "version": 1,
+  "description": "Profil 2D champs de distance signée (SDF), étend core avec entrées/nœuds spatiaux",
+  "extends": "core",
+  "implicit": [
+    "Position",
+    "Normal",
+    "Index",
+    "ID"
+  ],
+  "nodes": [
+    "Position",
+    "Normal",
+    "Index",
+    "ID"
+  ]
+}

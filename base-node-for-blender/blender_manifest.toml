@@ -1,0 +1,14 @@
+schema_version = "1.0.0"
+
+id = "base_node"
+version = "0.7.0"
+name = "Base Node for Blender"
+tagline = "Nodes as Text (.bn) — Écrit et relit les arbres de nœuds comme des fonctions"
+maintainer = "Marc Gardent"
+type = "add-on"
+website = "https://github.com/marcgardent/base-node-library"
+tags = ["Node", "Geometry Nodes"]
+
+blender_version_min = "5.2.0"
+
+license = ["SPDX:GPL-3.0-or-later"]

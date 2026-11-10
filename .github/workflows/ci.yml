@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    name: Python Parser & Profiles (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pytest
+        run: pip install pytest
+      - name: Run Python test suite & conformance
+        env:
+          PYTHONPATH: ${{ github.workspace }}/python
+        run: pytest -v python/tests
+
+  rust:
+    name: Rust Parser, Formatter & WASM32
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy
+      - name: Run cargo test (stdlib, conformance, fixtures, profiles)
+        working-directory: rust
+        run: cargo test
+      - name: Run cargo clippy
+        working-directory: rust
+        run: cargo clippy -- -D warnings
+      - name: Check wasm32-unknown-unknown target
+        working-directory: rust
+        run: cargo check --target wasm32-unknown-unknown

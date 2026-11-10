@@ -1,0 +1,50 @@
+{
+  "name": "vector2d",
+  "version": 1,
+  "description": "Profil 2D vectoriel (courbes, maillages 2D, semis de points, attributs), étend sdf2d",
+  "extends": "sdf2d",
+  "types": [
+    "Geometry",
+    "Material"
+  ],
+  "zones": [
+    "foreach"
+  ],
+  "nodes": [
+    "CurveCircle",
+    "CurveQuadrilateral",
+    "CurveStar",
+    "CurveLine",
+    "CurveSpiral",
+    "ResampleCurve",
+    "TrimCurve",
+    "SubdivideCurve",
+    "ReverseCurve",
+    "FillCurve",
+    "FilletCurve",
+    "SetCurveRadius",
+    "CurveToMesh",
+    "SplineParameter",
+    "Tangent",
+    "Radius",
+    "MeshGrid",
+    "MeshCircle",
+    "MeshLine",
+    "Points",
+    "Triangulate",
+    "SetPosition",
+    "TransformGeometry",
+    "JoinGeometry",
+    "InstanceOnPoints",
+    "RealizeInstances",
+    "MergeByDistance",
+    "BoundingBox",
+    "SampleIndex",
+    "CaptureAttribute",
+    "StoreNamedAttribute",
+    "NamedAttribute",
+    "IndexSwitch",
+    "MenuSwitch",
+    "SetMaterial"
+  ]
+}

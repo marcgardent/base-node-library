@@ -1,0 +1,52 @@
+use maths (fbm)
+
+geometry graph "gp encrage vivant"(
+    geometry: Geometry,
+    amplitude: Float = 0.02 in 0.0..,
+    fréquence: Float = 3.0 in 0.0..,
+    "variation rayon": Float = 0.35 in 0.0..1.0,
+    octaves: Int = 3 in 1..8
+) -> Geometry {
+  "Donne un encrage organique en déplaçant les points et modulant le rayon par un bruit fractal"
+  p = Position() * fréquence
+  déplacement = Normal().normal * (fbm(p, octaves) * amplitude)
+  bruit_r = fbm(p + (15.3, 27.1, 8.4), octaves)
+  rayon = max(Radius() * (1.0 + bruit_r * variation_rayon), 0.0)
+  return geometry |> SetPosition(offset: déplacement)
+    |> SetCurveRadius(radius: rayon)
+}
+
+geometry graph "gp ombre portée 2d"(
+    geometry: Geometry,
+    décalage: Vector = (0.08, 0.0, -0.08),
+    matériau: Material
+) -> Geometry {
+  "Copie les traits décalés dans un matériau d'ombre, placés derrière l'original"
+  ombre = geometry |> SetPosition(offset: décalage)
+    |> SetMaterial(material: matériau)
+  return ombre + geometry
+}
+
+geometry graph "gp double trait"(
+    geometry: Geometry,
+    écart: Float = 0.03 in 0.0..,
+    "facteur rayon": Float = 0.6 in 0.0..2.0,
+    matériau: Material
+) -> Geometry {
+  "Ajoute un second trait parallèle décalé selon la normale avec son propre matériau"
+  trait2 = geometry |> SetPosition(offset: Normal().normal * écart)
+    |> SetCurveRadius(radius: Radius() * facteur_rayon)
+    |> SetMaterial(material: matériau)
+  return geometry + trait2
+}
+
+geometry graph "gp effilement bouts"(
+    geometry: Geometry,
+    douceur: Float = 0.35 in 0.01..0.5
+) -> Geometry {
+  "Effile les deux extrémités des traits selon le paramètre douceur"
+  u = SplineParameter()
+  d = min(u.factor, 1.0 - u.factor)
+  facteur = MapRange(d, from_max: douceur, interpolation_type: SMOOTHSTEP)
+  return SetCurveRadius(geometry, radius: Radius() * facteur)
+}
