@@ -28,13 +28,13 @@ PORTABLE_TYPES = (
     "Material",
 )
 
-# Entrées implicites portables
+# Portable implicit inputs
 PORTABLE_IMPLICIT = ("Position", "Normal", "Index", "ID")
 
-# Identifiants internes de socket d'interface correspondants dans Blender
+# Corresponding internal interface socket identifiers in Blender
 PORTABLE_IMPLICIT_IDENTIFIERS = {"POSITION", "NORMAL", "INDEX", "ID_OR_INDEX"}
 
-# Contrat d'alias entre le nom canonique portable et le nom Blender (host)
+# Alias contract between canonical portable name and Blender (host) name
 PORTABLE_ALIASES = {
     "WhiteNoise": "TexWhiteNoise",
     "TransformGeometry": "Transform",
@@ -44,15 +44,15 @@ PORTABLE_ALIASES = {
     "BoundingBox": "BoundBox",
 }
 
-# Alias inverses : nom Blender -> nom canonique portable
+# Reverse aliases: Blender name -> canonical portable name
 BLENDER_TO_PORTABLE_ALIASES = {v: k for k, v in PORTABLE_ALIASES.items()}
 
-# Genres d'arbres acceptés dans le socle portable
+# Tree kinds accepted in the portable subset
 PORTABLE_KINDS = ("geometry", "vector", "pixel")
 
-# Nœuds du socle commun 2D (noms canoniques portables)
+# Core 2D common nodes (canonical portable names)
 CANONICAL_PORTABLE_NODES = (
-    # Calcul mathématique / vectoriel, logique
+    # Math / vector computation, logic
     "Math",
     "VectorMath",
     "Compare",
@@ -67,7 +67,7 @@ CANONICAL_PORTABLE_NODES = (
     "WhiteNoise",
     "RandomValue",
     "VectorRotate",
-    # Courbes 2D
+    # 2D Curves
     "CurveCircle",
     "CurveQuadrilateral",
     "CurveStar",
@@ -84,13 +84,13 @@ CANONICAL_PORTABLE_NODES = (
     "SplineParameter",
     "Tangent",
     "Radius",
-    # Maillage & Points 2D
+    # 2D Mesh & Points
     "MeshGrid",
     "MeshCircle",
     "MeshLine",
     "Points",
     "Triangulate",
-    # Géométrie 2D générale
+    # General 2D Geometry
     "SetPosition",
     "TransformGeometry",
     "JoinGeometry",
@@ -100,7 +100,7 @@ CANONICAL_PORTABLE_NODES = (
     "BoundingBox",
     "SetMaterial",
     "SampleIndex",
-    # Attributs & entrées contextuelles
+    # Attributes & contextual inputs
     "CaptureAttribute",
     "StoreNamedAttribute",
     "NamedAttribute",
@@ -113,12 +113,12 @@ CANONICAL_PORTABLE_NODES = (
     "MenuSwitch",
 )
 
-# Tous les noms textuels reconnus (canoniques + noms Blender spécifiques)
+# All recognized text names (canonical + Blender-specific names)
 PORTABLE_NODES = tuple(dict.fromkeys(CANONICAL_PORTABLE_NODES + tuple(PORTABLE_ALIASES.values())))
 
-# Identifiants de classes de nœuds (bl_idname) autorisés dans un graphe portable
+# Node class identifiers (bl_idname) allowed in a portable graph
 PORTABLE_BL_IDNAMES = {
-    # Math & Logique
+    # Math & Logic
     "ShaderNodeMath",
     "ShaderNodeVectorMath",
     "FunctionNodeCompare",
@@ -133,7 +133,7 @@ PORTABLE_BL_IDNAMES = {
     "ShaderNodeTexWhiteNoise",
     "FunctionNodeRandomValue",
     "ShaderNodeVectorRotate",
-    # Géométrie 2D & Courbes
+    # 2D Geometry & Curves
     "GeometryNodeSetPosition",
     "GeometryNodeTransform",
     "GeometryNodeJoinGeometry",
@@ -164,7 +164,7 @@ PORTABLE_BL_IDNAMES = {
     "GeometryNodeBoundBox",
     "GeometryNodeSetMaterial",
     "GeometryNodeSampleIndex",
-    # Attributs & Contexte
+    # Attributes & Context
     "GeometryNodeCaptureAttribute",
     "GeometryNodeStoreNamedAttribute",
     "GeometryNodeInputNamedAttribute",
@@ -175,12 +175,12 @@ PORTABLE_BL_IDNAMES = {
     # Switches
     "GeometryNodeIndexSwitch",
     "GeometryNodeMenuSwitch",
-    # Zones portables (repeat et foreach)
+    # Portable zones (repeat and foreach)
     "GeometryNodeRepeatInput",
     "GeometryNodeRepeatOutput",
     "GeometryNodeForeachGeometryElementInput",
     "GeometryNodeForeachGeometryElementOutput",
-    # Structure de groupe
+    # Group plumbing
     "NodeGroupInput",
     "NodeGroupOutput",
     "GeometryNodeGroup",
@@ -192,7 +192,7 @@ PORTABLE_BL_IDNAMES = {
 
 
 def _plain(value: Any) -> Any:
-    """Normalise les valeurs scalaires ou vectorielles pour le JSON."""
+    """Normalize scalar or vector values for JSON."""
     if value is None or isinstance(value, (bool, str, int)):
         return value
     if isinstance(value, float):
@@ -233,7 +233,6 @@ class PortableSchema(dict):
 
 def check_portable(graphs: Any) -> list[str]:
     """Check that compiled ir.Graph objects only use types and nodes
-
     from the portable contract.
 
     Returns [] if portable, or a list of error strings.
@@ -243,25 +242,25 @@ def check_portable(graphs: Any) -> list[str]:
         graphs = [graphs]
 
     for g in graphs:
-        # 1. Type d'arbre
+        # 1. Tree kind
         if g.kind not in PORTABLE_KINDS:
             errors.append(
-                f"Graphe '{g.name}' : type d'arbre '{g.kind}' non portable (attendu {PORTABLE_KINDS})"
+                f"Graph '{g.name}': tree kind '{g.kind}' is not portable (expected {PORTABLE_KINDS})"
             )
 
-        # 2. Types des entrées / sorties de l'interface
+        # 2. Interface input / output types
         for name, typ in g.inputs:
             if typ not in PORTABLE_TYPES:
                 errors.append(
-                    f"Graphe '{g.name}' : entrée '{name}' de type non portable '{typ}'"
+                    f"Graph '{g.name}': input '{name}' has non-portable type '{typ}'"
                 )
         for name, typ in g.outputs:
             if typ not in PORTABLE_TYPES:
                 errors.append(
-                    f"Graphe '{g.name}' : sortie '{name}' de type non portable '{typ}'"
+                    f"Graph '{g.name}': output '{name}' has non-portable type '{typ}'"
                 )
 
-        # 3. Entrées implicites
+        # 3. Implicit inputs
         for param, defs in g.defaults.items():
             if "implicit" in defs:
                 impl = defs["implicit"]
@@ -270,41 +269,38 @@ def check_portable(graphs: Any) -> list[str]:
                     and impl not in PORTABLE_IMPLICIT_IDENTIFIERS
                 ):
                     errors.append(
-                        f"Graphe '{g.name}' : entrée implicite '{impl}' pour '{param}' non portable"
+                        f"Graph '{g.name}': implicit input '{impl}' for '{param}' is not portable"
                     )
 
-        # 4. Nœuds et zones
+        # 4. Nodes and zones
         for node in g.nodes:
             if node.bl_idname not in PORTABLE_BL_IDNAMES:
                 errors.append(
-                    f"Graphe '{g.name}' : nœud '{node.name or node.bl_idname}' "
-                    f"(bl_idname '{node.bl_idname}') hors du contrat portable"
+                    f"Graph '{g.name}': node '{node.name or node.bl_idname}' "
+                    f"(bl_idname '{node.bl_idname}') outside portable contract"
                 )
 
-            # Vérification des types des items (zones, capture attribute, etc.)
+            # Check item types (zones, capture attribute, etc.)
             if node.items:
                 for item_name, item_type in node.items:
                     if item_type not in PORTABLE_TYPES:
                         errors.append(
-                            f"Graphe '{g.name}' : item '{item_name}' du nœud '{node.bl_idname}' "
-                            f"de type non portable '{item_type}'"
+                            f"Graph '{g.name}': item '{item_name}' of node '{node.bl_idname}' "
+                            f"has non-portable type '{item_type}'"
                         )
             if node.out_items:
                 for item_name, item_type in node.out_items:
                     if item_type not in PORTABLE_TYPES:
                         errors.append(
-                            f"Graphe '{g.name}' : sortie d'item '{item_name}' du nœud '{node.bl_idname}' "
-                            f"de type non portable '{item_type}'"
+                            f"Graph '{g.name}': item output '{item_name}' of node '{node.bl_idname}' "
+                            f"has non-portable type '{item_type}'"
                         )
 
     return errors
 
 
 def dump_portable_schema(schema: Any) -> PortableSchema:
-    """Extrait pour chaque nœud portable ses propriétés (props) et ses signatures
-
-    de sockets par défaut (inputs, outputs).
-    """
+    """Extract properties (props) and default socket signatures (inputs, outputs) for each portable node."""
     nodes: dict[str, dict] = {}
     has_defaults = hasattr(schema, "defaults")
 
@@ -363,7 +359,7 @@ def dump_portable_schema(schema: Any) -> PortableSchema:
 
         nodes[name] = entry
 
-        # Si le nom Blender diffère, on référence également l'entrée par son nom Blender
+        # If Blender name differs, also reference the entry by its Blender name
         if bl_name != name and bl_name not in nodes:
             bl_entry = dict(entry)
             bl_entry["name"] = bl_name

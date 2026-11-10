@@ -32,27 +32,27 @@ def test_wave_is_nine_nodes_and_nine_links(schema, fixture_text):
 
 def test_unary_math_has_one_input(schema):
     msgs = errors(graph("  x = Math(t, t, operation: SINE)\n  return geometry"), schema)
-    assert msgs == ["t.bn:2:15  Math prend 1 entrée(s) : value"]
+    assert msgs == ["t.bn:2:15  Math takes 1 input(s): value"]
 
 
 def test_unknown_input_lists_inputs(schema):
     msgs = errors(graph("  v = CombineXYZ(w: t)\n  return geometry"), schema)
-    assert msgs == ["t.bn:2:18  CombineXYZ n'a pas d'entrée « w » ; entrées : x, y, z"]
+    assert msgs == ["t.bn:2:18  CombineXYZ has no input 'w'; inputs: x, y, z"]
 
 
 def test_unknown_enum_value_suggests(schema):
     msgs = errors(graph("  x = Math(t, operation: SINUS)\n  return geometry"), schema)
-    assert msgs[0].startswith("t.bn:2:15  operation: SINUS inconnu ; voulez-vous dire SINE ? ; valeurs : ADD,")
+    assert msgs[0].startswith("t.bn:2:15  operation: unknown SINUS; did you mean SINE?; values: ADD,")
 
 
 def test_type_mismatch(schema):
     msgs = errors(graph("  return SetPosition(geometry, offset: geometry)"), schema)
-    assert msgs == ["t.bn:2:32  SetPosition.offset attend Vector, reçoit Geometry (geometry)"]
+    assert msgs == ["t.bn:2:32  SetPosition.offset expects Vector, receives Geometry (geometry)"]
 
 
 def test_unknown_node_suggests(schema):
     msgs = errors(graph("  return SetPositon(geometry)"), schema)
-    assert "voulez-vous dire SetPosition" in msgs[0]
+    assert "did you mean SetPosition" in msgs[0]
 
 
 def test_all_errors_reported_at_once(schema):
@@ -62,7 +62,7 @@ def test_all_errors_reported_at_once(schema):
 
 def test_duplicate_sockets_by_identifier(schema):
     msgs = errors(graph("  x = Math(value: t)\n  return geometry"), schema)
-    assert "ambigu" in msgs[0] and "Value_001" in msgs[0]
+    assert "ambiguous" in msgs[0] and "Value_001" in msgs[0]
     g = compile_one(graph("  x = Math(Value_001: t)\n  return geometry"), schema)
     assert g.nodes[2].links[0][0] == "Value_001"
 
@@ -96,7 +96,7 @@ def test_menu_socket_takes_enum_value(schema):
 
 def test_unknown_name_is_reported(schema):
     msgs = errors(graph("  return SetPosition(geometrie)"), schema)
-    assert msgs == ["t.bn:2:22  nom inconnu « geometrie »"]
+    assert msgs == ["t.bn:2:22  unknown name 'geometrie'"]
 
 
 
@@ -112,7 +112,7 @@ def test_group_call_and_order(schema):
 
 def test_recursion_is_an_error(schema):
     src = "geometry graph a(g: Geometry) -> Geometry {\n  return a(g)\n}"
-    assert "récursif" in errors(src, schema)[0]
+    assert "recursive" in errors(src, schema)[0]
 
 
 def test_record_return(schema):
@@ -166,13 +166,13 @@ def test_datablock_by_name(schema):
     try:
         g = compile_one(graph('  return SetMaterial(geometry, material: "Rust")'), schema)
         assert g.nodes[2].values == {"Material": "Rust"}
-        assert "attend Material" in errors(graph("  return SetMaterial(geometry, material: 3)"), schema)[0]
+        assert "expects Material" in errors(graph("  return SetMaterial(geometry, material: 3)"), schema)[0]
     finally:
         del NODES["SetMaterial"]
 
 
 def test_a_float_literal_does_not_go_into_an_int(schema):
-    with pytest.raises(BnError, match="attend un entier : 3 plutôt que 3.0"):
+    with pytest.raises(BnError, match="expects an integer: 3 rather than 3.0"):
         compile_source("geometry graph g() -> Geometry {\n  return MeshGrid(1.0, 1.0, 3.0, 3)\n}\n", schema)
 
 
@@ -191,5 +191,5 @@ def test_a_gizmo_links_the_value_it_moves(schema):
 def test_a_gizmo_value_takes_a_number_a_join_does_not(schema):
     g = compile_one(graph("  return geometry + GizmoLinear(2.0)"), schema)
     assert next(n for n in g.nodes if n.bl_idname == "GeometryNodeGizmoLinear").values == {"Value": 2.0}
-    assert "n'accepte que des liens" in errors(graph("  return JoinGeometry(1.0)"), schema)[0]
-    assert "n'accepte que des liens" in errors(graph("  return GizmoTransform((1.0, 0.0, 0.0))"), schema)[0]
+    assert "only accepts links" in errors(graph("  return JoinGeometry(1.0)"), schema)[0]
+    assert "only accepts links" in errors(graph("  return GizmoTransform((1.0, 0.0, 0.0))"), schema)[0]

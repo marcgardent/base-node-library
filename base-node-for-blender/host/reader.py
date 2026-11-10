@@ -107,12 +107,12 @@ class GraphReader:
         self.last_block = {}  # (enclosing frame name, title) -> the frame its last block was
 
     def warn(self, message):
-        self.warnings.append(f"{self.tree.name} : {message}")
+        self.warnings.append(f"{self.tree.name}: {message}")
 
     def read(self):
         tree = self.tree
         if self.kind is None:
-            raise ValueError(f"{tree.name} n'est pas un arbre de nœuds lisible")
+            raise ValueError(f"{tree.name} is not a readable node tree")
         written = {}  # interface socket identifier -> its Param
         for io in ("INPUT", "OUTPUT"):
             for item in tree.interface.items_tree:
@@ -137,8 +137,8 @@ class GraphReader:
                       if n.bl_idname in ZONE_INPUTS and n.paired_output is not None}
         others = [n for n in outs if n != out]
         if others:
-            self.warn(f"{len(others)} sortie(s) de groupe inactive(s) non exportée(s) ; "
-                      "ce qui les alimente est écrit")
+            self.warn(f"{len(others)} inactive group output(s) not exported; "
+                      "their inputs are still written")
         self.roots = self.dead_roots(self.reach([out]))
         reached = self.reach([out] + self.roots)
         self.zone_of = self.zones(reached)
@@ -271,20 +271,20 @@ class GraphReader:
         """Say what the text leaves out: how the nodes look."""
         # What `@ …` could not carry: the Group Input nodes, which the text has none of, and
         # the input nodes of zones, which have no statement of their own
-        looks = {"": Counter(), "des Group Input ": Counter(), "des entrées de zone ": Counter()}
+        looks = {"": Counter(), "of Group Input ": Counter(), "of zone inputs ": Counter()}
         for n in self.tree.nodes:
             if n.bl_idname in SKIP or n.name in self.shown:
                 continue
             if n.mute:
-                self.warn(f"« {n.name} » est désactivé (mute) ; le texte l'exporte actif")
-            counts = looks["des Group Input " if n.bl_idname == "NodeGroupInput" else
-                           "des entrées de zone " if n.bl_idname in ZONE_INPUTS else ""]
-            counts["libellé"] += bool(n.label)
-            counts["couleur"] += n.use_custom_color
-            counts["replié"] += n.hide
+                self.warn(f"'{n.name}' is muted; text exports it as active")
+            counts = looks["of Group Input " if n.bl_idname == "NodeGroupInput" else
+                           "of zone inputs " if n.bl_idname in ZONE_INPUTS else ""]
+            counts["label"] += bool(n.label)
+            counts["color"] += n.use_custom_color
+            counts["collapsed"] += n.hide
         for what, counts in looks.items():
             if +counts:
-                self.warn(f"présentation {what}non exportée : " + ", ".join(f"{k} ({v})" for k, v in counts.items() if v))
+                self.warn(f"appearance {what}not exported: " + ", ".join(f"{k} ({v})" for k, v in counts.items() if v))
 
     # Looks
 
@@ -315,7 +315,7 @@ class GraphReader:
         type = INTERFACE_TYPES.get(item.socket_type)
         if type is None:
             type = item.socket_type.removeprefix("NodeSocket")
-            self.warn(f"type d'interface {item.socket_type} inconnu du texte")
+            self.warn(f"unknown interface socket type {item.socket_type}")
         p = ast.Param(item.name, type, 0, 0)
         fresh = fresh_options(item.socket_type, item.in_out)
         # The subtype and the description first, as one reads them; then Blender's order
@@ -333,7 +333,7 @@ class GraphReader:
             if call is not None and IMPLICIT[call][1] == p.type:
                 p.default = ast.Call(call, [], 0, 0)
             else:
-                self.warn(f"entrée « {item.name} » : valeur implicite {item.default_input} non exportée")
+                self.warn(f"input '{item.name}': implicit value {item.default_input} not exported")
         elif "default_value" in fresh and not same(snapshot(item), fresh["default_value"]):
             p.default = self.default_literal(item, p.type)
         if "min_value" in fresh:
@@ -359,7 +359,7 @@ class GraphReader:
             return enum_literal(value)
         if isinstance(value, str):
             return ast.String(value.replace('"', "'").replace("\n", " "), 0, 0)
-        self.warn(f"valeur par défaut de « {item.name} » ({type}) non exportée")
+        self.warn(f"default value of '{item.name}' ({type}) not exported")
         return None
 
     # Links
@@ -371,7 +371,7 @@ class GraphReader:
             if link.is_muted or link.to_node.bl_idname in SKIP or link.to_socket.is_unavailable:
                 continue
             if not link.is_valid:
-                self.warn(f"lien invalide vers « {link.to_node.name} » ignoré")
+                self.warn(f"invalid link to '{link.to_node.name}' ignored")
                 continue
             src = self.source(link)
             if src is None:
@@ -553,15 +553,15 @@ class GraphReader:
         values = [self.zone_item(word, zout, zin, s, incoming, outside=True) for s in sockets]
         for sock, v in zip(sockets, values):
             if v.value is None:
-                self.warn(f"{word} « {zout.name} » : « {sock.name} » ({sock.type}) part sans valeur, "
-                          "pas encore pris en charge par le texte")
-                v.value = ast.Ref("aucun", 0, 0)
+                self.warn(f"{word} '{zout.name}': '{sock.name}' ({sock.type}) has no value, "
+                          "not yet supported in text")
+                v.value = ast.Ref(NO_VALUE, 0, 0)
         states = values[len(sockets) - len(heads):]
         if not repeat:
             lost = [(i.name, i.attribute_domain) for i in zout.state_items if i.attribute_domain != "POINT"]
             for item, domain in lost:
-                self.warn(f"simulate « {zout.name} » : domaine {domain} de l'état « {item} », "
-                          "pas encore pris en charge par le texte")
+                self.warn(f"simulate '{zout.name}': domain {domain} of state '{item}', "
+                          "not yet supported in text")
         self.zone_names(word, zout, zin, [s.name for s in heads])
 
         statements = [(self.tree.nodes[n], self.assign(self.tree.nodes[n])) for n in self.statement_order(zout.name)]
@@ -612,18 +612,18 @@ class GraphReader:
         statements = [(self.tree.nodes[n], self.assign(self.tree.nodes[n])) for n in self.statement_order(zout.name)]
         generation = list(zout.generation_items)
         if generation and generation[0].socket_type != "GEOMETRY":
-            self.warn(f"foreach « {zout.name} » : l'item généré « {generation[0].name} » ne suit aucune géométrie, "
-                      "pas encore pris en charge par le texte")
+            self.warn(f"foreach '{zout.name}': generated item '{generation[0].name}' does not follow any geometry, "
+                      "not yet supported in text")
         for item in generation:
             if item.socket_type != "GEOMETRY" and item.domain != "POINT":
-                self.warn(f"foreach « {zout.name} » : domaine {item.domain} de l'attribut généré « {item.name} », "
-                          "pas encore pris en charge par le texte")
+                self.warn(f"foreach '{zout.name}': domain {item.domain} of generated attribute '{item.name}', "
+                          "not yet supported in text")
         outgoing = self.incoming.get(zout.name, {})
         returned = self.items(zout.inputs)
         fields = [self.zone_item("foreach", zout, zout, s, outgoing) for s in returned]
         keys = [key(s.name) for s in returned]
         if len(set(keys)) < len(keys):
-            self.warn(f"foreach « {zout.name} » : deux items du même nom, pas encore pris en charge par le texte")
+            self.warn(f"foreach '{zout.name}': duplicate item names, not yet supported in text")
         ret = ast.Return(ast.Record([f for f in fields if f.value is not None], 0, 0), 0, 0, self.looked(zout))
         body = self.framed(statements + [(zout, ret)], base=frame_path(zout), notes=False)
         return ast.Foreach(geometry, args, body, 0, 0)
@@ -637,8 +637,8 @@ class GraphReader:
         if links:
             value, given = self.use(*links[0]), SOCKET_TYPES.get(links[0][1].type)
         elif sock.type == "MENU":
-            self.warn(f"{word} « {zout.name} » : valeur de menu de « {sock.name} », "
-                      "pas encore prise en charge par le texte")
+            self.warn(f"{word} '{zout.name}': menu value of '{sock.name}', "
+                      "not yet supported in text")
             return self.no_value(sock.name, wanted, zout if outside else None)
         elif sock.type in NO_LITERAL or not hasattr(sock, "default_value"):
             if not wanted:
@@ -667,8 +667,8 @@ class GraphReader:
         keys = [key(n) for n in items]
         own = set(BODY_NAMES[zin.bl_idname].values()) | set(HEAD_NAMES[zin.bl_idname])
         if len(set(keys)) < len(keys) or own & set(keys):
-            self.warn(f"{word} « {zout.name} » : des items portent le même nom, ou un nom de la zone "
-                      f"({', '.join(sorted(own))}), pas encore pris en charge par le texte")
+            self.warn(f"{word} '{zout.name}': items share the same name, or a zone name "
+                      f"({', '.join(sorted(own))}), not yet supported in text")
         # In the body an item, or a name of the zone, hides the group input of the same name
         hidden = (set(keys) | set(BODY_NAMES[zin.bl_idname].values())) & set(self.param_keys)
         inside = [n for n, z in self.zone_of.items() if z == zout.name] + [zout.name]
@@ -677,8 +677,8 @@ class GraphReader:
         for src, sock in gin:
             k = self.param_keys[self.items(src.outputs).index(sock)]
             if k in hidden:
-                self.warn(f"{word} « {zout.name} » : son corps lit l'entrée « {k} », cachée par l'état du même nom ; "
-                          "pas encore pris en charge par le texte")
+                self.warn(f"{word} '{zout.name}': body reads input '{k}', shadowed by state of same name; "
+                          "not yet supported in text")
                 hidden.discard(k)
 
     def closure(self, cout):
@@ -688,7 +688,7 @@ class GraphReader:
         outputs = self.declared(cout, "out_items")
         single = len(outputs) == 1 and outputs[0].name == outputs[0].type and not outputs[0].options
         if cout.define_signature:
-            self.warn(f"closure « {cout.name} » : define_signature non exporté")
+            self.warn(f"closure '{cout.name}': define_signature not exported")
         self.zone_names("closure", cout, cin, [i.name for i in cout.input_items])
 
         statements = [(self.tree.nodes[n], self.assign(self.tree.nodes[n])) for n in self.statement_order(cout.name)]
@@ -718,7 +718,7 @@ class GraphReader:
             type = ITEM_TYPE_NAMES.get(item.socket_type)
             if type is None:
                 type = item.socket_type.title()
-                self.warn(f"item « {item.name} » de type {item.socket_type}, pas encore pris en charge par le texte")
+                self.warn(f"item '{item.name}' of type {item.socket_type}, not yet supported in text")
             params.append(ast.Param(item.name, type, 0, 0, options=options))
         return params
 
@@ -805,17 +805,17 @@ class GraphReader:
         spec = None if group else self.spec(node)
         if group:
             if node.node_tree is None:
-                self.warn(f"« {node.name} » n'a pas d'arbre ; écrit comme un appel vide")
+                self.warn(f"'{node.name}' has no tree; written as empty call")
                 return ast.Call("missing_group", [], 0, 0)
             name = key(node.node_tree.name)
         elif spec is None:
             name = text_name(node.bl_idname)
-            self.warn(f"{name} (« {node.name} ») n'est pas encore pris en charge par le texte")
+            self.warn(f"{name} ('{node.name}') is not yet supported in text")
         else:
             name = spec.name
             if has_items(node) and node.bl_idname not in ITEM_NODES:
-                self.warn(f"{name} (« {node.name} ») a des sockets ajoutés à la main, "
-                          "pas encore pris en charge par le texte")
+                self.warn(f"{name} ('{node.name}') has manually added sockets, "
+                          "not yet supported in text")
 
         args = []
         props = {}
@@ -862,8 +862,7 @@ class GraphReader:
                 # Its value, its type when the value does not tell it, or its type alone
                 arg = self.zone_item(name, node, node, sock, incoming)
                 if arg.value is None:
-                    self.warn(f"{name} (« {node.name} ») : l'item « {sock.name} » n'a ni lien ni valeur "
-                              "que le texte sache écrire ; il est perdu")
+                    self.warn(f"{name} ('{node.name}'): item '{sock.name}' has neither link nor writable value; omitted")
                 else:
                     arg.options = self.item_options(node, shape, *item_of[sock.identifier], sock)
                     arg.alias = aliases[every.index(sock)]
@@ -880,8 +879,7 @@ class GraphReader:
             if not values and item and not shape.typed:
                 values = [ast.Ref(NO_VALUE, 0, 0)]
             elif not values and item:
-                self.warn(f"{name} (« {node.name} ») : l'item « {sock.name} » n'a ni lien ni valeur "
-                          "que le texte sache écrire ; il est perdu")
+                self.warn(f"{name} ('{node.name}'): item '{sock.name}' has neither link nor writable value; omitted")
             if not values:
                 positional = False
                 continue
@@ -901,7 +899,7 @@ class GraphReader:
                 positional = False
         for pname, value in props.items():
             if isinstance(value, str) and ('"' in value or "\n" in value):
-                self.warn(f"« {node.name}.{pname} » : guillemets et retours à la ligne remplacés")
+                self.warn(f"'{node.name}.{pname}': quotes and newlines replaced")
                 value = value.replace('"', "'").replace("\n", " ")
             args.append(ast.Arg(pname, prop_literal(spec.props[pname], value), 0, 0))
 
@@ -929,8 +927,8 @@ class GraphReader:
             given = SOCKET_TYPES.get(links[0][1].type) if links else literal_type(snapshot(sock), sock)
             wanted = SOCKET_TYPES.get(sock.type)
             if shape.typed and not shape.named and given is not None and given != wanted:
-                self.warn(f"« {node.name} » : l'item « {sock.name} » est un {wanted} qui reçoit un {given} ; "
-                          f"relu comme {given}")
+                self.warn(f"'{node.name}': item '{sock.name}' is a {wanted} receiving a {given}; "
+                          f"reread as {given}")
         if not shape.typed:
             # As the checker reads it: the type of the first item that has a value
             given = "Float"
@@ -946,7 +944,7 @@ class GraphReader:
                 props["data_type"] = node.data_type
 
     def item_options(self, node, shape, item, fresh, sock):
-        """`nom(option: valeur): …`: the settings of an item that differ from those the builder
+        """`name(option: value): …`: the settings of an item that differ from those the builder
         gives it (`fresh`)."""
         options = []
         field = sock is not None and SOCKET_TYPES.get(sock.type) in FIELD_TYPES
@@ -955,13 +953,13 @@ class GraphReader:
             if option not in fresh or same(value, fresh[option]) or option in shape.field_only and not field:
                 continue
             if isinstance(value, str) and ('"' in value or "\n" in value):
-                self.warn(f"« {node.name} » : {option} de l'item « {item.name} » : "
-                          "guillemets et retours à la ligne remplacés")
+                self.warn(f"'{node.name}': {option} of item '{item.name}': "
+                          "quotes and newlines replaced")
             options.append(ast.Arg(option, option_literal(item, option, value), 0, 0))
         if options and not shape.named:
             # Items given by position have no name to hang options on
-            self.warn(f"« {node.name} » : {', '.join(a.name for a in options)} de l'item « {sock.name} » "
-                      "non exporté")
+            self.warn(f"'{node.name}': {', '.join(a.name for a in options)} of item '{sock.name}' "
+                      "not exported")
             return []
         return options
 
@@ -1101,12 +1099,12 @@ class GraphReader:
             return enum_literal(value)
         if t in ("STRING",) or SOCKET_TYPES.get(t) in ("Object", "Collection", "Material", "Image", "Texture"):
             return self.string(value, node, sock)
-        self.warn(f"valeur de « {node.name}.{sock.name} » ({t}) non exportée")
+        self.warn(f"value of '{node.name}.{sock.name}' ({t}) not exported")
         return None
 
     def string(self, value, node, sock):
         if '"' in value or "\n" in value:
-            self.warn(f"« {node.name}.{sock.name} » : guillemets et retours à la ligne remplacés")
+            self.warn(f"'{node.name}.{sock.name}': quotes and newlines replaced")
             value = value.replace('"', "'").replace("\n", " ")
         return ast.String(value, 0, 0)
 
@@ -1160,8 +1158,8 @@ class GraphReader:
                 if f.name in opened and self.last_block.get(where) == f.name:
                     block = ast.Frame(block.label, None, [], 0, 0, continued=True)
                 elif f.name in opened:
-                    self.warn(f"le frame « {f.label or f.name} » est coupé en deux : ses nœuds dépendent "
-                              "de nœuds d'un autre frame qui dépendent d'eux")
+                    self.warn(f"frame '{f.label or f.name}' is split: its nodes depend on "
+                              "nodes of another frame that depend on them")
                 opened.add(f.name)
                 self.last_block[where] = f.name
                 blocks.setdefault(f.name, block)

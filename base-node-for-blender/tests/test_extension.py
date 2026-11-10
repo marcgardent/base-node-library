@@ -1,6 +1,6 @@
-"""Test de l'extension Blender base_node et de l'alias bnodes.
+"""Tests for Blender base_node extension and bnodes alias.
 
-Exécuté dans Blender via :
+Run in Blender via:
     blender --background --factory-startup --python-exit-code 1 --python base-node-for-blender/tests/test_extension.py
 """
 
@@ -27,101 +27,120 @@ import bnodes
 
 
 def test_import_and_aliases():
-    """1. Vérifie l'import de base_node et de l'alias bnodes."""
-    print("-> Test 1 : Vérification des imports et alias...")
-    assert base_node is not None, "base_node introuvable"
-    assert bnodes is not None, "bnodes introuvable"
-    assert base_node is bnodes, "bnodes n'est pas un alias de base_node"
-    assert base_node.lang is bnodes.lang, "base_node.lang et bnodes.lang diffèrent"
-    assert base_node.host is bnodes.host, "base_node.host et bnodes.host diffèrent"
+    """1. Verify import of base_node and bnodes alias."""
+    print("-> Test 1: Verifying imports and aliases...")
+    assert base_node is not None, "base_node not found"
+    assert bnodes is not None, "bnodes not found"
+    assert base_node is bnodes, "bnodes is not an alias of base_node"
+    assert base_node.lang is bnodes.lang, "base_node.lang and bnodes.lang differ"
+    assert base_node.host is bnodes.host, "base_node.host and bnodes.host differ"
 
-    # Enregistrement et désenregistrement de l'addon
+    # Register and unregister addon
     base_node.register()
-    assert hasattr(bpy.types.NodeTree, "base_node_text"), "NodeTree.base_node_text manquant"
-    assert hasattr(bpy.types.NodeTree, "bnodes_text"), "NodeTree.bnodes_text manquant"
-    assert hasattr(bpy.types.WindowManager, "base_node_sync"), "WindowManager.base_node_sync manquant"
-    assert hasattr(bpy.types.WindowManager, "bnodes_sync"), "WindowManager.bnodes_sync manquant"
-    print("   ✓ Imports et alias validés")
+    assert hasattr(bpy.types.NodeTree, "base_node_text"), "NodeTree.base_node_text missing"
+    assert hasattr(bpy.types.NodeTree, "bnodes_text"), "NodeTree.bnodes_text missing"
+    assert hasattr(bpy.types.WindowManager, "base_node_sync"), "WindowManager.base_node_sync missing"
+    assert hasattr(bpy.types.WindowManager, "bnodes_sync"), "WindowManager.bnodes_sync missing"
+    print("   ✓ Imports and aliases verified")
 
 
 def test_check_profile_stdlib():
-    """2. Vérifie la conformité de chaque module stdlib selon son profil cible."""
-    print("-> Test 2 : Vérification des profils sur stdlib...")
+    """2. Verify stdlib modules conformance against target profiles."""
+    print("-> Test 2: Verifying stdlib profiles...")
     from base_node.host.schema import BlenderSchema
     from base_node.lang import compile_source
     from base_node.lang.profiles import check_profile
 
-    targets = [
-        ("maths.bn", "core"),
-        ("sdf2d.bn", "sdf2d"),
-        ("courbes2d.bn", "vector2d"),
-        ("motifs2d.bn", "vector2d"),
-        ("gp_outils2d.bn", "vector2d"),
+    name_fallbacks = {
+        "math": ["math.bn", "maths.bn"],
+        "maths": ["math.bn", "maths.bn"],
+        "sdf2d": ["sdf2d.bn"],
+        "curves2d": ["curves2d.bn", "courbes2d.bn"],
+        "courbes2d": ["curves2d.bn", "courbes2d.bn"],
+        "patterns2d": ["patterns2d.bn", "motifs2d.bn"],
+        "motifs2d": ["patterns2d.bn", "motifs2d.bn"],
+        "gp_tools2d": ["gp_tools2d.bn", "gp_outils2d.bn"],
+        "gp_outils2d": ["gp_tools2d.bn", "gp_outils2d.bn"],
+    }
+
+    target_specs = [
+        (["math.bn", "maths.bn"], "core"),
+        (["sdf2d.bn"], "sdf2d"),
+        (["curves2d.bn", "courbes2d.bn"], "vector2d"),
+        (["patterns2d.bn", "motifs2d.bn"], "vector2d"),
+        (["gp_tools2d.bn", "gp_outils2d.bn"], "vector2d"),
     ]
 
     def loader(name: str, _caller: str):
-        p = STDLIB_DIR / f"{name}.bn"
-        if not p.exists():
-            raise LookupError(f"Module stdlib introuvable : {p}")
-        return p.read_text(encoding="utf-8"), str(p)
+        candidates = name_fallbacks.get(name, [f"{name}.bn"])
+        for fname in candidates:
+            p = STDLIB_DIR / fname
+            if p.exists():
+                return p.read_text(encoding="utf-8"), str(p)
+        raise LookupError(f"Module stdlib not found: {name}")
 
     with BlenderSchema() as schema:
-        for filename, expected_profile in targets:
-            filepath = STDLIB_DIR / filename
-            assert filepath.exists(), f"Fichier manquant : {filepath}"
+        for candidates, expected_profile in target_specs:
+            filepath = None
+            for cand in candidates:
+                p = STDLIB_DIR / cand
+                if p.exists():
+                    filepath = p
+                    break
+            assert filepath is not None and filepath.exists(), f"Missing file from candidates {candidates}"
             source = filepath.read_text(encoding="utf-8")
 
             graphs = compile_source(source, schema, str(filepath), load=loader)
-            assert len(graphs) > 0, f"Aucun graphe compilé pour {filename}"
+            assert len(graphs) > 0, f"No graph compiled for {filepath.name}"
 
             errors = check_profile(graphs, profile=expected_profile)
-            assert errors == [], f"Erreurs dans {filename} pour le profil '{expected_profile}' :\n" + "\n".join(errors)
-            print(f"   ✓ {filename} ({len(graphs)} graphes) validé sous profil '{expected_profile}'")
+            assert errors == [], f"Errors in {filepath.name} for profile '{expected_profile}':\n" + "\n".join(errors)
+            print(f"   ✓ {filepath.name} ({len(graphs)} graphs) validated under profile '{expected_profile}'")
 
 
 def test_build_and_round_trip():
-    """3. Construction et aller-retour Tree → Text → Tree dans Blender."""
-    print("-> Test 3 : Construction et aller-retour Tree → Text → Tree...")
+    """3. Build and round-trip Tree -> Text -> Tree in Blender."""
+    print("-> Test 3: Build and round-trip Tree -> Text -> Tree...")
     from base_node.host import build_source, export_tree
 
     src = """
-geometry graph ondulation(geometry: Geometry, frequence: Float = 2.0, amplitude: Float = 0.5) -> Geometry {
-  "Ondulation de la surface le long de Z"
+geometry graph wave(geometry: Geometry, frequency: Float = 2.0, amplitude: Float = 0.5) -> Geometry {
+  "Surface wave along Z"
   p = Position()
-  h = sin(p.x * frequence) * amplitude
+  h = sin(p.x * frequency) * amplitude
   return SetPosition(geometry, offset: CombineXYZ(z: h))
 }
 """
 
     # 1. Text -> Tree
-    trees = build_source(src, filename="ondulation.bn")
-    assert len(trees) == 1, f"Attendu 1 arbre construit, obtenu {len(trees)}"
+    trees = build_source(src, filename="wave.bn")
+    assert len(trees) == 1, f"Expected 1 built tree, got {len(trees)}"
     tree = trees[0]
-    assert tree.name == "ondulation", f"Nom d'arbre inattendu : {tree.name}"
-    assert len(tree.nodes) > 0, "L'arbre construit ne contient aucun nœud"
+    assert tree.name == "wave", f"Unexpected tree name: {tree.name}"
+    assert len(tree.nodes) > 0, "Built tree contains no nodes"
 
-    # Vérification des propriétés attachées
-    assert hasattr(tree, "bnodes_text"), "Propriété bnodes_text absente sur le node group"
-    assert hasattr(tree, "base_node_text"), "Propriété base_node_text absente sur le node group"
+    # Verify attached properties
+    assert hasattr(tree, "bnodes_text"), "Property bnodes_text missing on node group"
+    assert hasattr(tree, "base_node_text"), "Property base_node_text missing on node group"
 
     # 2. Tree -> Text
     exported, warnings = export_tree(tree)
-    assert "geometry graph ondulation" in exported, f"En-tête absent dans l'export :\n{exported}"
-    assert "SetPosition" in exported, f"SetPosition absent dans l'export :\n{exported}"
+    assert "geometry graph wave" in exported, f"Header missing in export:\n{exported}"
+    assert "SetPosition" in exported, f"SetPosition missing in export:\n{exported}"
 
-    # 3. Text -> Tree (deuxième passe)
-    rebuilt_trees = build_source(exported, filename="ondulation_rebuilt.bn")
+    # 3. Text -> Tree (second pass)
+    rebuilt_trees = build_source(exported, filename="wave_rebuilt.bn")
     assert len(rebuilt_trees) == 1
     rebuilt_tree = rebuilt_trees[0]
-    assert rebuilt_tree.name == "ondulation"
+    assert rebuilt_tree.name == "wave"
 
     re_exported, _ = export_tree(rebuilt_tree)
-    assert re_exported == exported, "L'aller-retour Tree → Text n'est pas stable"
-    print("   ✓ Aller-retour Tree → Text → Tree validé")
+    assert re_exported == exported, "Tree -> Text round trip is not stable"
+    print("   ✓ Tree -> Text -> Tree round-trip verified")
 
 
 def main():
-    print("=== Démarrage des tests de l'extension Base Node pour Blender ===")
+    print("=== Starting Base Node Blender extension tests ===")
     tests = [
         test_import_and_aliases,
         test_check_profile_stdlib,
@@ -136,10 +155,10 @@ def main():
             traceback.print_exc()
 
     if failed:
-        print(f"\n❌ ÉCHEC : {failed} test(s) échoué(s)")
+        print(f"\n❌ FAILED: {failed} test(s) failed")
         sys.exit(1)
     else:
-        print(f"\n✅ SUCCÈS : 100% des tests ({len(tests)}/{len(tests)}) validés avec succès !")
+        print(f"\n✅ SUCCESS: 100% of tests ({len(tests)}/{len(tests)}) passed successfully!")
         sys.exit(0)
 
 

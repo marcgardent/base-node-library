@@ -103,7 +103,7 @@ pub fn tokenize(source: &str, filename: &str, strict: bool) -> Result<Vec<Token>
                 text = chars[start + 1..i - 1].iter().collect();
                 kind = TokenKind::String;
             } else if strict {
-                return Err(BnError::new(filename, line, col, "chaîne non fermée"));
+                return Err(BnError::new(filename, line, col, "unclosed string"));
             } else {
                 text = chars[start + 1..i].iter().collect();
                 kind = TokenKind::OpenString;
@@ -126,7 +126,7 @@ pub fn tokenize(source: &str, filename: &str, strict: bool) -> Result<Vec<Token>
                     filename,
                     line,
                     col,
-                    format!("caractère inattendu « {} »", c),
+                    format!("unexpected character '{}'", c),
                 ));
             } else {
                 i += 1;

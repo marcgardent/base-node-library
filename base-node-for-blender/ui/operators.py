@@ -37,12 +37,12 @@ class BNODES_OT_text_to_tree(bpy.types.Operator):
             trees = actions.text_to_tree(text)
         except BnError as e:
             n = len(e.diagnostics)
-            self.report({"ERROR"}, f"{e.diagnostics[0]}" + (f" (+{n - 1} erreur(s))" if n > 1 else ""))
+            self.report({"ERROR"}, f"{e.diagnostics[0]}" + (f" (+{n - 1} error(s))" if n > 1 else ""))
             return {"CANCELLED"}
         for area in context.screen.areas:
             if area.type == "NODE_EDITOR":
                 area.tag_redraw()
-        self.report({"INFO"}, f"{len(trees)} arbre(s) construit(s) : {', '.join(t.name for t in trees)}")
+        self.report({"INFO"}, f"{len(trees)} tree(s) built: {', '.join(t.name for t in trees)}")
         return {"FINISHED"}
 
 
@@ -61,9 +61,9 @@ class BNODES_OT_format(bpy.types.Operator):
         try:
             changed = actions.format_text(context.space_data.text)
         except BnError as e:
-            self.report({"ERROR"}, f"rien n'est formaté : {e.diagnostics[0]}")
+            self.report({"ERROR"}, f"nothing formatted: {e.diagnostics[0]}")
             return {"CANCELLED"}
-        self.report({"INFO"}, "texte formaté" if changed else "texte déjà formaté")
+        self.report({"INFO"}, "text formatted" if changed else "text already formatted")
         return {"FINISHED"}
 
 
@@ -82,15 +82,15 @@ class BNODES_OT_tree_to_text(bpy.types.Operator):
     def execute(self, context):
         tree = bpy.data.node_groups.get(self.tree) if self.tree else edit_tree(context)
         if tree is None:
-            self.report({"ERROR"}, "aucun arbre Geometry Nodes à écrire")
+            self.report({"ERROR"}, "no Geometry Nodes tree to write")
             return {"CANCELLED"}
         text, warnings = actions.tree_to_text(tree)
         shown = show_text(context, text)
-        message = f"« {tree.name} » écrit dans {text.name}"
+        message = f"'{tree.name}' written to {text.name}"
         if not shown:
-            message += " ; ouvrez-le dans un Text Editor"
+            message += "; open it in a Text Editor"
         if warnings:
-            message += f" ({len(warnings)} avertissement(s), voir le panneau Nodes)"
+            message += f" ({len(warnings)} warning(s), see Nodes panel)"
         self.report({"WARNING"} if warnings else {"INFO"}, message)
         return {"FINISHED"}
 
@@ -135,7 +135,7 @@ class BNODES_OT_add_modifier(bpy.types.Operator):
         obj = context.active_object
         mod = obj.modifiers.new(tree.name, "NODES")
         mod.node_group = tree
-        self.report({"INFO"}, f"modifier « {mod.name} » ajouté à {obj.name}")
+        self.report({"INFO"}, f"modifier '{mod.name}' added to {obj.name}")
         return {"FINISHED"}
 
 

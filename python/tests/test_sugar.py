@@ -80,13 +80,13 @@ def test_negative_literals_fold(schema):
 
 
 @pytest.mark.parametrize("body, message", [
-    ("  a = geometry + 1.0", "« + » joint des Geometry, pas Float"),
-    ("  a = t + geometry", "« + » joint des Geometry, pas Float"),
-    ("  a = length(t)", "length attend des vecteurs"),
-    ("  a = atan2(t)", "atan2 attend 2 argument(s), en reçoit 1"),
-    ("  a = sin(t, base: 2.0)", "sin ne prend pas d'argument nommé"),
-    ("  a = sin(nope)", "nom inconnu « nope »"),
-    ("  a = t.x", "« t » est déjà une sortie (Float) ; « .x » n'existe pas"),
+    ("  a = geometry + 1.0", "'+' joins Geometry, not Float"),
+    ("  a = t + geometry", "'+' joins Geometry, not Float"),
+    ("  a = length(t)", "length expects vectors"),
+    ("  a = atan2(t)", "atan2 expects 2 argument(s), receives 1"),
+    ("  a = sin(t, base: 2.0)", "sin does not take named arguments"),
+    ("  a = sin(nope)", "unknown name 'nope'"),
+    ("  a = t.x", "'t' is already an output (Float); '.x' does not exist"),
 ])
 def test_formula_errors(schema, body, message):
     assert errors(graph(body), schema) == [message]
@@ -123,9 +123,9 @@ def test_a_comparison_is_a_bool(schema):
 
 
 @pytest.mark.parametrize("body, message", [
-    ('  a = "x" < "y"', "« < » : une String ne se compare qu'à une String, par == ou !="),
-    ('  a = "x" == t', "« == » : une String ne se compare qu'à une String, par == ou !="),
-    ("  a = geometry == geometry", "« == » ne s'applique pas à Geometry"),
+    ('  a = "x" < "y"', "'<': String can only be compared to String with == or !="),
+    ('  a = "x" == t', "'==': String can only be compared to String with == or !="),
+    ("  a = geometry == geometry", "'==' cannot be applied to Geometry"),
 ])
 def test_comparison_errors(schema, body, message):
     assert errors(graph(body), schema) == [message]
@@ -145,7 +145,7 @@ def test_and_or_not_make_boolean_math(schema):
 
 
 def test_logic_errors(schema):
-    assert errors(graph("  a = v and true"), schema) == ["« and » attend des Bool, pas Vector"]
+    assert errors(graph("  a = v and true"), schema) == ["'and' expects Bool, not Vector"]
 
 
 def test_plus_joins_geometries_in_one_node(schema):
@@ -187,13 +187,13 @@ def test_dot_and_cross_products(schema):
 
 
 @pytest.mark.parametrize("body, message", [
-    ("  a = t dot v", "« ⋅ » attend deux Vector, pas Float"),
-    ("  a = v × 2.0", "« × » attend deux Vector, pas Float"),
+    ("  a = t dot v", "'⋅' expects two Vectors, not Float"),
+    ("  a = v × 2.0", "'×' expects two Vectors, not Float"),
 ])
 def test_product_errors(schema, body, message):
     assert errors(graph(body), schema) == [message]
 
 
 def test_dot_and_cross_are_reserved(schema):
-    assert errors(graph("  dot = 1.0"), schema) == ["« dot » est réservé au produit scalaire : choisir un autre nom"]
+    assert errors(graph("  dot = 1.0"), schema) == ["'dot' is reserved for dot product: choose another name"]
     assert choose("⋅", ["Vector", "Color"]) == ("VectorMath", {"operation": "DOT_PRODUCT"}, (0, 1))

@@ -1,0 +1,94 @@
+use math (bump, fbm)
+
+// ---- 2D Curves and Contours ----
+
+geometry graph "morph curves 2d"(
+    start: Geometry,
+    end: Geometry,
+    factor: Float = 0.5 in 0.0..1.0,
+    points: Int = 128 in 4..4096
+) -> Geometry {
+  "Interpolates positions between two curves resampled to matching point counts"
+  c_start = ResampleCurve(start, count: points)
+  c_end = ResampleCurve(end, count: points)
+  pos_end = SampleIndex(c_end, Position(), Index(), data_type: FLOAT_VECTOR)
+  pos = Mix(factor, Position(), pos_end, data_type: VECTOR)
+  return SetPosition(c_start, position: pos)
+}
+
+geometry graph "parallel contour 2d"(curve: Geometry, offset: Float = 0.1) -> Geometry {
+  "Offsets each point along the 2D normal in the XY plane"
+  t = Tangent()
+  normal = CombineXYZ(-t.y, t.x)
+  return SetPosition(curve, offset: normal * offset)
+}
+
+geometry graph "contour noise 2d"(
+    curve: Geometry,
+    amplitude: Float = 0.08,
+    frequency: Float = 2.0 in 0.0..,
+    octaves: Int = 4 in 1..8,
+    resolution: Int = 128 in 8..2048
+) -> Geometry {
+  "Deforms a 2D contour along its normal using fractal noise"
+  c = ResampleCurve(curve, count: resolution)
+  t = Tangent()
+  normal = CombineXYZ(-t.y, t.x)
+  noise = fbm(Position() * frequency, octaves) * amplitude
+  return SetPosition(c, offset: normal * noise)
+}
+
+geometry graph "wave curve 2d"(
+    curve: Geometry,
+    amplitude: Float = 0.06,
+    periods: Float = 8.0,
+    phase: Float,
+    resolution: Int = 128 in 8..2048
+) -> Geometry {
+  "Displaces a 2D curve sinusoidally along its normal"
+  c = ResampleCurve(curve, count: resolution)
+  t = Tangent()
+  normal = CombineXYZ(-t.y, t.x)
+  wave = sin((SplineParameter().factor * periods + phase) * 6.283185) * amplitude
+  return SetPosition(c, offset: normal * wave)
+}
+
+geometry graph "ribbon 2d"(
+    curve: Geometry,
+    width: Float = 0.15 in 0.0..,
+    taper: Float in 0.0..1.0
+) -> Geometry {
+  "Generates a flat 2D ribbon along the curve with optional end tapering"
+  half = width * 0.5
+  profile = CurvePrimitiveLine(CombineXYZ(-half), CombineXYZ(half))
+  radius = Mix(taper, 1.0, bump(SplineParameter().factor, half_width: 0.5))
+  c = SetCurveRadius(curve, radius: radius)
+  return CurveToMesh(c, profile, Radius())
+}
+
+geometry graph "arrow 2d"(
+    curve: Geometry,
+    "body width": Float = 0.08 in 0.0..,
+    "head width": Float = 0.24 in 0.0..,
+    "head length": Float = 0.2 in 0.01..0.95
+) -> Geometry {
+  "Generates a flat 2D arrow along the curve with stem and triangular arrowhead"
+  f = SplineParameter()
+  threshold = 1.0 - head_length
+  head = (1.0 - f.factor) / head_length * head_width
+  radius = Switch(f.factor < threshold, head, body_width)
+  c = SetCurveRadius(curve, radius: radius)
+  profile = CurvePrimitiveLine((-0.5, 0.0, 0.0), (0.5, 0.0, 0.0))
+  return CurveToMesh(c, profile, Radius())
+}
+
+geometry graph "ring 2d"(
+    outer_radius: Float = 1.0 in 0.001..,
+    inner_radius: Float = 0.6 in 0.0..,
+    resolution: Int = 64 in 3..512
+) -> Geometry {
+  "Generates a flat 2D ring bounded by two radii"
+  c_ext = CurvePrimitiveCircle(resolution, outer_radius)
+  c_int = CurvePrimitiveCircle(resolution, inner_radius)
+  return FillCurve(c_ext + c_int)
+}

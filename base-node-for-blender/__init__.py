@@ -1,16 +1,16 @@
 """Base Node for Blender (base_node / bnodes).
 
-Nodes as Text (.bn) — Écrit et relit les arbres de nœuds comme des fonctions.
+Nodes as Text (.bn) — Write and read node trees as functions.
 """
 
 from __future__ import annotations
 
 import sys
 
-# Modules cœurs embarqués
+# Embedded core modules
 from . import host, lang
 
-# Enregistrement des alias globaux dans sys.modules
+# Register global aliases in sys.modules
 this_module = sys.modules[__name__]
 sys.modules["base_node"] = this_module
 sys.modules["base_node.lang"] = lang

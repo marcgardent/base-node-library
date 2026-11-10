@@ -49,7 +49,7 @@ def classify(tokens):
         elif t.kind == "COLOR" and rgb(t.text[1:]):
             out.append((t, rgb(t.text[1:])))
         elif t.kind == "IDENT":
-            # `use` and `from` are keywords only on a use line: `use maths from "…"`
+            # `use` and `from` are keywords only on a use line: `use math from "…"`
             if t.text == "use" and i == 0 and nxt is not None and nxt.kind == "IDENT" \
                     or t.text == "from" and nxt is not None and nxt.kind in ("STRING", "OPEN_STRING") \
                     and tokens[0].text in ("use", ")"):

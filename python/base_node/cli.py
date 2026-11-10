@@ -1,10 +1,10 @@
-"""Interface en ligne de commande (CLI) pour base-node.
+"""Command-line interface (CLI) for base-node.
 
-Commandes supportées :
-  base-node fmt [--check] <fichiers.bn>
-  base-node parse <fichiers.bn>
-  base-node check [--profile <nom>] <fichiers.bn>
-  base-node ast <fichier.bn>
+Supported commands:
+  base-node fmt [--check] <files.bn>
+  base-node parse <files.bn>
+  base-node check [--profile <name>] <files.bn>
+  base-node ast <file.bn>
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ from .profiles import check_profile, load_profile
 
 
 def _serialize_ast(obj: Any) -> Any:
-    """Convertit l'AST de dataclasses en structures JSON sérialisables."""
+    """Convert AST dataclasses into serializable JSON structures."""
     if is_dataclass(obj):
         d = asdict(obj)
         d["__class__"] = obj.__class__.__name__
@@ -36,12 +36,12 @@ def _serialize_ast(obj: Any) -> Any:
 
 
 def cmd_fmt(args: argparse.Namespace) -> int:
-    """Formate les fichiers .bn ou vérifie leur formatage canonique."""
+    """Format .bn files or verify canonical formatting."""
     exit_code = 0
     for path_str in args.files:
         p = Path(path_str)
         if not p.is_file():
-            print(f"Erreur : fichier introuvable '{path_str}'", file=sys.stderr)
+            print(f"Error: file not found '{path_str}'", file=sys.stderr)
             exit_code = 1
             continue
         try:
@@ -49,61 +49,61 @@ def cmd_fmt(args: argparse.Namespace) -> int:
             formatted = format_source(content)
             if args.check:
                 if content != formatted:
-                    print(f"Non formaté : {path_str}", file=sys.stderr)
+                    print(f"Not formatted: {path_str}", file=sys.stderr)
                     exit_code = 1
                 else:
-                    print(f"OK (formaté) : {path_str}")
+                    print(f"OK (formatted): {path_str}")
             else:
                 if content != formatted:
                     p.write_text(formatted, encoding="utf-8")
-                    print(f"Formaté : {path_str}")
+                    print(f"Formatted: {path_str}")
                 else:
-                    print(f"Inchangé : {path_str}")
+                    print(f"Unchanged: {path_str}")
         except BnError as err:
-            print(f"Erreur de syntaxe dans '{path_str}' :\n{err}", file=sys.stderr)
+            print(f"Syntax error in '{path_str}':\n{err}", file=sys.stderr)
             exit_code = 1
         except Exception as ex:
-            print(f"Erreur lors du traitement de '{path_str}' : {ex}", file=sys.stderr)
+            print(f"Error processing '{path_str}': {ex}", file=sys.stderr)
             exit_code = 1
     return exit_code
 
 
 def cmd_parse(args: argparse.Namespace) -> int:
-    """Analyse syntaxiquement les fichiers .bn."""
+    """Parse .bn files syntax."""
     exit_code = 0
     for path_str in args.files:
         p = Path(path_str)
         if not p.is_file():
-            print(f"Erreur : fichier introuvable '{path_str}'", file=sys.stderr)
+            print(f"Error: file not found '{path_str}'", file=sys.stderr)
             exit_code = 1
             continue
         try:
             content = p.read_text(encoding="utf-8")
             file_ast = parse(content, p.name)
             count = len(file_ast.graphs)
-            print(f"Syntaxe valide : {path_str} ({count} graphe{'s' if count > 1 else ''})")
+            print(f"Valid syntax: {path_str} ({count} graph{'s' if count > 1 else ''})")
         except BnError as err:
-            print(f"Erreur de syntaxe dans '{path_str}' :\n{err}", file=sys.stderr)
+            print(f"Syntax error in '{path_str}':\n{err}", file=sys.stderr)
             exit_code = 1
         except Exception as ex:
-            print(f"Erreur inattendue dans '{path_str}' : {ex}", file=sys.stderr)
+            print(f"Unexpected error in '{path_str}': {ex}", file=sys.stderr)
             exit_code = 1
     return exit_code
 
 
 def cmd_check(args: argparse.Namespace) -> int:
-    """Vérifie la syntaxe et la compatibilité du profil pour chaque fichier .bn."""
+    """Check syntax and profile compatibility for each .bn file."""
     exit_code = 0
     try:
         prof = load_profile(args.profile)
     except Exception as ex:
-        print(f"Erreur lors du chargement du profil '{args.profile}' : {ex}", file=sys.stderr)
+        print(f"Error loading profile '{args.profile}': {ex}", file=sys.stderr)
         return 1
 
     for path_str in args.files:
         p = Path(path_str)
         if not p.is_file():
-            print(f"Erreur : fichier introuvable '{path_str}'", file=sys.stderr)
+            print(f"Error: file not found '{path_str}'", file=sys.stderr)
             exit_code = 1
             continue
         try:
@@ -111,26 +111,26 @@ def cmd_check(args: argparse.Namespace) -> int:
             file_ast = parse(content, p.name)
             errors = check_profile(file_ast.graphs, profile=prof)
             if errors:
-                print(f"Erreurs de profil dans '{path_str}' (profil '{args.profile}') :", file=sys.stderr)
+                print(f"Profile errors in '{path_str}' (profile '{args.profile}'):", file=sys.stderr)
                 for e in errors:
                     print(f"  - {e}", file=sys.stderr)
                 exit_code = 1
             else:
-                print(f"OK (profil {args.profile}) : {path_str}")
+                print(f"OK (profile {args.profile}): {path_str}")
         except BnError as err:
-            print(f"Erreur de syntaxe dans '{path_str}' :\n{err}", file=sys.stderr)
+            print(f"Syntax error in '{path_str}':\n{err}", file=sys.stderr)
             exit_code = 1
         except Exception as ex:
-            print(f"Erreur inattendue dans '{path_str}' : {ex}", file=sys.stderr)
+            print(f"Unexpected error in '{path_str}': {ex}", file=sys.stderr)
             exit_code = 1
     return exit_code
 
 
 def cmd_ast(args: argparse.Namespace) -> int:
-    """Exporte l'AST d'un fichier .bn sous forme de document JSON."""
+    """Export the AST of a .bn file as JSON."""
     p = Path(args.file)
     if not p.is_file():
-        print(f"Erreur : fichier introuvable '{args.file}'", file=sys.stderr)
+        print(f"Error: file not found '{args.file}'", file=sys.stderr)
         return 1
     try:
         content = p.read_text(encoding="utf-8")
@@ -139,42 +139,42 @@ def cmd_ast(args: argparse.Namespace) -> int:
         print(json.dumps(data, indent=2, ensure_ascii=False))
         return 0
     except BnError as err:
-        print(f"Erreur de syntaxe dans '{args.file}' :\n{err}", file=sys.stderr)
+        print(f"Syntax error in '{args.file}':\n{err}", file=sys.stderr)
         return 1
     except Exception as ex:
-        print(f"Erreur inattendue dans '{args.file}' : {ex}", file=sys.stderr)
+        print(f"Unexpected error in '{args.file}': {ex}", file=sys.stderr)
         return 1
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="base-node",
-        description="Base Node (.bn) — Outil CLI pour la manipulation de graphes de nœuds",
+        description="Base Node (.bn) — CLI tool for node graph manipulation",
     )
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 
     # fmt
-    parser_fmt = subparsers.add_parser("fmt", help="Formate des fichiers .bn")
-    parser_fmt.add_argument("--check", action="store_true", help="Vérifie le formatage sans modifier les fichiers")
-    parser_fmt.add_argument("files", nargs="+", help="Fichiers .bn à formater")
+    parser_fmt = subparsers.add_parser("fmt", help="Format .bn files")
+    parser_fmt.add_argument("--check", action="store_true", help="Check formatting without modifying files")
+    parser_fmt.add_argument("files", nargs="+", help=".bn files to format")
     parser_fmt.set_defaults(func=cmd_fmt)
 
     # parse
-    parser_parse = subparsers.add_parser("parse", help="Vérifie la syntaxe de fichiers .bn")
-    parser_parse.add_argument("files", nargs="+", help="Fichiers .bn à analyser")
+    parser_parse = subparsers.add_parser("parse", help="Check syntax of .bn files")
+    parser_parse.add_argument("files", nargs="+", help=".bn files to parse")
     parser_parse.set_defaults(func=cmd_parse)
 
     # check
-    parser_check = subparsers.add_parser("check", help="Vérifie la syntaxe et un profil de compatibilité")
+    parser_check = subparsers.add_parser("check", help="Check syntax and profile compatibility")
     parser_check.add_argument(
-        "--profile", default="vector2d", help="Nom du profil de compatibilité (défaut : vector2d)"
+        "--profile", default="vector2d", help="Compatibility profile name (default: vector2d)"
     )
-    parser_check.add_argument("files", nargs="+", help="Fichiers .bn à vérifier")
+    parser_check.add_argument("files", nargs="+", help=".bn files to check")
     parser_check.set_defaults(func=cmd_check)
 
     # ast
-    parser_ast = subparsers.add_parser("ast", help="Exporte l'AST en JSON")
-    parser_ast.add_argument("file", help="Fichier .bn à exporter")
+    parser_ast = subparsers.add_parser("ast", help="Export AST as JSON")
+    parser_ast.add_argument("file", help=".bn file to export")
     parser_ast.set_defaults(func=cmd_ast)
 
     args = parser.parse_args(argv)

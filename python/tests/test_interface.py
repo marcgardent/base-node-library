@@ -33,7 +33,7 @@ def test_options_and_description_reach_the_graph(schema, fixture_text):
 
 def test_the_description_is_first_in_the_body():
     src = 'geometry graph g() -> Float {\n  x = 1.0\n  "Trop tard"\n  return x\n}\n'
-    with pytest.raises(BnError, match="première ligne"):
+    with pytest.raises(BnError, match="first line"):
         parse(src)
 
 
@@ -44,13 +44,13 @@ def test_a_titled_frame_is_not_a_description():
 
 def test_settings_with_a_syntax_of_their_own_are_not_options(schema):
     src = "geometry graph g(x: Float(default_value: 1.0, min_value: 0.0)) -> Float {\n  return x\n}\n"
-    assert errors(src, schema) == ["default_value s'écrit après = : x: Float = 1.0",
-                                   "min_value s'écrit avec in : x: Float in 0.0..1.0"]
+    assert errors(src, schema) == ["default_value is written after =: x: Float = 1.0",
+                                   "min_value is written with in: x: Float in 0.0..1.0"]
 
 
 def test_an_option_takes_a_plain_value(schema):
     src = "geometry graph g(x: Float(description: Position())) -> Float {\n  return x\n}\n"
-    assert errors(src, schema)[0].startswith("option « description » : un nombre")
+    assert errors(src, schema)[0].startswith("option 'description': expected number")
 
 
 def test_long_outputs_take_one_line_each():

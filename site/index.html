@@ -239,80 +239,79 @@
     <section id="examples">
       <div class="tabs" role="tablist" aria-label=".bn code examples">
         <button class="tab-btn" role="tab" aria-selected="true" data-tab="ex-sdf">sdf2d.bn</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-curves">courbes2d.bn</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-grid">motifs2d.bn</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-repeat">maths.bn (repeat)</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-curves">curves2d.bn</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-grid">patterns2d.bn</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-repeat">math.bn (repeat)</button>
         <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-panels">panels &amp; @</button>
       </div>
 
       <pre id="ex-sdf" class="tab-panel active"><code>// 2D rounded box signed distance field (profile: sdf2d)
-geometry graph "sdf boîte arrondie 2d"(
+geometry graph "sdf rounded box 2d"(
     p: Vector = Position(),
-    demi_taille: Vector = (0.5, 0.3, 0.0),
-    rayon: Float = 0.1 in 0.0..
+    "half size": Vector = (0.6, 0.4, 0.0),
+    radius: Float = 0.15 in 0.0..
 ) -> Float {
-  "Distance signée à une boîte 2D aux coins arrondis dans le plan XY"
-  q_x = abs(p.x) - demi_taille.x + rayon
-  q_y = abs(p.y) - demi_taille.y + rayon
-  ext = length(CombineXYZ(max(q_x, 0.0), max(q_y, 0.0)))
-  int = min(max(q_x, q_y), 0.0)
-  return ext + int - rayon
+  "XY-plane rectangle with rounded corners of given half-size (2D: z ignored)"
+  d = CombineXYZ(abs(p.x) - half_size.x + radius, abs(p.y) - half_size.y + radius)
+  return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - radius
 }</code></pre>
 
-      <pre id="ex-curves" class="tab-panel"><code>use maths (bosse)
+      <pre id="ex-curves" class="tab-panel"><code>use math (bump)
 
 // Parallel 2D offset along XY curve normal (profile: vector2d)
-geometry graph "contour parallèle 2d"(courbe: Geometry, décalage: Float = 0.1) -> Geometry {
-  "Décale chaque point le long de la normale 2D dans le plan XY"
+geometry graph "parallel contour 2d"(curve: Geometry, offset: Float = 0.1) -> Geometry {
+  "Offsets each point along the 2D normal in the XY plane"
   t = Tangent()
-  normale = CombineXYZ(-t.y, t.x)
-  return SetPosition(courbe, offset: normale * décalage)
+  normal = CombineXYZ(-t.y, t.x)
+  return SetPosition(curve, offset: normal * offset)
 }
 
 // Flat 2D ribbon with end tapering (profile: vector2d)
-geometry graph "ruban 2d"(
-    courbe: Geometry,
-    largeur: Float = 0.15 in 0.0..,
-    effilement: Float in 0.0..1.0
+geometry graph "ribbon 2d"(
+    curve: Geometry,
+    width: Float = 0.15 in 0.0..,
+    taper: Float in 0.0..1.0
 ) -> Geometry {
-  demi = largeur * 0.5
-  profil = CurvePrimitiveLine(CombineXYZ(-demi), CombineXYZ(demi))
-  rayon = Mix(effilement, 1.0, bosse(SplineParameter().factor, demi_largeur: 0.5))
-  c = SetCurveRadius(courbe, radius: rayon)
-  return CurveToMesh(c, profil, Radius())
+  "Generates a flat 2D ribbon along the curve with optional end tapering"
+  half = width * 0.5
+  profile = CurvePrimitiveLine(CombineXYZ(-half), CombineXYZ(half))
+  radius = Mix(taper, 1.0, bump(SplineParameter().factor, half_width: 0.5))
+  c = SetCurveRadius(curve, radius: radius)
+  return CurveToMesh(c, profile, Radius())
 }</code></pre>
 
       <pre id="ex-grid" class="tab-panel"><code>// Vogel golden-angle phyllotaxis spiral (profile: vector2d)
-geometry graph "spirale phyllotaxis 2d"(
-    nombre: Int = 200 in 1..100000,
-    rayon: Float = 1.0 in 0.001..
-) -> (Points: Geometry, Facteur: Float) {
+geometry graph "phyllotaxis spiral 2d"(
+    count: Int = 200 in 1..100000,
+    radius: Float = 1.0 in 0.001..
+) -> (Points: Geometry, Factor: Float) {
+  "Sunflower disk distribution using golden angle and radial factor"
   i = Index()
-  f = i / max(nombre, 1)
-  r = sqrt(f) * rayon
-  theta = i * 2.399963
-  pos = CombineXYZ(r * cos(theta), r * sin(theta))
-  pts = Points(nombre, position: pos)
-  return (Points: pts, Facteur: f)
+  f = sqrt(i / (count * 1.0))
+  a = i * 2.399963
+  r = f * radius
+  x = r * cos(a)
+  y = r * sin(a)
+  pts = Points(count, CombineXYZ(x, y))
+  return (Points: pts, Factor: f)
 }</code></pre>
 
       <pre id="ex-repeat" class="tab-panel"><code>// Fractal Brownian Motion using a repeat zone (profile: core)
 geometry graph fbm(
-    coordonnées: Vector = Position(),
-    octaves: Int = 4 in 1..16,
-    rugosité: Float = 0.5 in 0.0..1.0,
-    lacunarité: Float = 2.0 in 1.0..
+    p: Vector = Position(),
+    octaves: Int = 5 in 1..16,
+    lacunarity: Float = 2.0,
+    persistence: Float = 0.5 in 0.0..1.0
 ) -> Float {
-  boucle = repeat(octaves, somme: 0.0, amp: 1.0, norme: 0.0, p: coordonnées) {
-    n = TexNoise(vector: p, scale: 1.0).fac - 0.5
+  "Fractal noise: octave layers of increasing frequency and decreasing amplitude"
+  r = repeat(octaves, sum: 0.0, amplitude: 0.5, frequency: 1.0) {
+    noise = TexNoise(p * frequency + (1.7, 9.2, 3.1) * iteration, 1.0, 0.0).factor * 2.0 - 1.0
     return (
-      somme: somme + n * amp,
-      amp: amp * rugosité,
-      norme: norme + amp,
-      p: p * lacunarité
-    )
+      sum: sum + noise * amplitude,
+      amplitude: amplitude * persistence,
+      frequency: frequency * lacunarity)
   }
-  return boucle.somme / max(boucle.norme, 0.0001) + 0.5
+  return r.sum
 }</code></pre>
 
       <pre id="ex-panels" class="tab-panel"><code>// Interface panels, item keys (as), frames, and node presentation (@)
@@ -352,7 +351,7 @@ geometry graph scatter(
           <td><code>core</code></td>
           <td>—</td>
           <td><code>Float</code>, <code>Int</code>, <code>Bool</code>, <code>Vector</code>, <code>Color</code>, <code>Rotation</code>, <code>Matrix</code>, math/logic/noise nodes, <code>repeat</code></td>
-          <td>All runtimes, <code>stdlib/maths.bn</code></td>
+          <td>All runtimes, <code>stdlib/math.bn</code></td>
         </tr>
         <tr>
           <td><code>sdf2d</code></td>
@@ -364,7 +363,7 @@ geometry graph scatter(
           <td><code>vector2d</code></td>
           <td><code>sdf2d</code></td>
           <td><code>Geometry</code>, <code>Material</code>, 2D curves/meshes/points/instances/attributes, <code>foreach</code></td>
-          <td>2D vector engines, Blender, <code>courbes2d.bn</code>, <code>motifs2d.bn</code></td>
+          <td>2D vector engines, Blender, <code>curves2d.bn</code>, <code>patterns2d.bn</code></td>
         </tr>
         <tr>
           <td><code>raster2d</code></td>
@@ -430,7 +429,7 @@ let err = check_profile(&amp;f, ProfileKind::Vector2d);</code></pre>
       </thead>
       <tbody>
         <tr>
-          <td><a href="https://github.com/marcgardent/base-node-library/blob/main/stdlib/maths.bn"><code>maths.bn</code></a></td>
+          <td><a href="https://github.com/marcgardent/base-node-library/blob/main/stdlib/math.bn"><code>math.bn</code></a></td>
           <td><code>core</code></td>
           <td>47</td>
           <td>Inigo Quilez curves, easing, bounce, elastic, fbm, Fibonacci, R2 low-discrepancy sequence, analytic SDFs</td>
@@ -442,19 +441,19 @@ let err = check_profile(&amp;f, ProfileKind::Vector2d);</code></pre>
           <td>2D segment, rounded box, rhombus, equilateral triangle, hexagon, regular polygon, star, arc, sector, cross, chamfer booleans, polar/grid repetition, isolines</td>
         </tr>
         <tr>
-          <td><a href="https://github.com/marcgardent/base-node-library/blob/main/stdlib/courbes2d.bn"><code>courbes2d.bn</code></a></td>
+          <td><a href="https://github.com/marcgardent/base-node-library/blob/main/stdlib/curves2d.bn"><code>curves2d.bn</code></a></td>
           <td><code>vector2d</code></td>
           <td>7</td>
           <td>2D curve morphing, parallel offset contour, fractal contour noise, sine wave contour, tapered ribbon, 2D arrow, 2D ring</td>
         </tr>
         <tr>
-          <td><a href="https://github.com/marcgardent/base-node-library/blob/main/stdlib/motifs2d.bn"><code>motifs2d.bn</code></a></td>
+          <td><a href="https://github.com/marcgardent/base-node-library/blob/main/stdlib/patterns2d.bn"><code>patterns2d.bn</code></a></td>
           <td><code>vector2d</code></td>
           <td>5</td>
           <td>Hexagonal honeycomb grid, equilateral triangular grid, Vogel phyllotaxis spiral, R2 stratified jitter points, 2D hatching</td>
         </tr>
         <tr>
-          <td><a href="https://github.com/marcgardent/base-node-library/blob/main/stdlib/gp_outils2d.bn"><code>gp_outils2d.bn</code></a></td>
+          <td><a href="https://github.com/marcgardent/base-node-library/blob/main/stdlib/gp_tools2d.bn"><code>gp_tools2d.bn</code></a></td>
           <td><code>vector2d</code></td>
           <td>4</td>
           <td>Living ink stroke, 2D drop shadow, double stroke, stroke tip tapering</td>

@@ -6,9 +6,9 @@ import bpy
 ROOT = __package__.rpartition(".")[0]
 
 KEYS = (
-    ("ALT", "Alt+Espace", "Libre dans Blender ; KDE l'utilise parfois pour KRunner"),
-    ("SHIFT", "Maj+Espace", "Toujours libre, moins pratique"),
-    ("CTRL", "Ctrl+Espace", "Pris par Blender pour agrandir la zone : ne le remplace que sur les textes .bn"),
+    ("ALT", "Alt+Space", "Free in Blender; KDE sometimes uses it for KRunner"),
+    ("SHIFT", "Shift+Space", "Always free, less convenient"),
+    ("CTRL", "Ctrl+Space", "Used by Blender to toggle area: only replaces it in .bn text editors"),
 )
 
 # When the add-on runs from the sources (tests), it has no preferences entry
@@ -30,20 +30,20 @@ class BnodesPreferences(bpy.types.AddonPreferences):
 
     complete_key: bpy.props.EnumProperty(
         name="Suggestions", items=KEYS, default="ALT", update=update_keys,
-        description="Raccourci qui ouvre les suggestions dans un texte .bn")
+        description="Shortcut that opens suggestions in a .bn text editor")
     auto_complete: bpy.props.BoolProperty(
-        name="Ouvrir après ( . :", default=True,
-        description="Les suggestions s'ouvrent seules après une parenthèse, un point ou deux-points")
+        name="Open after ( . :", default=True,
+        description="Suggestions open automatically after a parenthesis, period, or colon")
     highlight: bpy.props.BoolProperty(
-        name="Surlignage", default=True,
-        description="Surligne mots-clés, nœuds, types et valeurs dans les textes .bn")
+        name="Highlight", default=True,
+        description="Highlight keywords, nodes, types, and values in .bn text files")
 
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "complete_key")
         layout.prop(self, "auto_complete")
         layout.prop(self, "highlight")
-        layout.label(text="Ctrl+Entrée construit l'arbre depuis le texte.", icon="INFO")
+        layout.label(text="Ctrl+Enter builds the tree from text.", icon="INFO")
 
 
 classes = (BnodesPreferences,)

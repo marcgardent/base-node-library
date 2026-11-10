@@ -47,11 +47,11 @@ def test_panels_nest_and_hold_their_settings(schema, fixture_text):
         ("OUTPUT", "Angle"): "p2",
     }
     assert semis.settings == {"show_modifier_manage_panel": False}
-    # Defaults and options go by key: the two « échelle » keep their own
+    # Defaults and options go by key: the two 'échelle' keep their own
     assert semis.defaults["échelle"] == {"value": 1.0}
     assert semis.defaults["aléa_échelle"] == {"value": 0.2, "min": 0.0, "max": 1.0}
     assert semis.options[("INPUT", "Aléa")] == {"is_panel_toggle": True}
-    # The caller names the second « échelle » by its key; links to the group input too
+    # The caller names the second 'échelle' by its key; links to the group input too
     call = next(n for n in appel.nodes if n.group == "semis")
     assert call.values == {"densité": 5.0, "échelle": 2.0, "aléa_échelle": 0.5, "rotation_graine": 3}
     product = next(n for n in semis.nodes if n.bl_idname == "ShaderNodeMath")
@@ -88,31 +88,31 @@ def test_a_panel_in_both_lists_is_one_panel(schema):
     assert [(p.name, p.options) for p in g.panels] == [("P", {"default_closed": True})]
     assert g.panel_of == {("INPUT", "t"): "p0", ("OUTPUT", "n"): "p0"}
     twice = src.replace('(geometry: Geometry, "P" {', '(geometry: Geometry, "P"(description: "x") {')
-    assert errors(twice, schema) == ["réglages du panneau « P » donnés deux fois : une seule fois, dans la première "
-                                     "liste où il paraît"]
+    assert errors(twice, schema) == ["panel 'P' settings given twice: define them once, in the first "
+                                     "list where it appears"]
 
 
 def test_sockets_come_before_the_panels_of_their_level(schema):
     assert errors(graph('geometry: Geometry, "P" { t: Float }, u: Float'), schema) == [
-        "« u » vient après le panneau « P » : Blender range les sockets d'un niveau avant ses panneaux"]
+        "'u' comes after panel 'P': Blender places sockets before panels"]
     assert errors(graph('geometry: Geometry, "P" {}, "P" {}'), schema) == [
-        "panneau « P » écrit deux fois dans la même liste"]
+        "panel 'P' written twice in the same list"]
 
 
 def test_a_toggle_is_the_first_bool_of_its_panel_and_takes_its_name(schema):
     ok = graph('geometry: Geometry, "Fin" { Fin: Bool(is_panel_toggle: true), t: Float }')
     assert compile_source(ok, schema)[0].options[("INPUT", "Fin")] == {"is_panel_toggle": True}
     assert errors(graph('geometry: Geometry, "Fin" { t: Float, Fin: Bool(is_panel_toggle: true) }'), schema) == [
-        "is_panel_toggle : l'interrupteur vient en premier dans le panneau « Fin »"]
+        "is_panel_toggle: toggle switch must be first in panel 'Fin'"]
     assert errors(graph('geometry: Geometry, "Fin" { on: Bool(is_panel_toggle: true) }'), schema) == [
-        "is_panel_toggle : l'interrupteur porte le nom de son panneau, « Fin » (Blender le renomme ainsi)"]
+        "is_panel_toggle: toggle switch must match panel name 'Fin'"]
     assert errors(graph("geometry: Geometry, on: Bool(is_panel_toggle: true)"), schema) == [
-        "is_panel_toggle : une entrée Bool, la première d'un panneau"]
+        "is_panel_toggle: must be a Bool input, the first in a panel"]
 
 
 def test_two_sockets_of_one_name_need_a_key_of_their_own(schema):
     assert errors(graph('geometry: Geometry, "A" { t: Float }, "B" { t: Float }'), schema) == [
-        "paramètre « t » défini deux fois ; pour garder les deux, nommer l'autre avec as : \"t\" as t_2: Float"]
+        'parameter \'t\' defined twice; to keep both, alias the other with as: "t" as t_2: Float']
     src = graph('geometry: Geometry, "A" { t: Float }, "B" { t as b_t: Int }',
                 body="  return SetPosition(geometry, offset: CombineXYZ(t, b_t))\n")
     (g,) = compile_source(src, schema)
@@ -135,7 +135,7 @@ def test_a_caller_tells_them_apart_by_key_or_position(schema):
     shared = named.replace('"A" { t: Float }, "B" { t as b_t: Float }',
                            '"A" { "Fur Density": Float }, "B" { "Fur Density" as b_fur: Float }')
     assert errors(shared.replace("b_t: 2.0", '"Fur Density": 2.0'), schema) == [
-        "« Fur Density » est ambigu ; utilisez l'identifiant : fur_density, b_fur"]
+        "'Fur Density' is ambiguous; use identifier: fur_density, b_fur"]
 
 
 def test_a_group_of_the_file_gives_its_keys(schema):
@@ -163,7 +163,7 @@ def test_tree_settings_go_on_the_tree_kind(schema):
     (g,) = compile_source(src, schema)
     assert g.settings == {"is_tool": True, "is_mode_edit": True}
     assert errors(src.replace("is_mode_edit: true", "is_mode_edit: Position()"), schema) == [
-        "réglage « is_mode_edit » : un nombre, true/false, un texte ou une valeur comme FACTOR"]
+        "setting 'is_mode_edit': expected number, true/false, string, or enum value like FACTOR"]
 
 
 def test_completion_reads_headers_with_panels_settings_and_keys(schema):
@@ -182,7 +182,7 @@ def test_completion_reads_headers_with_panels_settings_and_keys(schema):
 
 def test_panels_and_keys_belong_to_a_graph_header():
     head = "geometry graph g(geometry: Geometry) -> Geometry {\n"
-    with pytest.raises(BnError, match="un panneau ne s'écrit que dans l'en-tête d'un graph"):
+    with pytest.raises(BnError, match="panels can only be defined in a graph header"):
         parse(head + '  f = closure("P" { x: Float }) -> Float {\n    return x\n  }\n  return geometry\n}\n')
-    with pytest.raises(BnError, match="« as » ne s'écrit que dans l'en-tête d'un graph"):
+    with pytest.raises(BnError, match="'as' can only be used in a graph header"):
         parse(head + "  f = closure(x as y: Float) -> Float {\n    return y\n  }\n  return geometry\n}\n")

@@ -85,25 +85,25 @@ def test_the_zone_alone_is_the_geometry_it_went_through(schema):
 
 @pytest.mark.parametrize("body, message", [
     ("  s = simulate(v: 0.0) {\n    x = v\n  }\n  return geometry",
-     "t.bn:2:7  return manquant dans le simulate de « s »"),
+     "t.bn:2:7  missing return in simulate of 's'"),
     ("  s = simulate(delta_time: 0.0) {\n    return ()\n  }\n  return geometry",
-     "t.bn:2:16  « delta_time » est le temps écoulé depuis le pas précédent : choisir un autre nom d'état"),
+     "t.bn:2:16  'delta_time' is the elapsed time since previous step: choose another state name"),
     ("  s = simulate(v: 0.0, u: 1.0) {\n    return v\n  }\n  return geometry",
-     "t.bn:3:5  ce simulate a plusieurs états : return (v: …, u: …)"),
+     "t.bn:3:5  this simulate has multiple states: return (v: …, u: …)"),
     ("  s = simulate(v: 0.0) {\n    return (w: v)\n  }\n  return geometry",
-     "t.bn:3:13  « w » n'est pas un état du simulate ; états : v"),
+     "t.bn:3:13  'w' is not a simulate state; states: v"),
     ("  s = simulate(m: Shader) {\n    return ()\n  }\n  return geometry",
-     "t.bn:2:16  un état de simulate ne peut pas être de type Shader"),
+     "t.bn:2:16  a simulate state cannot have type Shader"),
     ("  e = foreach(geometry, domain: FACES) {\n    return ()\n  }\n  return e",
-     "t.bn:2:25  domain attend une valeur parmi POINT, EDGE, FACE, CORNER, CURVE, INSTANCE, LAYER"),
+     "t.bn:2:25  domain expects one of POINT, EDGE, FACE, CORNER, CURVE, INSTANCE, LAYER"),
     ("  e = foreach(geometry, index: 1.0) {\n    return ()\n  }\n  return e",
-     "t.bn:2:25  « index » est le numéro de l'élément : choisir un autre nom d'item"),
+     "t.bn:2:25  'index' is the element's index: choose another item name"),
     ("  e = foreach(geometry) {\n    return element\n  }\n  return e",
-     "t.bn:3:5  un foreach rend ses items par nom : return (valeur: v, mesh: g, …)"),
+     "t.bn:3:5  foreach returns items by name: return (item: v, mesh: g, …)"),
     ("  e = foreach(geometry) {\n    return (nom: \"a\")\n  }\n  return e",
-     "t.bn:3:13  un item de foreach ne peut pas être de type String"),
+     "t.bn:3:13  a foreach item cannot have type String"),
     ("  e = foreach(geometry) {\n    d = index\n    return ()\n  }\n  return d",
-     "t.bn:6:10  nom inconnu « d »"),
+     "t.bn:6:10  unknown name 'd'"),
 ])
 def test_wrong_zones_are_reported(schema, body, message):
     assert errors(graph(body), schema) == [message]
@@ -111,10 +111,10 @@ def test_wrong_zones_are_reported(schema, body, message):
 
 @pytest.mark.parametrize("body, message", [
     ("  s = simulate(geometry) {\n    return ()\n  }\n  return s",
-     "t.bn:2:7  simulate attend des états nommés : simulate(état: départ, …)"),
+     "t.bn:2:7  simulate expects named states: simulate(state: start, …)"),
     ("  e = foreach(domain: FACE) {\n    return ()\n  }\n  return e",
-     "t.bn:2:7  foreach attend d'abord la géométrie, puis des valeurs nommées : "
-     "foreach(geometry, domain: FACE, valeur: champ, …)"),
+     "t.bn:2:7  foreach expects geometry first, then named items: "
+     "foreach(geometry, domain: FACE, item: field, …)"),
 ])
 def test_wrong_zone_syntax_is_reported(body, message):
     with pytest.raises(BnError) as err:

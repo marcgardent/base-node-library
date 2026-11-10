@@ -47,7 +47,7 @@ class Empty:
 
 @dataclass
 class Typed:
-    """An item's value given its type: `hauteur: Float = 1`."""
+    """An item's value given its type: `height: Float = 1`."""
     value: object
     type: str
 
@@ -101,9 +101,9 @@ class Modules:
         # Graphs are called by their key: "Smooth by Angle" is called as smooth_by_angle(...)
         for g in file.graphs:
             if key(g.name) in by_name:
-                diags.append(Diagnostic(filename, g.line, g.col, f"graph « {key(g.name)} » défini deux fois"))
+                diags.append(Diagnostic(filename, g.line, g.col, f"graph '{key(g.name)}' defined twice"))
             elif key(g.name) in imported:
-                diags.append(Diagnostic(filename, g.line, g.col, f"« {key(g.name)} » est défini ici et importé de "
+                diags.append(Diagnostic(filename, g.line, g.col, f"'{key(g.name)}' is defined here and imported from "
                                                                  f"{imported[key(g.name)][1].name}"))
             by_name[key(g.name)] = g
         callable_ = {k: g for k, (g, _u) in imported.items()} | by_name
@@ -126,7 +126,7 @@ class Modules:
             def error(message):
                 diags.append(Diagnostic(filename, u.line, u.col, message))
             if u.name in names:
-                error(f"module « {u.name} » importé deux fois : un seul use par module")
+                error(f"module '{u.name}' imported twice: only one use per module")
                 continue
             names.add(u.name)
             unit = self.unit(u, stack, error)
@@ -136,10 +136,10 @@ class Modules:
             wanted = u.names if u.names is not None else list(unit.graphs)
             for k in wanted:
                 if k not in unit.graphs:
-                    error(f"« {k} » n'est pas dans le module {u.name} ; graphs : {short_list(sorted(unit.graphs))}")
+                    error(f"'{k}' is not in module {u.name}; graphs: {short_list(sorted(unit.graphs))}")
                 elif k in imported and imported[k][1].name != u.name:
-                    error(f"« {k} » est dans {imported[k][1].name} et dans {u.name} : "
-                          f"choisir avec use {u.name} (…)")
+                    error(f"'{k}' is in {imported[k][1].name} and in {u.name}: "
+                          f"disambiguate with use {u.name} (…)")
                 else:
                     imported[k] = (unit.graphs[k], u)
         return imported
@@ -147,23 +147,23 @@ class Modules:
     def unit(self, u, stack, error):
         ident = (u.name, u.source)
         if ident in stack:
-            error("import circulaire : " + " → ".join(n for n, _s in stack + (ident,)))
+            error("circular import: " + " -> ".join(n for n, _s in stack + (ident,)))
             return None
         if ident in self.done:
             return self.done[ident]
         if self.load is None:
-            error("use : aucun module à charger ici")
+            error("use: no module loader configured")
             return None
         try:
             text, filename = self.load(u.name, u.source)
         except LookupError as e:
-            error(f"module « {u.name} » : {e.args[0] if e.args else e}")
+            error(f"module '{u.name}': {e.args[0] if e.args else e}")
             return None
         try:
             unit = self.check(parse(text, filename), filename, ident, stack + (ident,))
         except BnError as e:
             first, n = e.diagnostics[0], len(e.diagnostics)
-            error(f"module « {u.name} » : {first}" + (f" (+{n - 1} erreur(s))" if n > 1 else ""))
+            error(f"module '{u.name}': {first}" + (f" (+{n - 1} error(s))" if n > 1 else ""))
             return None
         self.done[ident] = unit
         return unit
@@ -208,7 +208,7 @@ def check_graphs(graphs, by_name, callable_, schema, filename, diags, unsure=Fal
             return
         if state.get(name) == "open":
             g = by_name[via]
-            diags.append(Diagnostic(filename, g.line, g.col, f"appel récursif : « {via} » rappelle « {name} »"))
+            diags.append(Diagnostic(filename, g.line, g.col, f"recursive call: '{via}' calls '{name}'"))
             return
         state[name] = "open"
         for callee in calls.get(name, ()):
@@ -247,16 +247,16 @@ class GraphChecker:
     def run(self):
         g = self.g
         if g.kind == "pixel":
-            self.error(g, "pixel n'est pas un type d'arbre Blender ; attendus : geometry, shader, compositor")
+            self.error(g, "pixel is not a Blender tree kind; expected: geometry, shader, compositor")
             return None
         if g.kind not in TREE_KINDS:
-            self.error(g, f"type d'arbre « {g.kind} » inconnu ; types : {', '.join(TREE_KINDS)}")
+            self.error(g, f"unknown tree kind '{g.kind}'; expected: {', '.join(TREE_KINDS)}")
             return None
 
         ok = True
         for p in g.params + g.outputs:
             if p.type not in TYPES:
-                self.error(p, f"type « {p.type} » inconnu ; types : {', '.join(TYPES)}")
+                self.error(p, f"unknown type '{p.type}'; expected: {', '.join(TYPES)}")
                 ok = False
         if not ok:
             return None
@@ -267,18 +267,18 @@ class GraphChecker:
         self.nodes += [gin, gout]
         for p in g.params:
             if p.key in self.env:
-                self.error(p, f"paramètre « {p.key} » défini deux fois" + twice_hint(p))
+                self.error(p, f"parameter '{p.key}' defined twice" + twice_hint(p))
             sock = Socket(p.name, p.key, p.type)
             self.env[p.key] = Out(ir.GROUP_INPUT, [sock], sock, p.key)
         keys = set()
         for o in g.outputs:
             if o.key in keys:
-                self.error(o, f"sortie « {o.key} » définie deux fois" + twice_hint(o))
+                self.error(o, f"output '{o.key}' defined twice" + twice_hint(o))
             keys.add(o.key)
 
         self.statements(g.body, gout, None)
         if not self.returned:
-            self.error(g, f"return manquant dans « {g.name} »")
+            self.error(g, f"missing return in '{g.name}'")
 
         graph = ir.Graph(g.kind, g.name, [(p.name, p.type) for p in g.params],
                          [(o.name, o.type) for o in g.outputs], self.nodes, g.line, g.col, self.frames, defaults)
@@ -287,7 +287,7 @@ class GraphChecker:
         graph.input_keys = [p.key for p in g.params]
         graph.output_keys = [o.key for o in g.outputs]
         graph.panels, graph.panel_of = self.panels()
-        graph.settings = self.literal_options(g.settings, "réglage")
+        graph.settings = self.literal_options(g.settings, "setting")
         return graph
 
     def panels(self):
@@ -301,15 +301,15 @@ class GraphChecker:
             for n, item in enumerate(items):
                 if isinstance(item, ast.Param):
                     if seen_panel is not None:
-                        self.error(item, f"« {item.name} » vient après le panneau « {seen_panel.name} » : "
-                                         "Blender range les sockets d'un niveau avant ses panneaux")
+                        self.error(item, f"'{item.name}' comes after panel '{seen_panel.name}': "
+                                         "Blender places sockets before panels")
                     if parent is not None:
                         panel_of[(side, item.key)] = parent.id
                     self.toggle(item, side, parent, n)
                     continue
                 seen_panel = item
                 if item.name in names:
-                    self.error(item, f"panneau « {item.name} » écrit deux fois dans la même liste")
+                    self.error(item, f"panel '{item.name}' written twice in the same list")
                     continue
                 names.add(item.name)
                 here = path + (item.name,)
@@ -320,10 +320,10 @@ class GraphChecker:
                 panel, given = found[here]
                 if item.options:
                     if given:
-                        self.error(item, f"réglages du panneau « {item.name} » donnés deux fois : "
-                                         "une seule fois, dans la première liste où il paraît")
+                        self.error(item, f"panel '{item.name}' settings given twice: "
+                                         "define them once, in the first list where it appears")
                     else:
-                        panel.options = self.literal_options(item.options, "réglage")
+                        panel.options = self.literal_options(item.options, "setting")
                         found[here] = (panel, True)
                 walk(item.items, side, here, panel)
 
@@ -333,24 +333,23 @@ class GraphChecker:
         return [p for p, _given in found.values()], panel_of
 
     def toggle(self, p, side, panel, position):
-        """`"Réglages": Bool(is_panel_toggle: true)` turns its panel on and off, as Blender has it."""
+        """`"Settings": Bool(is_panel_toggle: true)` turns its panel on and off, as Blender has it."""
         flag = next((a for a in p.options if a.name == "is_panel_toggle"), None)
         if flag is None or not (isinstance(flag.value, ast.Bool) and flag.value.value):
             return
         if side != "INPUT" or panel is None or p.type != "Bool":
-            self.error(flag, "is_panel_toggle : une entrée Bool, la première d'un panneau")
+            self.error(flag, "is_panel_toggle: must be a Bool input, the first in a panel")
         elif position != 0:
-            self.error(flag, f"is_panel_toggle : l'interrupteur vient en premier dans le panneau « {panel.name} »")
+            self.error(flag, f"is_panel_toggle: toggle switch must be first in panel '{panel.name}'")
         elif p.name != panel.name:
-            self.error(flag, f"is_panel_toggle : l'interrupteur porte le nom de son panneau, "
-                             f"« {panel.name} » (Blender le renomme ainsi)")
+            self.error(flag, f"is_panel_toggle: toggle switch must match panel name '{panel.name}'")
 
     def literal_options(self, items, what):
         """{name: value} of `(name: value, …)` settings, each a plain value: Blender checks the names."""
         found = {}
         for a in items:
             if a.name in found:
-                self.error(a, f"{what} « {a.name} » donné deux fois")
+                self.error(a, f"{what} '{a.name}' given twice")
                 continue
             v = a.value
             if isinstance(v, ast.Ref):
@@ -358,7 +357,7 @@ class GraphChecker:
             elif isinstance(v, (ast.Number, ast.String, ast.Bool, ast.Neg)) and isinstance(self.eval(v), Lit):
                 found[a.name] = self.eval(v).value
             else:
-                self.error(a, f"{what} « {a.name} » : un nombre, true/false, un texte ou une valeur comme FACTOR")
+                self.error(a, f"{what} '{a.name}': expected number, true/false, string, or enum value like FACTOR")
         return found
 
     # Interface
@@ -367,7 +366,7 @@ class GraphChecker:
         """{input key: {"value", "min", "max", "implicit"}} from `name: Type = default in lo..hi`."""
         for o in self.g.outputs:
             if o.default is not None or o.range is not None:
-                self.error(o, f"la sortie « {o.name} » n'a ni valeur par défaut ni bornes")
+                self.error(o, f"output '{o.name}' has no default value or range")
         out = {}
         for p in self.g.params:
             spec = {}
@@ -375,9 +374,9 @@ class GraphChecker:
             if isinstance(d, ast.Call) and d.name in IMPLICIT:
                 mode, wanted = IMPLICIT[d.name]
                 if d.args:
-                    self.error(d, f"{d.name}() en valeur par défaut ne prend pas d'argument")
+                    self.error(d, f"{d.name}() default value does not take arguments")
                 elif p.type != wanted:
-                    self.error(d, f"{d.name}() ne sert de valeur par défaut qu'à une entrée {wanted}")
+                    self.error(d, f"{d.name}() default value only applies to a {wanted} input")
                 else:
                     spec["implicit"] = mode
             elif d is not None:
@@ -402,10 +401,10 @@ class GraphChecker:
                 found = {}
                 for a in p.options:
                     if a.name in WRITTEN_ELSEWHERE:
-                        self.error(a, f"{a.name} s'écrit {WRITTEN_ELSEWHERE[a.name]}")
+                        self.error(a, f"{a.name} is written {WRITTEN_ELSEWHERE[a.name]}")
                         continue
                     if a.name in found:
-                        self.error(a, f"option « {a.name} » donnée deux fois")
+                        self.error(a, f"option '{a.name}' given twice")
                         continue
                     value = self.option_value(a)
                     if value is not None:
@@ -421,20 +420,20 @@ class GraphChecker:
             return v.name
         if isinstance(v, (ast.Number, ast.String, ast.Bool, ast.Neg)) and isinstance(self.eval(v), Lit):
             return self.eval(v).value
-        self.error(a, f"option « {a.name} » : un nombre, true/false, un texte ou une valeur comme FACTOR")
+        self.error(a, f"option '{a.name}': expected number, true/false, string, or enum value like FACTOR")
         return None
 
     def item_options(self, c, a):
-        """{option: value} from `nom(option: valeur): …`, by the item's Blender property names.
+        """{option: value} from `name(option: value): …`, by the item's Blender property names.
 
         The names are checked by the builder, against the item; here only the values are."""
         found = {}
         for o in a.options:
             if o.name in ("name", "socket_type", "data_type", "type"):
-                self.error(o, f"{c.name} : le nom et le type d'un item s'écrivent « nom: valeur »")
+                self.error(o, f"{c.name}: item name and type must be written 'name: value'")
                 continue
             if o.name in found:
-                self.error(o, f"option « {o.name} » donnée deux fois")
+                self.error(o, f"option '{o.name}' given twice")
                 continue
             value = self.option_value(o)
             if value is not None:
@@ -444,13 +443,13 @@ class GraphChecker:
     def default_value(self, p, d):
         t = p.type
         if t in NO_DEFAULT:
-            self.error(d, f"une entrée {t} n'a pas de valeur par défaut")
+            self.error(d, f"a {t} input does not take a default value")
             return None
         if t == "Menu" and isinstance(d, (ast.Ref, ast.String)):
             return d.name if isinstance(d, ast.Ref) else d.value
         if not isinstance(d, (ast.Number, ast.String, ast.Bool, ast.Tuple, ast.Neg)):
-            self.error(d, f"valeur par défaut de « {p.name} » : un nombre, un tuple, true/false, un texte"
-                          f" ou {', '.join(n + '()' for n in IMPLICIT)}")
+            self.error(d, f"default value for '{p.name}': expected number, tuple, true/false, string"
+                          f" or {', '.join(n + '()' for n in IMPLICIT)}")
             return None
         v = self.eval(d)
         if v is None:
@@ -466,13 +465,13 @@ class GraphChecker:
             return v.value
         if (t == "String" or t in DATABLOCKS) and v.type == "String":
             return v.value
-        self.error(d, f"valeur par défaut de type {v.type} pour une entrée {t}")
+        self.error(d, f"default value of type {v.type} for a {t} input")
         return None
 
     def bounds(self, p):
         at = p.range[0] or p.range[1]
         if p.type not in RANGED:
-            self.error(at, f"une entrée {p.type} n'a pas de bornes ; bornes pour : {', '.join(sorted(RANGED))}")
+            self.error(at, f"a {p.type} input does not take bounds; bounds apply to: {', '.join(sorted(RANGED))}")
             return None
         values = []
         for b in p.range:
@@ -481,11 +480,11 @@ class GraphChecker:
                 continue
             v = self.eval(b) if isinstance(b, (ast.Number, ast.Neg)) else None
             if not (isinstance(v, Lit) and v.type in ("Int", "Float")) or p.type == "Int" and v.type != "Int":
-                self.error(b, f"borne de « {p.name} » : un nombre{' entier' if p.type == 'Int' else ''}")
+                self.error(b, f"bound for '{p.name}': expected a{'n integer' if p.type == 'Int' else ''} number")
                 return None
             values.append(v.value if p.type == "Int" else float(v.value))
         if None not in values and values[0] > values[1]:
-            self.error(at, f"bornes de « {p.name} » : le min dépasse le max")
+            self.error(at, f"bounds for '{p.name}': min exceeds max")
             return None
         return tuple(values)
 
@@ -495,7 +494,7 @@ class GraphChecker:
         """Check a block; the nodes each statement makes go into `frame`."""
         for stmt in body:
             if self.returned and not (isinstance(stmt, ast.Frame) and not stmt.body):
-                self.error(stmt, "instruction après return")
+                self.error(stmt, "statement after return")
                 return
             created = len(self.nodes)
             self.frame_now = frame
@@ -524,13 +523,13 @@ class GraphChecker:
         if f.color is not None:
             color = colors.rgb(f.color[1:])
             if color is None:
-                self.error(f, f"couleur « {f.color} » inconnue : #rrggbb, #rgb ou un nom CSS (#orange, #teal…)")
+                self.error(f, f"unknown color '{f.color}': expected #rrggbb, #rgb or CSS name (#orange, #teal…)")
         if f.continued:
             # The statements go on in the last frame of that title opened in the same block
             known = self.last_frame.get((parent, f.label))
             if known is None:
-                title = f"« {f.label} »" if f.label is not None else "sans titre"
-                self.error(f, f"pas de frame {title} plus haut dans ce bloc à continuer")
+                title = f"'{f.label}'" if f.label is not None else "untitled"
+                self.error(f, f"no earlier {title} frame in this block to continue")
                 return
             self.statements(f.body, gout, known)
             return
@@ -543,7 +542,7 @@ class GraphChecker:
 
     def assign_stmt(self, stmt):
         if stmt.name in self.env:
-            self.error(stmt, f"« {stmt.name} » est déjà défini")
+            self.error(stmt, f"'{stmt.name}' is already defined")
             return
         created = len(self.nodes)
         if isinstance(stmt.value, ast.Repeat):
@@ -567,7 +566,7 @@ class GraphChecker:
                 node.name = stmt.name
             self.look(node, stmt.look)
         elif stmt.look is not None:
-            self.error(stmt.look, f"@ : « {stmt.name} » ne fait pas de nœud à lui")
+            self.error(stmt.look, f"@: '{stmt.name}' does not produce its own node")
         self.env[stmt.name] = value
 
     def look(self, node, look):
@@ -579,7 +578,7 @@ class GraphChecker:
         if look.color is not None:
             color = colors.rgb(look.color[1:])
             if color is None:
-                self.error(look, f"couleur « {look.color} » inconnue : #rrggbb, #rgb ou un nom CSS (#orange, #teal…)")
+                self.error(look, f"unknown color '{look.color}': expected #rrggbb, #rgb or CSS name (#orange, #teal…)")
             else:
                 node.look["use_custom_color"] = True
                 node.look["color"] = color
@@ -594,13 +593,13 @@ class GraphChecker:
             for f in self.untyped(stmt.value.fields):
                 sock = find_socket(outs, f.name)
                 if isinstance(sock, list):
-                    self.error(f, f"« {f.name} » est ambigu ; sorties : {', '.join(s.identifier for s in sock)}")
+                    self.error(f, f"'{f.name}' is ambiguous; outputs: {', '.join(s.identifier for s in sock)}")
                     continue
                 if sock is None:
-                    self.error(f, f"« {f.name} » n'est pas une sortie ; sorties : {', '.join(s.name for s in outs)}")
+                    self.error(f, f"'{f.name}' is not an output; outputs: {', '.join(s.name for s in outs)}")
                     continue
                 if sock.identifier in given:
-                    self.error(f, f"sortie « {f.name} » donnée deux fois")
+                    self.error(f, f"output '{f.name}' given twice")
                     continue
                 given[sock.identifier] = f
                 value = self.eval(f.value)
@@ -608,7 +607,7 @@ class GraphChecker:
                     self.connect(gout, sock, value, f, "return")
             return
         if not self.g.single_output:
-            self.error(stmt, f"ce graph a plusieurs sorties : return ({', '.join(s.name + ': …' for s in outs)})")
+            self.error(stmt, f"graph has multiple outputs: return ({', '.join(s.name + ': …' for s in outs)})")
             return
         value = self.eval(stmt.value)
         if value is not None:
@@ -633,7 +632,7 @@ class GraphChecker:
         for a in e.states:
             v = self.zone_value(a)
             if key(a.name) in {key(n) for n, _t in items}:
-                self.error(a, f"état « {a.name} » déclaré deux fois")
+                self.error(a, f"state '{a.name}' declared twice")
                 continue
             if key(a.name) in STATE_NAMES[word]:
                 self.error(a, STATE_NAMES[word][key(a.name)])
@@ -641,11 +640,11 @@ class GraphChecker:
             if v is None:
                 continue
             if isinstance(v, Sym):
-                self.error(a, f"nom inconnu « {v.name} »")
+                self.error(a, f"unknown name '{v.name}'")
                 continue
             t = value_type(v)
             if t not in allowed:
-                self.error(a, f"un état de {word} ne peut pas être de type {t}")
+                self.error(a, f"a {word} state cannot have type {t}")
                 continue
             items.append((a.name, t))
             starts.append((a, v))
@@ -693,31 +692,31 @@ class GraphChecker:
         for a in e.args:
             k = key(a.name)
             if k in given:
-                self.error(a, f"« {a.name} » donné deux fois")
+                self.error(a, f"'{a.name}' given twice")
                 continue
             given.add(k)
             if k == "domain":
                 if isinstance(a.value, ast.Ref) and a.value.name in FOREACH_DOMAINS:
                     zout.props["domain"] = a.value.name
                 else:
-                    self.error(a, f"domain attend une valeur parmi {', '.join(FOREACH_DOMAINS)}")
+                    self.error(a, f"domain expects one of {', '.join(FOREACH_DOMAINS)}")
                 continue
             if k == "selection":
                 selection = (self.eval(a.value), a)
                 continue
             if k in ("index", "element"):
-                self.error(a, f"« {k} » est {'le numéro' if k == 'index' else 'la géométrie'} de l'élément : "
-                              "choisir un autre nom d'item")
+                self.error(a, f"'{k}' is the element's {'index' if k == 'index' else 'geometry'}: "
+                              "choose another item name")
                 continue
             v = self.zone_value(a)
             if v is None:
                 continue
             if isinstance(v, Sym):
-                self.error(a, f"nom inconnu « {v.name} »")
+                self.error(a, f"unknown name '{v.name}'")
                 continue
             t = value_type(v)
             if t not in FOREACH_INPUT_ITEMS:
-                self.error(a, f"un item d'entrée de foreach ne peut pas être de type {t}")
+                self.error(a, f"a foreach input item cannot have type {t}")
                 continue
             items.append((a.name, t))
             values.append((a, v))
@@ -727,9 +726,9 @@ class GraphChecker:
         zin_outputs = [Socket("Index", "Index", "Int"), Socket("Element", "Element", "Geometry")] + sockets
         zin.n_inputs, zin.n_outputs = len(zin_inputs), len(zin_outputs)
         if isinstance(geometry, Sym):
-            self.error(e.geometry, f"nom inconnu « {geometry.name} »")
+            self.error(e.geometry, f"unknown name '{geometry.name}'")
         elif isinstance(geometry, Empty) and geometry.type != "Geometry":
-            self.error(e.geometry, f"foreach.geometry attend Geometry, reçoit {geometry.type}")
+            self.error(e.geometry, f"foreach.geometry expects Geometry, receives {geometry.type}")
         elif geometry is not None and not isinstance(geometry, Empty):
             self.connect(zin, zin_inputs[0], geometry, e.geometry, "foreach")
         if selection is not None and selection[0] is not None:
@@ -757,18 +756,18 @@ class GraphChecker:
         frame = self.frame_now
         self.statements(e.body, None, frame)
         if not self.returned:
-            self.error(e, f"return manquant dans {'la' if zone.word == 'closure' else 'le'} {zone.word} de « {name} »")
+            self.error(e, f"missing return in {zone.word} of '{name}'")
         zin.frame = zone.out.frame = frame
         self.env, self.returned, self.zone = saved
         self.frame_now = frame
 
     def zone_value(self, a):
         """The value of an item, an Arg (or an expression): a type alone is an item with no value,
-        `cache: Bundle`; `nom: Type = valeur` gives the item that type, `nom: Type = _` none."""
+        `cache: Bundle`; `name: Type = value` gives the item that type, `name: Type = _` none."""
         if isinstance(a, ast.Arg) and a.type is not None:
             t = a.type.type
             if t not in TYPES:
-                self.error(a.type, f"type « {t} » inconnu ; types : {', '.join(TYPES)}")
+                self.error(a.type, f"unknown type '{t}'; expected: {', '.join(TYPES)}")
                 return None
             if is_no_value(a.value):
                 return Empty(t)
@@ -786,14 +785,14 @@ class GraphChecker:
         zone, word = self.zone, self.zone.word
         states = zone.states
         if word == "closure":
-            what, whats, twice = "une sortie de la closure", "sorties", "sortie « {} » rendue deux fois"
+            what, whats, twice = "closure output", "outputs", "output '{}' returned twice"
         else:
-            what, whats, twice = f"un état du {word}", "états", "état « {} » rendu deux fois"
+            what, whats, twice = f"{word} state", "states", "state '{}' returned twice"
         if isinstance(stmt.value, ast.Record):
             for f in stmt.value.fields:
                 if zone.skip is not None and key(f.name) == "skip":
                     if "skip" in zone.given:
-                        self.error(f, "skip rendu deux fois")
+                        self.error(f, "skip returned twice")
                         continue
                     zone.given.add("skip")
                     value = self.eval(f.value)
@@ -802,8 +801,8 @@ class GraphChecker:
                     continue
                 sock = next((s for s in states if key(f.name) == key(s.name)), None)
                 if sock is None:
-                    self.error(f, f"« {f.name} » n'est pas {what} ; {whats} : "
-                                  f"{', '.join(s.name for s in states) or 'aucune'}")
+                    self.error(f, f"'{f.name}' is not a {what}; {whats}: "
+                                  f"{', '.join(s.name for s in states) or 'none'}")
                     continue
                 if sock.name in zone.given:
                     self.error(f, twice.format(f.name))
@@ -812,9 +811,9 @@ class GraphChecker:
                 self.state(sock, self.zone_value(f), f)
             return
         if len(states) != 1:
-            many = (f"ce {word} a plusieurs états" if word != "closure" else
-                    "cette closure a plusieurs sorties" if states else "cette closure n'a pas de sortie")
-            self.error(stmt, f"{many} : return ({', '.join(s.name + ': …' for s in states)})")
+            many = (f"this {word} has multiple states" if word != "closure" else
+                    "this closure has multiple outputs" if states else "this closure has no outputs")
+            self.error(stmt, f"{many}: return ({', '.join(s.name + ': …' for s in states)})")
             return
         zone.given.add(states[0].name)
         self.state(states[0], self.zone_value(stmt.value), stmt.value)
@@ -823,7 +822,7 @@ class GraphChecker:
         """The next value of a state: linked, set, or left empty by its type alone."""
         if isinstance(value, Empty):
             if value.type != sock.type:
-                self.error(at, f"{self.zone.word}.{sock.key} attend {sock.type}, reçoit {value.type}")
+                self.error(at, f"{self.zone.word}.{sock.key} expects {sock.type}, receives {value.type}")
         elif value is not None:
             self.connect(self.zone.out, sock, value, at, self.zone.word)
 
@@ -831,28 +830,28 @@ class GraphChecker:
         """The items of a For Each output: main items, then each Geometry with its attributes."""
         zone = self.zone
         if not isinstance(stmt.value, ast.Record):
-            self.error(stmt, "un foreach rend ses items par nom : return (valeur: v, mesh: g, …)")
+            self.error(stmt, "foreach returns items by name: return (item: v, mesh: g, …)")
             return
         main, generation, seen = [], [], set()
         for f in stmt.value.fields:
             if key(f.name) in seen:
-                self.error(f, f"item « {f.name} » rendu deux fois")
+                self.error(f, f"item '{f.name}' returned twice")
                 continue
             seen.add(key(f.name))
             v = self.zone_value(f)
             if v is None:
                 continue
             if isinstance(v, Sym):
-                self.error(f, f"nom inconnu « {v.name} »")
+                self.error(f, f"unknown name '{v.name}'")
                 continue
             t = value_type(v)
             if t == "Geometry" or generation:
                 if t not in FOREACH_ITEMS and t != "Geometry":
-                    self.error(f, f"un attribut généré par foreach ne peut pas être de type {t}")
+                    self.error(f, f"a foreach generated attribute cannot have type {t}")
                     continue
                 generation.append((f, v, t))
             elif t not in FOREACH_ITEMS:
-                self.error(f, f"un item de foreach ne peut pas être de type {t}")
+                self.error(f, f"a foreach item cannot have type {t}")
                 continue
             else:
                 main.append((f, v, t))
@@ -872,7 +871,7 @@ class GraphChecker:
         """The fields of a return: a type before `=` belongs to an item, not to an output."""
         for f in fields:
             if f.type is not None:
-                self.error(f, f"« {f.name} » : un type ne s'écrit pas dans un return")
+                self.error(f, f"'{f.name}': types cannot be specified in a return")
             else:
                 yield f
 
@@ -906,13 +905,13 @@ class GraphChecker:
         items = []
         for p in params:
             if p.type not in ITEM_TYPES:
-                self.error(p, f"type « {p.type} » inconnu ; types : {', '.join(ITEM_TYPES)}")
+                self.error(p, f"unknown type '{p.type}'; expected: {', '.join(ITEM_TYPES)}")
                 continue
             if p.default is not None or p.range is not None:
-                self.error(p, f"un item de {what} n'a ni valeur par défaut ni bornes")
+                self.error(p, f"a {what} item has no default value or range")
                 continue
             if key(p.name) in {key(n) for n, _t in items}:
-                self.error(p, f"item « {p.name} » déclaré deux fois")
+                self.error(p, f"item '{p.name}' declared twice")
                 continue
             items.append((p.name, p.type))
             found = self.item_options(p, p)
@@ -942,30 +941,30 @@ class GraphChecker:
         fixed = SIGNATURE_NODES[spec.bl_idname]["inputs"][0]
         if target is not None:
             if positional:
-                self.error(positional[0][1], f"une closure prend ses entrées par nom : {c.name}(x: …)")
+                self.error(positional[0][1], f"a closure takes inputs by name: {c.name}(x: …)")
                 return None
             positional = [(target, c)]
         if len(positional) > fixed:
             if spec.bl_idname == SEPARATE_BUNDLE:
-                self.error(positional[fixed][1], "SeparateBundle prend le bundle seul : "
-                                                 "SeparateBundle(b) -> (nom: Type, …)")
+                self.error(positional[fixed][1], "SeparateBundle takes the bundle alone: "
+                                                 "SeparateBundle(b) -> (name: Type, …)")
             else:
-                self.error(positional[fixed][1], f"{c.name} : les items se donnent par nom, {c.name}(…, nom: valeur)")
+                self.error(positional[fixed][1], f"{c.name}: items are passed by name, {c.name}(…, name: value)")
             return None
 
         options = {}
         if spec.bl_idname == COMBINE_BUNDLE:
             if c.outputs is not None:
-                self.error(c, "CombineBundle n'a qu'une sortie, le bundle : pas de « -> »")
+                self.error(c, "CombineBundle has only one output, the bundle: no '->'")
                 return None
             items, values = self.given_items(c, named, options)
         elif spec.bl_idname == SEPARATE_BUNDLE:
             if named:
-                self.error(named[0][0], "SeparateBundle déclare ses items après « -> » : "
-                                        "SeparateBundle(b) -> (nom: Type, …)")
+                self.error(named[0][0], "SeparateBundle declares items after '->': "
+                                        "SeparateBundle(b) -> (name: Type, …)")
                 return None
             if c.outputs is None:
-                self.error(c, "SeparateBundle déclare ses items : SeparateBundle(b) -> (nom: Type, …)")
+                self.error(c, "SeparateBundle declares items: SeparateBundle(b) -> (name: Type, …)")
                 return None
             items, values = [], []
         elif c.outputs is not None:
@@ -975,7 +974,7 @@ class GraphChecker:
             closure = positional[0][0] if positional else None
             sig = self.signatures.get(closure.node) if isinstance(closure, Out) else None
             if sig is None:
-                self.error(c, f"{c.name} : la signature de la closure n'est pas connue ici ; écrire ses items : "
+                self.error(c, f"{c.name}: closure signature is not known here; declare its items: "
                               f"{c.name}(x: Float = …) -> (r: Float)")
                 return None
             items, outs, sig_options = sig
@@ -984,15 +983,15 @@ class GraphChecker:
             values = []
             for a, v in named:
                 if isinstance(v, (Empty, Typed)):
-                    self.error(a, f"« {a.name} » : avec un type, écrire aussi les sorties : {c.name}(…) -> (…)")
+                    self.error(a, f"'{a.name}': when given a type, outputs must also be declared: {c.name}(…) -> (…)")
                     return None
                 if a.options:
-                    self.error(a, f"« {a.name} » : avec des options, écrire aussi les sorties : {c.name}(…) -> (…)")
+                    self.error(a, f"'{a.name}': when given options, outputs must also be declared: {c.name}(…) -> (…)")
                     return None
                 name = next((n for n, _t in items if key(n) == key(a.name)), None)
                 if name is None:
-                    self.error(a, f"la closure n'a pas d'entrée « {a.name} » ; entrées : "
-                                  f"{', '.join(n for n, _t in items) or 'aucune'}")
+                    self.error(a, f"closure has no input '{a.name}'; inputs: "
+                                  f"{', '.join(n for n, _t in items) or 'none'}")
                 elif v is not None and not (isinstance(v, Sym) and v.name == NO_VALUE):
                     values.append((name, v, a))
         if items is None:
@@ -1026,14 +1025,14 @@ class GraphChecker:
         ok = True
         for a, v in named:
             if key(a.name) in {key(n) for n, _t in items}:
-                self.error(a, f"{c.name} : « {a.name} » donné deux fois")
+                self.error(a, f"{c.name}: '{a.name}' given twice")
                 ok = False
                 continue
             if isinstance(v, Sym):
                 if v.name == NO_VALUE:
-                    self.error(a, f"« {a.name} » n'a pas de valeur : écrire son type, {a.name}: Float")
+                    self.error(a, f"'{a.name}' has no value: specify its type, {a.name}: Float")
                 else:
-                    self.error(a.value, f"nom inconnu « {v.name} »")
+                    self.error(a.value, f"unknown name '{v.name}'")
                 ok = False
                 continue
             if v is None:
@@ -1041,7 +1040,7 @@ class GraphChecker:
                 continue
             t = value_type(v)
             if t not in ITEM_TYPES:
-                self.error(a, f"{c.name} : pas d'item de type {t}")
+                self.error(a, f"{c.name}: no item of type {t}")
                 ok = False
                 continue
             items.append((a.name, t))
@@ -1099,11 +1098,11 @@ class GraphChecker:
         for item in e.items:
             v = self.eval(item)
             if not (isinstance(v, Lit) and v.type in ("Int", "Float")):
-                self.error(item, "un tuple ne contient que des nombres")
+                self.error(item, "a tuple contains only numbers")
                 return None
             values.append(float(v.value))
         if len(values) not in (2, 3, 4):
-            self.error(e, "un tuple a 2, 3 ou 4 nombres")
+            self.error(e, "a tuple takes 2, 3 or 4 numbers")
             return None
         return Lit(tuple(values), "Color" if len(values) == 4 else "Vector")
 
@@ -1111,23 +1110,23 @@ class GraphChecker:
         if target is None:
             return None
         if isinstance(target, Sym):
-            self.error(e.target, f"nom inconnu « {target.name} »")
+            self.error(e.target, f"unknown name '{target.name}'")
             return None
         if not isinstance(target, Out):
-            self.error(e, f"« .{e.socket} » ne s'applique qu'à un nœud")
+            self.error(e, f"'.{e.socket}' only applies to a node")
             return None
         if e.socket in sugar.COMPONENTS and target.socket is not None and target.socket.type == "Vector" \
                 and (target.chosen is not None or find_socket(target.outputs, e.socket) is None):
             return self.component(e, target)
         if target.chosen is not None:
-            self.error(e, f"« {target.label} » est déjà une sortie ({target.chosen.type}) ; « .{e.socket} » n'existe pas")
+            self.error(e, f"'{target.label}' is already an output ({target.chosen.type}); '.{e.socket}' does not exist")
             return None
         sock = find_socket(target.outputs, e.socket)
         if isinstance(sock, list):
-            self.error(e, f"« {e.socket} » est ambigu ; utilisez l'identifiant : {', '.join(s.identifier for s in sock)}")
+            self.error(e, f"'{e.socket}' is ambiguous; use identifier: {', '.join(s.identifier for s in sock)}")
             return None
         if sock is None:
-            self.error(e, f"{target.label} n'a pas de sortie « {e.socket} » ; sorties : {socket_keys(target.outputs)}")
+            self.error(e, f"{target.label} has no output '{e.socket}'; outputs: {socket_keys(target.outputs)}")
             return None
         return Out(target.node, target.outputs, sock, f"{target.label}.{e.socket}")
 
@@ -1136,7 +1135,7 @@ class GraphChecker:
         src = target.socket
         spec = self.schema.node(self.g.kind, "SeparateXYZ")
         if spec is None:
-            self.error(e, f"pas de SeparateXYZ dans un arbre {self.g.kind}")
+            self.error(e, f"no SeparateXYZ in a {self.g.kind} tree")
             return None
         inputs, outputs = self.schema.sockets(self.g.kind, spec, {})
         memo = (target.node, src.identifier)
@@ -1166,7 +1165,7 @@ class GraphChecker:
         for s in steps:
             right = self.eval(s.right)
             if value_type(right) == "Geometry" and v is not None:
-                self.error(s.left, f"« + » joint des Geometry, pas {value_type(v)}")
+                self.error(s.left, f"'+' joins Geometry, not {value_type(v)}")
                 return None
             v = self.formula(s, "+", [(v, s.left), (right, s.right)])
         return v
@@ -1176,14 +1175,14 @@ class GraphChecker:
             if v is None:
                 return None
             if isinstance(v, Sym):
-                self.error(a, f"nom inconnu « {v.name} »")
+                self.error(a, f"unknown name '{v.name}'")
                 return None
             if value_type(v) != "Geometry":
-                self.error(a, f"« + » joint des Geometry, pas {value_type(v)}")
+                self.error(a, f"'+' joins Geometry, not {value_type(v)}")
                 return None
         spec = self.schema.node(self.g.kind, "JoinGeometry")
         if spec is None:
-            self.error(at, f"pas de JoinGeometry dans un arbre {self.g.kind}")
+            self.error(at, f"no JoinGeometry in a {self.g.kind} tree")
             return None
         inputs, outputs = self.schema.sockets(self.g.kind, spec, {})
         node = ir.Node(f"n{len(self.nodes)}", spec.bl_idname, n_inputs=len(inputs), n_outputs=len(outputs),
@@ -1203,7 +1202,7 @@ class GraphChecker:
             if v is None:
                 return None
             if isinstance(v, Sym):
-                self.error(a, f"nom inconnu « {v.name} »")
+                self.error(a, f"unknown name '{v.name}'")
                 return None
         try:
             name, props, order = sugar.choose(op, [value_type(v) for v, _a in operands])
@@ -1212,14 +1211,14 @@ class GraphChecker:
             return None
         spec = self.schema.node(self.g.kind, name)
         if spec is None:
-            self.error(at, f"pas de {name} dans un arbre {self.g.kind}")
+            self.error(at, f"no {name} in a {self.g.kind} tree")
             return None
         inputs, outputs = self.schema.sockets(self.g.kind, spec, props)
         n_inputs = len(inputs)
         if name in sugar.OPERANDS:
             inputs = inputs[:sugar.OPERANDS[name]]
         if len(inputs) != len(operands):
-            self.error(at, f"{op} attend {len(inputs)} argument(s), en reçoit {len(operands)}")
+            self.error(at, f"{op} expects {len(inputs)} argument(s), receives {len(operands)}")
             return None
         node = ir.Node(f"n{len(self.nodes)}", spec.bl_idname, props=dict(props), n_inputs=n_inputs,
                        n_outputs=len(outputs), line=at.line, col=at.col)
@@ -1241,19 +1240,19 @@ class GraphChecker:
             if evaluate is not None:
                 return self.signature_call(c, evaluate, piped, target=self.env[c.name])
         if c.outputs is not None:
-            self.error(c, f"« -> » déclare les items de SeparateBundle ou EvaluateClosure, pas de {c.name}")
+            self.error(c, f"'->' declares items of SeparateBundle or EvaluateClosure, not {c.name}")
             return None
         items = self.takes_items(c.name)
         for a in c.args:
             if a.type is not None and not items:
-                self.error(a, f"« {a.name}: {a.type.type} = … » donne le type d'un item : d'un nœud à items, "
-                              "d'une zone ou d'EvaluateClosure")
+                self.error(a, f"'{a.name}: {a.type.type} = …' gives an item type: for item nodes, "
+                              "zones, or EvaluateClosure")
                 return None
         if self.is_function(c.name):
             operands = [(piped, c)] if piped is not None else []
             for a in c.args:
                 if a.name is not None:
-                    self.error(a, f"{c.name} ne prend pas d'argument nommé")
+                    self.error(a, f"{c.name} does not take named arguments")
                     return None
                 operands.append((self.eval(a.value), a.value))
             return self.formula(c, c.name, operands)
@@ -1263,9 +1262,9 @@ class GraphChecker:
         failed = False
         for a in c.args:
             if a.alias and not items:
-                self.error(a, f"« {a.name} as {a.alias} » : seuls les items d'un nœud à items prennent une clé")
+                self.error(a, f"'{a.name} as {a.alias}': only item node items take an alias key")
             if a.options and not items:
-                self.error(a, f"« {a.name}(…) » : seuls les items d'un nœud à items prennent des options")
+                self.error(a, f"'{a.name}(…)': only item node items take options")
             # An item may be given its type, or be its type alone
             v = self.zone_value(a) if items and a.name is not None else self.eval(a.value)
             failed |= v is None
@@ -1283,7 +1282,7 @@ class GraphChecker:
                 return None
         elif group is not None:
             if isinstance(group, list):
-                self.error(c, f"« {c.name} » désigne plusieurs groupes du fichier : "
+                self.error(c, f"'{c.name}' refers to multiple groups in the file: "
                               f"{', '.join(g.name for g in group)}")
                 return None
             node.bl_idname = GROUP_NODES[self.g.kind]
@@ -1295,8 +1294,8 @@ class GraphChecker:
                 if self.unsure:
                     return None
                 close = difflib.get_close_matches(c.name, self.schema.node_names(self.g.kind), 3)
-                hint = f" ; voulez-vous dire {', '.join(close)} ?" if close else ""
-                self.error(c, f"nœud « {c.name} » inconnu dans un arbre {self.g.kind}{hint}")
+                hint = f"; did you mean {', '.join(close)}?" if close else ""
+                self.error(c, f"unknown node '{c.name}' in a {self.g.kind} tree{hint}")
                 return None
             node.bl_idname = spec.bl_idname
             rest = []
@@ -1323,7 +1322,7 @@ class GraphChecker:
         i = 0
         for v, a in positional:
             if i >= len(inputs):
-                self.error(a, f"{c.name} prend {len(inputs)} entrée(s) : {socket_keys(inputs)}")
+                self.error(a, f"{c.name} takes {len(inputs)} input(s): {socket_keys(inputs)}")
                 break
             sock = inputs[i]
             self.connect(node, sock, v, a, c.name)
@@ -1334,13 +1333,13 @@ class GraphChecker:
         for name, v, a in named:
             sock = find_socket(inputs, name)
             if isinstance(sock, list):
-                self.error(a, f"« {name} » est ambigu ; utilisez l'identifiant : {', '.join(s.identifier for s in sock)}")
+                self.error(a, f"'{name}' is ambiguous; use identifier: {', '.join(s.identifier for s in sock)}")
                 continue
             if sock is None:
-                self.error(a, f"{c.name} n'a pas d'entrée « {name} » ; entrées : {socket_keys(inputs)}")
+                self.error(a, f"{c.name} has no input '{name}'; inputs: {socket_keys(inputs)}")
                 continue
             if sock.identifier in given and not sock.multi_input:
-                self.error(a, f"entrée « {name} » donnée deux fois")
+                self.error(a, f"input '{name}' given twice")
                 continue
             given.add(sock.identifier)
             self.connect(node, sock, v, a, c.name)
@@ -1357,8 +1356,8 @@ class GraphChecker:
         fixed = self.schema.sockets(self.g.kind, spec, node.props)[0][:shape.inputs]
         if shape.named:
             if len(positional) > shape.inputs:
-                self.error(positional[shape.inputs][1], f"{c.name} : les valeurs se donnent par nom, "
-                                                        f"{c.name}(…, nom: valeur)")
+                self.error(positional[shape.inputs][1], f"{c.name}: items are passed by name, "
+                                                        f"{c.name}(…, name: value)")
                 return None, None
             # An item under a key of its own may be named like a fixed input
             given = [(n, v, a) for n, v, a in named if a.alias or find_socket(fixed, n) is None]
@@ -1368,18 +1367,18 @@ class GraphChecker:
             del positional[shape.inputs:]
         for name, _v, a in named:
             if a.options:
-                self.error(a, f"{c.name} : « {name} » est une entrée du nœud, pas un item ; elle ne prend pas d'options")
+                self.error(a, f"{c.name}: '{name}' is a node input, not an item; it does not take options")
         items, values, options, keys = [], [], {}, []
         for name, v, a in given:
             alias = getattr(a, "alias", None)
             if key(name) in {key(n) for n, _t in items}:
-                self.error(a, f"{c.name} : « {name} » donné deux fois")
+                self.error(a, f"{c.name}: '{name}' given twice")
                 continue
             if alias and (find_socket(fixed, alias) is not None or alias in spec.props or alias in keys):
-                self.error(a, f"{c.name} : la clé « {alias} » est déjà une entrée, un réglage ou un item du nœud")
+                self.error(a, f"{c.name}: key '{alias}' is already an input, setting, or item of the node")
                 continue
             if not alias and shape.named and (key(name) in keys or name in keys):
-                self.error(a, f"{c.name} : « {name} » est déjà la clé d'un item")
+                self.error(a, f"{c.name}: '{name}' is already an item key")
                 continue
             if getattr(a, "options", None):
                 options[name] = self.item_options(c, a)
@@ -1389,14 +1388,14 @@ class GraphChecker:
                 keys.append(alias)
                 continue
             if isinstance(v, Sym):
-                self.error(a, f"nom inconnu « {v.name} »")
+                self.error(a, f"unknown name '{v.name}'")
                 continue
             if v is None:
                 continue
             t = value_type(v)
             allowed = shape.types or tuple(ITEM_TYPES)
             if shape.typed and t not in allowed:
-                self.error(a, f"{c.name} : pas d'item {t} ; types : {', '.join(allowed)}")
+                self.error(a, f"{c.name}: no {t} item; types: {', '.join(allowed)}")
                 return None, None
             items.append((name, t))
             keys.append(alias)
@@ -1409,7 +1408,7 @@ class GraphChecker:
             typed = [t for _n, t in items if t is not None]
             t = DATA_TYPES.get(chosen) if chosen else typed[0] if typed else "Float"
             if t not in ITEM_TYPES:
-                self.error(c, f"{c.name} : pas d'items de type {chosen or t}")
+                self.error(c, f"{c.name}: no items of type {chosen or t}")
                 return None, None
             node.props["data_type"] = ITEM_TYPES[t]
             items = [(name, t) for name, _t in items]
@@ -1432,7 +1431,7 @@ class GraphChecker:
     def group_signature(self, c, node):
         callee = self.graphs[c.name]
         if callee.kind != self.g.kind:
-            self.error(c, f"« {c.name} » est un graph {callee.kind}, pas {self.g.kind}")
+            self.error(c, f"'{c.name}' is a {callee.kind} graph, not {self.g.kind}")
             return None, None
         self.calls.add(c.name)
         node.bl_idname = GROUP_NODES[self.g.kind]
@@ -1444,12 +1443,12 @@ class GraphChecker:
         if prop.kind == "ENUM":
             value = v.name if isinstance(v, Sym) else v.value if v.type == "String" else None
             if value is None:
-                self.error(a, f"{prop.name} attend une valeur comme {prop.items[0] if prop.items else 'MODE'}")
+                self.error(a, f"{prop.name} expects a value like {prop.items[0] if prop.items else 'MODE'}")
                 return
             if prop.items and value not in prop.items:
                 close = difflib.get_close_matches(value, prop.items, 1)
-                hint = f" ; voulez-vous dire {close[0]} ?" if close else ""
-                self.error(a, f"{prop.name}: {value} inconnu{hint} ; valeurs : {short_list(prop.items)}")
+                hint = f"; did you mean {close[0]}?" if close else ""
+                self.error(a, f"{prop.name}: unknown {value}{hint}; values: {short_list(prop.items)}")
                 return
         elif prop.kind == "BOOLEAN" and isinstance(v, Lit) and v.type == "Bool":
             value = v.value
@@ -1460,7 +1459,7 @@ class GraphChecker:
         elif prop.kind == "STRING" and isinstance(v, Lit) and v.type == "String":
             value = v.value
         else:
-            self.error(a, f"{prop.name} attend une valeur {prop.kind.lower()}")
+            self.error(a, f"{prop.name} expects a {prop.kind.lower()} value")
             return
         node.props[prop.name] = value
 
@@ -1469,48 +1468,48 @@ class GraphChecker:
         if isinstance(v, Typed):
             v = v.value
         if isinstance(v, Empty):
-            self.error(at, f"{label} : un type seul ({v.type}) ne va qu'à un item")
+            self.error(at, f"{label}: a bare type ({v.type}) only applies to an item")
             return
-        where = f"{label}.{sock.key}" if label != "return" else f"la sortie « {sock.name} »"
+        where = f"{label}.{sock.key}" if label != "return" else f"output '{sock.name}'"
         if isinstance(v, Out):
             src = v.socket
             if src is None:
-                self.error(at, f"« {v.label} » n'a pas de sortie")
+                self.error(at, f"'{v.label}' has no output")
             elif not can_link(src.type, sock.type):
-                self.error(at, f"{where} attend {sock.type}, reçoit {src.type} ({v.label})")
+                self.error(at, f"{where} expects {sock.type}, receives {src.type} ({v.label})")
             else:
                 node.links.append((sock.identifier, ir.Link(v.node, src.identifier)))
             return
         # A gizmo's value holds a number when nothing is linked to it; a join, nothing
         if sock.multi_input and sock.type in NO_DEFAULT:
-            self.error(at, f"{where} n'accepte que des liens")
+            self.error(at, f"{where} only accepts links")
             return
         if isinstance(v, Sym):
             if sock.type == "Menu":
                 node.values[sock.identifier] = v.name
             else:
-                self.error(at, f"nom inconnu « {v.name} »")
+                self.error(at, f"unknown name '{v.name}'")
             return
         ok = (v.type == sock.type
               or (sock.type == "Menu" and v.type == "String")
               or (sock.type in DATABLOCKS and v.type == "String")
               or (sock.type not in STRICT and v.type not in STRICT))
         if not ok:
-            self.error(at, f"{where} attend {sock.type}, reçoit {v.type}")
+            self.error(at, f"{where} expects {sock.type}, receives {v.type}")
             return
         if sock.type == "Int" and v.type == "Float":
             # Blender would not round it: say so rather than fail at build
-            self.error(at, f"{where} attend un entier : {int(v.value)} plutôt que {v.value}")
+            self.error(at, f"{where} expects an integer: {int(v.value)} rather than {v.value}")
             return
         node.values[sock.identifier] = v.value
 
 
 # Interface settings the text writes in their own way, not as options
 WRITTEN_ELSEWHERE = {
-    "name": "avant les deux-points", "socket_type": "après les deux-points : x: Float",
-    "bl_socket_idname": "avec le type et subtype", "default_value": "après = : x: Float = 1.0",
-    "min_value": "avec in : x: Float in 0.0..1.0", "max_value": "avec in : x: Float in 0.0..1.0",
-    "default_input": "après = : p: Vector = Position()", "dimensions": "par la taille du défaut : (0.5, 0.5)",
+    "name": "before the colon", "socket_type": "after the colon: x: Float",
+    "bl_socket_idname": "with type and subtype", "default_value": "after =: x: Float = 1.0",
+    "min_value": "with in: x: Float in 0.0..1.0", "max_value": "with in: x: Float in 0.0..1.0",
+    "default_input": "after =: p: Vector = Position()", "dimensions": "from default size: (0.5, 0.5)",
 }
 
 # Text type -> the socket type of a zone item, for each kind of item Blender takes
@@ -1522,17 +1521,17 @@ FOREACH_DOMAINS = ("POINT", "EDGE", "FACE", "CORNER", "CURVE", "INSTANCE", "LAYE
 
 # Names a zone's body gives itself, which no state may take
 STATE_NAMES = {
-    "repeat": {"iteration": "« iteration » est le numéro du tour : choisir un autre nom d'état"},
-    "simulate": {"delta_time": "« delta_time » est le temps écoulé depuis le pas précédent : "
-                               "choisir un autre nom d'état",
-                 "skip": "« skip » se rend par return (…, skip: …) : choisir un autre nom d'état"},
+    "repeat": {"iteration": "'iteration' is the loop counter: choose another state name"},
+    "simulate": {"delta_time": "'delta_time' is the elapsed time since previous step: "
+                               "choose another state name",
+                 "skip": "'skip' is returned via return (…, skip: …): choose another state name"},
 }
 DATA_TYPES = {v: t for t, v in ITEM_TYPES.items()}
 
 
 def twice_hint(p):
     """How to keep two sockets of the same name: give one a key of its own."""
-    return f' ; pour garder les deux, nommer l\'autre avec as : "{p.name}" as {snake(p.name)}_2: {p.type}'
+    return f'; to keep both, alias the other with as: "{p.name}" as {snake(p.name)}_2: {p.type}'
 
 
 def item_sockets(items):
@@ -1573,7 +1572,7 @@ def find_socket(sockets, name):
 def socket_keys(sockets):
     """How to name each socket in text: its key, or its identifier when the key repeats."""
     keys = [s.key for s in sockets]
-    return ", ".join(k if keys.count(k) == 1 else s.identifier for k, s in zip(keys, sockets)) or "aucune"
+    return ", ".join(k if keys.count(k) == 1 else s.identifier for k, s in zip(keys, sockets)) or "none"
 
 
 def short_list(items, limit=12):

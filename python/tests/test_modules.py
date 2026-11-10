@@ -37,7 +37,7 @@ def loader(modules):
     def load(name, source):
         asked.append((name, source))
         if (name, source) not in modules:
-            raise LookupError(f"pas de texte « {name}.bn »")
+            raise LookupError(f"no text '{name}.bn'")
         return modules[(name, source)], source or f"{name}.bn"
     load.asked = asked
     return load
@@ -76,7 +76,7 @@ def test_use_is_a_name_like_any_other_outside_the_head(schema):
 
 
 def test_a_use_after_a_graph_fails():
-    with pytest.raises(BnError, match="en tête du fichier"):
+    with pytest.raises(BnError, match="at the top of the file"):
         parse("geometry graph g() -> Float {\n  return 1.0\n}\nuse maths\n")
 
 
@@ -96,7 +96,7 @@ def test_a_list_brings_those_graphs_and_what_they_call(schema):
 
 def test_a_graph_left_out_of_the_list_is_unknown(schema):
     src = MAIN.replace("use maths", "use maths (moitié)")
-    assert any("quadruple" in m and "inconnu" in m for m in errors(src, schema, loader({("maths", None): MATHS})))
+    assert any("quadruple" in m and "unknown" in m for m in errors(src, schema, loader({("maths", None): MATHS})))
 
 
 def test_the_source_reaches_the_loader(schema):
@@ -110,33 +110,33 @@ def test_a_missing_module_points_at_its_use(schema):
     with pytest.raises(BnError) as err:
         compile_source(MAIN, schema, "t.bn", loader({}))
     (d,) = err.value.diagnostics
-    assert (d.line, d.col) == (1, 1) and d.message == "module « maths » : pas de texte « maths.bn »"
+    assert (d.line, d.col) == (1, 1) and d.message == "module 'maths': no text 'maths.bn'"
 
 
 def test_without_a_loader_use_fails(schema):
-    assert errors(MAIN, schema) == ["use : aucun module à charger ici"]
+    assert errors(MAIN, schema) == ["use: no module loader configured"]
 
 
 def test_an_error_in_the_module_is_reported_at_the_use(schema):
     broken = MATHS.replace("x * 2.0", "y * 2.0")
     (message,) = errors(MAIN, schema, loader({("maths", None): broken}))
-    assert message.startswith("module « maths » : maths.bn:2:10") and "y" in message
+    assert message.startswith("module 'maths': maths.bn:2:10") and "y" in message
 
 
 def test_a_name_both_defined_and_imported_fails(schema):
     src = MAIN + "\ngeometry graph double(x: Float) -> Float {\n  return x\n}\n"
-    assert "« double » est défini ici et importé de maths" in errors(src, schema, loader({("maths", None): MATHS}))
+    assert "'double' is defined here and imported from maths" in errors(src, schema, loader({("maths", None): MATHS}))
 
 
 def test_a_name_in_two_modules_fails(schema):
     src = "use maths\nuse autres\n\n" + MAIN.split("\n\n", 1)[1]
     load = loader({("maths", None): MATHS, ("autres", None): MATHS.split("\n\n")[0] + "\n"})
-    assert any("« double » est dans maths et dans autres" in m for m in errors(src, schema, load))
+    assert any("'double' is in maths and in autres" in m for m in errors(src, schema, load))
 
 
 def test_the_same_module_twice_fails(schema):
     src = "use maths\nuse maths (double)\n\n" + MAIN.split("\n\n", 1)[1]
-    assert "un seul use par module" in errors(src, schema, loader({("maths", None): MATHS}))[0]
+    assert "only one use per module" in errors(src, schema, loader({("maths", None): MATHS}))[0]
 
 
 def test_modules_may_use_modules_each_loaded_once(schema):
@@ -154,7 +154,7 @@ def test_a_cycle_of_modules_fails(schema):
     b = "use a\n\ngeometry graph fb() -> Float {\n  return 1.0\n}\n"
     src = "use a\n\ngeometry graph g() -> Float {\n  return fa()\n}\n"
     (message,) = errors(src, schema, loader({("a", None): a, ("b", None): b}))
-    assert "import circulaire : a → b → a" in message
+    assert "circular import: a -> b -> a" in message
 
 
 def test_a_group_of_the_file_is_called_by_its_key(schema):
@@ -178,4 +178,4 @@ def test_two_groups_with_one_key_are_ambiguous(schema):
     spec = (("x", "Float"),), (("r", "Float"),)
     schema.existing = {"ab": [GroupSpec("ab", *spec), GroupSpec("AB ", *spec)]}
     src = "geometry graph g() -> Float {\n  return ab(1.0)\n}\n"
-    assert errors(src, schema) == ["« ab » désigne plusieurs groupes du fichier : ab, AB "]
+    assert errors(src, schema) == ["'ab' refers to multiple groups in the file: ab, AB "]

@@ -1,4 +1,4 @@
-"""Tests des profils de compatibilité déclaratifs (base_node/profiles.py)."""
+"""Tests for declarative compatibility profiles (base_node/profiles.py)."""
 
 import pytest
 
@@ -8,7 +8,7 @@ from base_node.profiles import check_profile, load_profile
 
 
 def test_load_all_profiles_and_hierarchy():
-    """Vérifie le chargement et la résolution hiérarchique des 5 profils."""
+    """Verify loading and hierarchical resolution of all 5 profiles."""
     core = load_profile("core")
     assert core["name"] == "core"
     assert core["extends"] is None
@@ -49,7 +49,7 @@ def test_load_all_profiles_and_hierarchy():
 
 
 def test_check_profile_valid_core(schema):
-    """Un graphe mathématique pur est valide sous le profil core."""
+    """A pure math graph is valid under the core profile."""
     src = """
 geometry graph calcul(x: Float, y: Float) -> Float {
   return sin(x) * 2.0 + cos(y)
@@ -61,7 +61,7 @@ geometry graph calcul(x: Float, y: Float) -> Float {
 
 
 def test_check_profile_rejects_geometry_in_core(schema):
-    """Le profil core refuse le type Geometry."""
+    """The core profile rejects the Geometry type."""
     src = """
 geometry graph pass_geom(g: Geometry) -> Geometry {
   return g
@@ -74,7 +74,7 @@ geometry graph pass_geom(g: Geometry) -> Geometry {
 
 
 def test_check_profile_valid_vector2d(schema):
-    """Un graphe de courbes / maillages est valide sous vector2d."""
+    """A curve / mesh graph is valid under vector2d."""
     src = """
 geometry graph grille(taille: Float = 1.0) -> Geometry {
   g = MeshGrid(size_x: taille, size_y: taille)
@@ -87,7 +87,7 @@ geometry graph grille(taille: Float = 1.0) -> Geometry {
 
 
 def test_check_profile_rejects_simulation_in_vector2d():
-    """Le profil vector2d refuse la zone de simulation."""
+    """The vector2d profile rejects simulation zones."""
     g = Graph(
         kind="geometry",
         name="non_portable_sim",
@@ -101,7 +101,7 @@ def test_check_profile_rejects_simulation_in_vector2d():
 
 
 def test_check_profile_blender_geometry_allows_all():
-    """Le profil blender-geometry accepte tous les nœuds Blender."""
+    """The blender-geometry profile accepts all Blender nodes."""
     g = Graph(
         kind="geometry",
         name="custom_node",

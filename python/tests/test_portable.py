@@ -16,7 +16,7 @@ from base_node.portable import (
 
 
 def test_portable_types_and_implicits():
-    """Vérifie l'ensemble canonique des types et entrées implicites portables."""
+    """Verify canonical set of portable types and implicit inputs."""
     assert PORTABLE_TYPES == (
         "Float",
         "Int",
@@ -41,7 +41,7 @@ def test_portable_types_and_implicits():
 
 
 def test_dump_portable_schema_with_fake_schema(schema):
-    """Vérifie l'extraction du schéma portable avec le schéma factice de test."""
+    """Verify portable schema extraction with fake test schema."""
     doc = dump_portable_schema(schema)
     assert doc["version"] == 1
     assert doc["types"] == list(PORTABLE_TYPES)
@@ -49,7 +49,7 @@ def test_dump_portable_schema_with_fake_schema(schema):
     assert doc["aliases"] == dict(PORTABLE_ALIASES)
     assert "nodes" in doc
 
-    # Accès direct via PortableSchema et accès imbriqué via .nodes
+    # Direct access via PortableSchema and nested access via .nodes
     assert "Math" in doc
     assert "Math" in doc.nodes
     math_node = doc["Math"]
@@ -66,7 +66,7 @@ def test_dump_portable_schema_with_fake_schema(schema):
 
 
 def test_check_portable_valid_compiled_graph(schema):
-    """Un graphe valide compilé depuis .bn doit passer check_portable sans erreur."""
+    """A valid graph compiled from .bn must pass check_portable without errors."""
     src = """
 geometry graph f(g: Geometry, t: Float = 0.5 in 0.0..1.0, p: Vector = Position()) -> Geometry {
   h = t * 2.0
@@ -80,7 +80,7 @@ geometry graph f(g: Geometry, t: Float = 0.5 in 0.0..1.0, p: Vector = Position()
 
 
 def test_check_portable_repeat_zone(schema):
-    """Les zones repeat sont supportées dans le socle portable."""
+    """Repeat zones are supported in the portable core."""
     src = """
 geometry graph boucle(x: Float) -> Float {
   r = repeat(10, val: x) {
@@ -95,7 +95,7 @@ geometry graph boucle(x: Float) -> Float {
 
 
 def test_check_portable_rejects_non_portable_type():
-    """Un type d'interface non portable (ex. Shader ou Object) est rejeté."""
+    """A non-portable interface type (e.g. Shader or Object) is rejected."""
     g = Graph(
         kind="geometry",
         name="test_obj",
@@ -104,7 +104,7 @@ def test_check_portable_rejects_non_portable_type():
         nodes=[],
     )
     errors = check_portable([g])
-    assert any("entrée 'obj' de type non portable 'Object'" in e for e in errors)
+    assert any("input 'obj' has non-portable type 'Object'" in e for e in errors)
 
     g2 = Graph(
         kind="geometry",
@@ -114,11 +114,11 @@ def test_check_portable_rejects_non_portable_type():
         nodes=[],
     )
     errors2 = check_portable([g2])
-    assert any("sortie 'sh' de type non portable 'Shader'" in e for e in errors2)
+    assert any("output 'sh' has non-portable type 'Shader'" in e for e in errors2)
 
 
 def test_check_portable_rejects_non_portable_kind():
-    """Un genre d'arbre non portable (ex. shader ou compositor) est rejeté."""
+    """A non-portable tree kind (e.g. shader or compositor) is rejected."""
     g = Graph(
         kind="shader",
         name="mon_shader",
@@ -127,11 +127,11 @@ def test_check_portable_rejects_non_portable_kind():
         nodes=[],
     )
     errors = check_portable([g])
-    assert any("type d'arbre 'shader' non portable" in e for e in errors)
+    assert any("tree kind 'shader' is not portable" in e for e in errors)
 
 
 def test_check_portable_rejects_non_portable_implicit():
-    """Une entrée implicite non portable (ex. SelfObject) est rejetée."""
+    """A non-portable implicit input (e.g. SelfObject) is rejected."""
     g = Graph(
         kind="geometry",
         name="test_self",
@@ -141,12 +141,12 @@ def test_check_portable_rejects_non_portable_implicit():
         defaults={"s": {"implicit": "SELF_OBJECT"}},
     )
     errors = check_portable([g])
-    assert any("entrée implicite 'SELF_OBJECT'" in e for e in errors)
+    assert any("implicit input 'SELF_OBJECT'" in e for e in errors)
 
 
 def test_check_portable_rejects_non_portable_node():
-    """Un nœud 3D ou shader hors du socle portable est rejeté."""
-    # SubdivideMesh n'est pas dans le socle commun 2D
+    """A 3D node or shader outside the portable core is rejected."""
+    # SubdivideMesh is not in the common 2D core
     g = Graph(
         kind="geometry",
         name="test_node",
@@ -178,7 +178,7 @@ def test_check_portable_rejects_simulation_zone():
 
 
 def test_check_portable_rejects_non_portable_item_type():
-    """Un item de nœud portant un type non portable est rejeté."""
+    """A node item carrying a non-portable type is rejected."""
     g = Graph(
         kind="geometry",
         name="test_items",
@@ -193,4 +193,4 @@ def test_check_portable_rejects_non_portable_item_type():
         ],
     )
     errors = check_portable([g])
-    assert any("type non portable 'Object'" in e for e in errors)
+    assert any("has non-portable type 'Object'" in e for e in errors)

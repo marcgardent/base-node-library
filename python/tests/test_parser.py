@@ -81,12 +81,12 @@ def test_record_return():
 
 
 @pytest.mark.parametrize("source, line, col, text", [
-    ("geometry graph g() -> Float {\n  return F(a: 1, 2)\n}", 2, 18, "positionnel après"),
-    ("geometry graph g() -> Float {\n  return 1\n", 3, 1, "« } » attendu"),
-    ("geometry graph g() -> Float {\n  F()\n}", 2, 3, "instruction attendue"),
-    ("geometry graph g() -> Float {\n  return x |> 3\n}", 2, 12, "après |>"),
-    ('geometry graph g() -> Float {\n  return "abc\n}', 2, 10, "chaîne non fermée"),
-    ("geometry graph g() -> Float {\n  return a < b < c\n}", 2, 16, "une seule comparaison"),
+    ("geometry graph g() -> Float {\n  return F(a: 1, 2)\n}", 2, 18, "positional argument after"),
+    ("geometry graph g() -> Float {\n  return 1\n", 3, 1, "'}' expected"),
+    ("geometry graph g() -> Float {\n  F()\n}", 2, 3, "statement expected"),
+    ("geometry graph g() -> Float {\n  return x |> 3\n}", 2, 12, "after |>"),
+    ('geometry graph g() -> Float {\n  return "abc\n}', 2, 10, "unclosed string"),
+    ("geometry graph g() -> Float {\n  return a < b < c\n}", 2, 16, "only one comparison"),
 ])
 def test_syntax_errors(source, line, col, text):
     with pytest.raises(BnError) as err:

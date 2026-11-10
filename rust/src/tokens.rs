@@ -74,8 +74,8 @@ impl Token {
 
     pub fn describe(&self) -> String {
         match &self.kind {
-            TokenKind::Eof => "la fin du fichier".to_string(),
-            _ => format!("« {} »", self.text),
+            TokenKind::Eof => "end of file".to_string(),
+            _ => format!("'{}'", self.text),
         }
     }
 }

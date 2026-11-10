@@ -66,17 +66,17 @@ def test_iteration_is_the_turn_number(schema):
 
 def test_names_of_the_body_stay_inside(schema):
     msgs = errors(graph("  r = repeat(3, s: 0.0) {\n    d = s * 2.0\n    return d\n  }\n  return d"), schema)
-    assert msgs == ["t.bn:6:10  nom inconnu « d »"]
+    assert msgs == ["t.bn:6:10  unknown name 'd'"]
 
 
 @pytest.mark.parametrize("body, message", [
-    ("  r = repeat(3, s: 0.0) {\n    x = s\n  }\n  return r", "t.bn:2:7  return manquant dans le repeat de « r »"),
+    ("  r = repeat(3, s: 0.0) {\n    x = s\n  }\n  return r", "t.bn:2:7  missing return in repeat of 'r'"),
     ("  r = repeat(3, s: 0.0, u: 1.0) {\n    return s\n  }\n  return r.s",
-     "t.bn:3:5  ce repeat a plusieurs états : return (s: …, u: …)"),
-    ("  r = repeat(3, s: 0.0) {\n    return (v: s)\n  }\n  return r", "t.bn:3:13  « v » n'est pas un état du repeat ; états : s"),
-    ("  r = repeat(3, s: 0.0, s: 1.0) {\n    return ()\n  }\n  return r", "t.bn:2:25  état « s » déclaré deux fois"),
+     "t.bn:3:5  this repeat has multiple states: return (s: …, u: …)"),
+    ("  r = repeat(3, s: 0.0) {\n    return (v: s)\n  }\n  return r", "t.bn:3:13  'v' is not a repeat state; states: s"),
+    ("  r = repeat(3, s: 0.0, s: 1.0) {\n    return ()\n  }\n  return r", "t.bn:2:25  state 's' declared twice"),
     ("  r = repeat(3, iteration: 0.0) {\n    return ()\n  }\n  return r",
-     "t.bn:2:17  « iteration » est le numéro du tour : choisir un autre nom d'état"),
+     "t.bn:2:17  'iteration' is the loop counter: choose another state name"),
 ])
 def test_wrong_zones_are_reported(schema, body, message):
     assert errors(graph(body), schema) == [message]
@@ -84,10 +84,10 @@ def test_wrong_zones_are_reported(schema, body, message):
 
 @pytest.mark.parametrize("body, message", [
     ("  return repeat(3, s: 0.0) {\n    return s\n  }",
-     "t.bn:2:10  repeat s'écrit seul, en valeur d'un nom : r = repeat(10, état: départ) { … }"),
+     "t.bn:2:10  repeat must be assigned to a name: r = repeat(10, state: start) { … }"),
     ("  r = repeat(s: 0.0) {\n    return s\n  }\n  return r",
-     "t.bn:2:7  repeat attend d'abord le nombre de tours : repeat(10, état: départ, …)"),
-    ("  r = repeat(3) {\n    return 1.0\n  }\n  return r", "t.bn:2:7  repeat attend au moins un état : repeat(10, état: départ)"),
+     "t.bn:2:7  repeat expects iteration count first: repeat(10, state: start, …)"),
+    ("  r = repeat(3) {\n    return 1.0\n  }\n  return r", "t.bn:2:7  repeat expects at least one state: repeat(10, state: start)"),
 ])
 def test_wrong_repeat_syntax_is_reported(body, message):
     with pytest.raises(BnError) as err:

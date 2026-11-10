@@ -186,7 +186,7 @@ def key(name):
 def interface_keys(sockets, given=()):
     """The text key of each socket of one side of an interface, from [(name, panel, type)] in order.
 
-    Each one's key, but a name that repeats (two « Seed », in two panels or in one) keeps it
+    Each one's key, but a name that repeats (two 'Seed', in two panels or in one) keeps it
     for its first socket only; the next ones are told apart by their panel, then by their
     type, then by a number: `guide_map_seed`, `seed_vector`, `seed_2`. The reader writes
     these as `"Seed" as guide_map_seed: Int`; `panel` is the innermost panel's name, or None.

@@ -3,11 +3,11 @@
 Text format (`.bn`) for node graphs. Reads and writes node trees as functions.
 
 ```bn
-use maths (bosse)
+use math (bump)
 
 geometry graph relief(geometry: Geometry, height: Float = 0.4 in 0.0..2.0) -> Geometry {
   "Displaces vertices along Z using a radial bump"
-  h = bosse(length(Position()) / 3.0, 0.5, 0.2) * height
+  h = bump(length(Position()) / 3.0, 0.5, 0.2) * height
   return SetPosition(geometry, offset: CombineXYZ(z: h))
 }
 ```
@@ -18,7 +18,7 @@ geometry graph relief(geometry: Geometry, height: Float = 0.4 in 0.0..2.0) -> Ge
 |---|---|---|
 | [`spec/reference.md`](spec/reference.md) | `.bn` grammar and semantics | MIT OR Apache-2.0 |
 | [`profiles/`](profiles/) | Target profiles (`core`, `sdf2d`, `vector2d`, `raster2d`, `blender-geometry`) | MIT OR Apache-2.0 |
-| [`stdlib/`](stdlib/) | Standard `.bn` modules (`maths`, `sdf2d`, `courbes2d`, `motifs2d`, `gp_outils2d`) | MIT OR Apache-2.0 |
+| [`stdlib/`](stdlib/) | Standard `.bn` modules (`math`, `sdf2d`, `curves2d`, `patterns2d`, `gp_tools2d`) | MIT OR Apache-2.0 |
 | [`conformance/`](conformance/) | Shared `.bn` test corpus and expected ASTs | MIT OR Apache-2.0 |
 | [`python/`](python/) | Zero-dependency Python parser, formatter, and CLI (`base_node`) | MIT OR Apache-2.0 |
 | [`rust/`](rust/) | `wasm32`-compatible Rust parser, formatter, and profile checker (`base-node`) | MIT OR Apache-2.0 |
@@ -29,9 +29,9 @@ geometry graph relief(geometry: Geometry, height: Float = 0.4 in 0.0..2.0) -> Ge
 Each profile extends its parent and restricts allowed types, implicit inputs, zones, and nodes:
 
 ```text
-core              Scalar/vector math, logic, noise, repeat (maths.bn)
+core              Scalar/vector math, logic, noise, repeat (math.bn)
  └─ sdf2d         + 2D spatial context: Position, Normal, Index, ID (sdf2d.bn)
-     ├─ vector2d  + Geometry, 2D curves/meshes/points/instances, foreach (courbes2d.bn, motifs2d.bn)
+     ├─ vector2d  + Geometry, 2D curves/meshes/points/instances, foreach (curves2d.bn, patterns2d.bn)
      │   └─ blender-geometry  + Full Blender 5.2+ Geometry Nodes (3D, volumes, closures, bundles)
      └─ raster2d  + Image buffers, blend modes, filters, rasterize/vectorize
 ```
@@ -43,7 +43,7 @@ pip install -e ./python
 
 base-node fmt file.bn
 base-node fmt --check file.bn
-base-node check --profile vector2d stdlib/courbes2d.bn
+base-node check --profile vector2d stdlib/curves2d.bn
 base-node ast file.bn
 ```
 

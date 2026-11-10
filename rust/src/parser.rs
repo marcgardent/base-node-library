@@ -74,7 +74,7 @@ impl<'a> Parser<'a> {
             Ok(self.advance())
         } else {
             let desc = what.unwrap_or(kind_or_punct);
-            Err(self.fail(format!("{} attendu, trouvé {}", desc, self.tok().describe()), None))
+            Err(self.fail(format!("expected {}, found {}", desc, self.tok().describe()), None))
         }
     }
 
@@ -83,7 +83,7 @@ impl<'a> Parser<'a> {
             Ok(self.advance())
         } else {
             let desc = what.unwrap_or(text);
-            Err(self.fail(format!("{} attendu, trouvé {}", desc, self.tok().describe()), None))
+            Err(self.fail(format!("expected {}, found {}", desc, self.tok().describe()), None))
         }
     }
 
@@ -102,12 +102,12 @@ impl<'a> Parser<'a> {
         let mut graphs = Vec::new();
         while !self.at("EOF") {
             if self.at_use() {
-                return Err(self.fail("les use vont en tête du fichier, avant le premier graph", None));
+                return Err(self.fail("use declarations must appear at top of file before graphs", None));
             }
             graphs.push(self.parse_graph()?);
         }
         if graphs.is_empty() {
-            return Err(self.fail("fichier vide : aucun graph", None));
+            return Err(self.fail("empty file: no graphs found", None));
         }
         Ok(File { uses, graphs })
     }
@@ -123,7 +123,7 @@ impl<'a> Parser<'a> {
         if self.accept("(").is_some() {
             let mut list = Vec::new();
             while self.accept(")").is_none() {
-                let g = self.expect("IDENT", Some("nom de graph"))?;
+                let g = self.expect("IDENT", Some("graph name"))?;
                 list.push(g.text);
                 if self.accept(",").is_none() {
                     self.expect(")", None)?;
@@ -132,7 +132,7 @@ impl<'a> Parser<'a> {
             }
             if list.is_empty() {
                 return Err(self.fail(
-                    format!("liste vide : écrire use {} pour tout le module", name_tok.text),
+                    format!("empty list: write 'use {}' to import the entire module", name_tok.text),
                     Some(&t),
                 ));
             }
@@ -140,7 +140,7 @@ impl<'a> Parser<'a> {
         }
         let mut source = None;
         if self.accept_text("IDENT", "from").is_some() {
-            let s = self.expect("STRING", Some("source entre guillemets"))?;
+            let s = self.expect("STRING", Some("quoted source"))?;
             source = Some(s.text);
         }
         Ok(Use {
@@ -153,7 +153,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_graph(&mut self) -> Result<Graph, BnError> {
-        let kind = self.expect("IDENT", Some("type d'arbre (geometry, shader, compositor)"))?;
+        let kind = self.expect("IDENT", Some("tree kind (geometry, shader, compositor)"))?;
         let settings = if self.accept("(").is_some() {
             self.args(true)?
         } else {
@@ -163,7 +163,7 @@ impl<'a> Parser<'a> {
         let name_tok = if let Some(s) = self.accept("STRING") {
             s
         } else {
-            self.expect("IDENT", Some("nom du graph"))?
+            self.expect("IDENT", Some("graph name"))?
         };
         self.expect("(", None)?;
         let param_tree = self.typed_list(")", true)?;
@@ -171,7 +171,7 @@ impl<'a> Parser<'a> {
         let (output_tree, single) = if self.accept("(").is_some() {
             (self.typed_list(")", true)?, false)
         } else {
-            let t = self.expect("IDENT", Some("type de retour"))?;
+            let t = self.expect("IDENT", Some("return type"))?;
             (
                 vec![ParamTreeItem::Param(Param {
                     name: t.text.clone(),
@@ -199,11 +199,11 @@ impl<'a> Parser<'a> {
         let mut body = Vec::new();
         while !self.at("}") {
             if self.at("EOF") {
-                return Err(self.fail("« } » attendu avant la fin du fichier", None));
+                return Err(self.fail("expected '}' before end of file", None));
             }
             if self.at_description() {
                 return Err(self.fail(
-                    "la description d'un graph va en première ligne de son corps",
+                    "graph description must be the first statement in graph body",
                     None,
                 ));
             }
@@ -247,7 +247,7 @@ impl<'a> Parser<'a> {
         while self.accept(close).is_none() {
             if self.at("STRING") && (self.peek(1).is("{") || self.peek(1).is("(")) {
                 if !header {
-                    return Err(self.fail("un panneau ne s'écrit que dans l'en-tête d'un graph", None));
+                    return Err(self.fail("panels are only allowed in graph headers", None));
                 }
                 items.push(ParamTreeItem::Panel(self.panel()?));
                 if self.accept(",").is_none() {
@@ -259,12 +259,12 @@ impl<'a> Parser<'a> {
             let name_tok = if let Some(s) = self.accept("STRING") {
                 s
             } else {
-                self.expect("IDENT", Some("nom"))?
+                self.expect("IDENT", Some("name"))?
             };
             let mut alias = None;
             if self.at_text("IDENT", "as") && self.peek(1).is("IDENT") {
                 if !header {
-                    return Err(self.fail("« as » ne s'écrit que dans l'en-tête d'un graph", None));
+                    return Err(self.fail("'as' is only allowed in graph headers", None));
                 }
                 self.advance();
                 alias = Some(self.advance().text);
@@ -287,14 +287,14 @@ impl<'a> Parser<'a> {
                 } else {
                     Some(self.unary()?)
                 };
-                self.expect("..", Some("« .. » entre le min et le max"))?;
+                self.expect("..", Some("'..' between min and max"))?;
                 let hi = if self.tok().is("NUMBER") || self.tok().is("-") {
                     Some(self.unary()?)
                 } else {
                     None
                 };
                 if lo.is_none() && hi.is_none() {
-                    return Err(self.fail("bornes vides : écrire au moins le min ou le max", None));
+                    return Err(self.fail("empty bounds: specify at least min or max", None));
                 }
                 range = Some((lo, hi));
             }
@@ -323,7 +323,7 @@ impl<'a> Parser<'a> {
         } else {
             Vec::new()
         };
-        self.expect("{", Some("« { » après le nom du panneau"))?;
+        self.expect("{", Some("'{' after panel name"))?;
         let items = self.typed_list("}", true)?;
         let end = self.tokens[self.i - 1].line;
         Ok(Panel {
@@ -376,10 +376,10 @@ impl<'a> Parser<'a> {
         }
         if self.at("IDENT") && self.peek(1).is("=") {
             if t.text == "dot" || t.text == "cross" {
-                let msg = if t.text == "dot" { "scalaire" } else { "vectoriel" };
+                let msg = if t.text == "dot" { "dot product" } else { "cross product" };
                 return Err(self.fail(
                     format!(
-                        "« {} » est réservé au produit {} : choisir un autre nom",
+                        "'{}' is reserved for {}: choose another name",
                         t.text, msg
                     ),
                     Some(&t),
@@ -414,7 +414,7 @@ impl<'a> Parser<'a> {
         }
         Err(self.fail(
             format!(
-                "instruction attendue (nom = …, return, ou un frame \"titre\" {{ … }}), trouvé {}",
+                "expected statement (name = ..., return, or frame \"title\" {{ ... }}), found {}",
                 t.describe()
             ),
             Some(&t),
@@ -443,13 +443,13 @@ impl<'a> Parser<'a> {
         {
             let f = self.advance().text;
             if flags.contains(&f) {
-                return Err(self.fail(format!("« {} » donné deux fois", f), None));
+                return Err(self.fail(format!("duplicate flag '{}'", f), None));
             }
             flags.push(f);
         }
         if label.is_none() && color.is_none() && flags.is_empty() {
             return Err(self.fail(
-                "après @, sur sa ligne : un \"libellé\", une #couleur, hide, mute",
+                "after '@' on the same line: a \"label\", #color, hide, or mute",
                 Some(&at),
             ));
         }
@@ -479,7 +479,7 @@ impl<'a> Parser<'a> {
         };
         if continued && self.at("COLOR") {
             return Err(self.fail(
-                "un frame continué garde sa couleur : écrire seulement \"titre\" .. {",
+                "continued frame retains its color: write only \"title\" .. {",
                 None,
             ));
         }
@@ -487,7 +487,7 @@ impl<'a> Parser<'a> {
         let mut body = Vec::new();
         while !self.at("}") {
             if self.at("EOF") {
-                return Err(self.fail("« } » attendu avant la fin du fichier", None));
+                return Err(self.fail("expected '}' before end of file", None));
             }
             body.push(self.statement()?);
         }
@@ -505,25 +505,25 @@ impl<'a> Parser<'a> {
 
     fn repeat(&mut self) -> Result<Repeat, BnError> {
         let t = self.advance();
-        self.expect("(", Some("« ( » après repeat"))?;
+        self.expect("(", Some("'(' after repeat"))?;
         let args = self.args(false)?;
         self.no_alias(&args)?;
         if args.is_empty() || args[0].name.is_some() {
             return Err(self.fail(
-                "repeat attend d'abord le nombre de tours : repeat(10, état: départ, …)",
+                "repeat expects iteration count first: repeat(10, state: init, ...)",
                 Some(&t),
             ));
         }
         if args.len() < 2 {
             return Err(self.fail(
-                "repeat attend au moins un état : repeat(10, état: départ)",
+                "repeat expects at least one state: repeat(10, state: init)",
                 Some(&t),
             ));
         }
         if args.iter().any(|a| !a.options.is_empty()) {
-            return Err(self.fail("un état de repeat ne prend pas d'options", Some(&t)));
+            return Err(self.fail("repeat state does not accept options", Some(&t)));
         }
-        self.expect("{", Some("« { » après repeat(…)"))?;
+        self.expect("{", Some("'{' after repeat(...)"))?;
         let (body, end) = self.block()?;
         Ok(Repeat {
             count: args[0].value.clone(),
@@ -566,7 +566,7 @@ impl<'a> Parser<'a> {
         if t.text == "simulate" {
             if args.iter().any(|a| a.name.is_none()) {
                 return Err(self.fail(
-                    "simulate attend des états nommés : simulate(état: départ, …)",
+                    "simulate expects named states: simulate(state: init, ...)",
                     Some(&t),
                 ));
             }
@@ -575,7 +575,7 @@ impl<'a> Parser<'a> {
             || args[1..].iter().any(|a| a.name.is_none())
         {
             return Err(self.fail(
-                "foreach attend d'abord la géométrie, puis des valeurs nommées : foreach(geometry, domain: FACE, valeur: champ, …)",
+                "foreach expects geometry first, then named arguments: foreach(geometry, domain: FACE, value: field, ...)",
                 Some(&t),
             ));
         }
@@ -605,7 +605,7 @@ impl<'a> Parser<'a> {
         let mut body = Vec::new();
         while !self.at("}") {
             if self.at("EOF") {
-                return Err(self.fail("« } » attendu avant la fin du fichier", None));
+                return Err(self.fail("expected '}' before end of file", None));
             }
             body.push(self.statement()?);
         }
@@ -655,11 +655,11 @@ impl<'a> Parser<'a> {
         let params = flatten(&self.typed_list(")", false)?);
         self.expect("->", None)?;
         let (outputs, single) = self.outputs()?;
-        self.expect("{", Some("« { » après closure(…) -> …"))?;
+        self.expect("{", Some("'{' after closure(...) -> ..."))?;
         let mut body = Vec::new();
         while !self.at("}") {
             if self.at("EOF") {
-                return Err(self.fail("« } » attendu avant la fin du fichier", None));
+                return Err(self.fail("expected '}' before end of file", None));
             }
             body.push(self.statement()?);
         }
@@ -679,7 +679,7 @@ impl<'a> Parser<'a> {
         if self.accept("(").is_some() {
             Ok((flatten(&self.typed_list(")", false)?), false))
         } else {
-            let t = self.expect("IDENT", Some("type de retour"))?;
+            let t = self.expect("IDENT", Some("return type"))?;
             Ok((
                 vec![Param {
                     name: t.text.clone(),
@@ -706,7 +706,7 @@ impl<'a> Parser<'a> {
                 _ => &rhs,
             };
             if !matches!(call, Expr::Call(_)) {
-                return Err(self.fail("un appel de nœud est attendu après |>", Some(&op)));
+                return Err(self.fail("expected node call after |>", Some(&op)));
             }
             left = Expr::Pipe(Pipe {
                 left: Box::new(left),
@@ -779,7 +779,7 @@ impl<'a> Parser<'a> {
             });
             if is_cmp(self.tok().kind_str()) {
                 return Err(self.fail(
-                    "une seule comparaison à la fois ; pour deux, passer par un nom",
+                    "chained comparisons not allowed; assign intermediate result to a variable",
                     None,
                 ));
             }
@@ -873,7 +873,7 @@ impl<'a> Parser<'a> {
                     col: dot.col,
                 });
             } else {
-                return Err(self.fail("nom de sortie attendu après « . »", None));
+                return Err(self.fail("expected output socket name after '.'", None));
             }
         }
         Ok(node)
@@ -884,9 +884,9 @@ impl<'a> Parser<'a> {
         if self.accept("NUMBER").is_some() {
             let is_int = !t.text.contains('.') && !t.text.contains('e') && !t.text.contains('E');
             let val: f64 = if is_int {
-                t.text.parse::<i64>().map_err(|_| self.fail("entier invalide", Some(&t)))? as f64
+                t.text.parse::<i64>().map_err(|_| self.fail("invalid integer", Some(&t)))? as f64
             } else {
-                t.text.parse::<f64>().map_err(|_| self.fail("flottant invalide", Some(&t)))?
+                t.text.parse::<f64>().map_err(|_| self.fail("invalid float", Some(&t)))?
             };
             return Ok(Expr::Number(Number {
                 value: val,
@@ -918,7 +918,7 @@ impl<'a> Parser<'a> {
         }
         if self.at_text("KEYWORD", "repeat") {
             return Err(self.fail(
-                "repeat s'écrit seul, en valeur d'un nom : r = repeat(10, état: départ) { … }",
+                "repeat can only be assigned to a variable: r = repeat(10, state: init) { ... }",
                 Some(&t),
             ));
         }
@@ -972,7 +972,7 @@ impl<'a> Parser<'a> {
                 }))
             };
         }
-        Err(self.fail(format!("expression attendue, trouvé {}", t.describe()), Some(&t)))
+        Err(self.fail(format!("expected expression, found {}", t.describe()), Some(&t)))
     }
 
     fn args(&mut self, named_only: bool) -> Result<Vec<Arg>, BnError> {
@@ -989,7 +989,7 @@ impl<'a> Parser<'a> {
                 let alias = self.advance();
                 if named_only {
                     return Err(self.fail(
-                        "« as » nomme un item dans l'appel d'un nœud à items, ou une entrée dans l'en-tête d'un graph",
+                        "'as' is only allowed for items in itemized node calls or inputs in graph headers",
                         Some(&alias),
                     ));
                 }
@@ -1013,10 +1013,10 @@ impl<'a> Parser<'a> {
                 self.expect(":", None)?;
                 args.push(self.item(&t, options)?);
             } else if named_only {
-                return Err(self.fail("champ nommé attendu (nom: valeur)", None));
+                return Err(self.fail("expected named argument (name: value)", None));
             } else {
                 if args.iter().any(|a| a.name.is_some()) {
-                    return Err(self.fail("argument positionnel après un argument nommé", None));
+                    return Err(self.fail("positional argument after named argument", None));
                 }
                 let val = self.expr()?;
                 args.push(Arg {
@@ -1046,7 +1046,7 @@ impl<'a> Parser<'a> {
                     a.line,
                     a.col,
                     format!(
-                        "« {} as {} » : « as » ne nomme que l'item d'un nœud à items",
+                        "'{} as {}': 'as' is only allowed for items in itemized node calls",
                         name_str, alias
                     ),
                 ));
@@ -1132,6 +1132,6 @@ impl<'a> Parser<'a> {
                 });
             }
         }
-        Err(self.fail("un type est attendu avant « = » : nom: Type = valeur", Some(at)))
+        Err(self.fail("type expected before '=': name: Type = value", Some(at)))
     }
 }

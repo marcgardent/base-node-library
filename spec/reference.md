@@ -12,18 +12,18 @@ A `.bn` file is UTF-8 text containing:
 `//` starts a line comment. Whitespace and newlines are not significant outside literals; a statement ends when the next token cannot continue the current expression.
 
 ```bn
-use maths (bosse)
+use math (bump)
 
 geometry graph relief(geometry: Geometry, height: Float = 0.4) -> Geometry {
   "Lifts the center of a mesh"
-  h = bosse(length(Position()) / 3.0, 0.5, 0.2) * height
+  h = bump(length(Position()) / 3.0, 0.5, 0.2) * height
   return SetPosition(geometry, offset: CombineXYZ(z: h))
 }
 ```
 
 ## 2. Identifiers and Keywords
 
-- **Identifier**: Unicode letters, digits, and `_`, not starting with a digit (`height`, `fréquence_2`, `p`).
+- **Identifier**: Unicode letters, digits, and `_`, not starting with a digit (`height`, `frequency_2`, `p`).
 - **Quoted name**: `"Point Count"`. Referenced in expressions by its `snake_case` key (`point_count`), or given an explicit key via `as`: `"Scale" as random_scale: Float`.
 - **Reserved words**: `graph`, `return`, `true`, `false`, `and`, `or`, `xor`, `not`, `repeat`, `dot`, `cross`. Host sockets matching a reserved word take a trailing `_` (`not_`).
 - **Contextual keywords**: `use`, `from`, `simulate`, `foreach`, `closure`, `_`.
@@ -142,8 +142,8 @@ b = CombineBundle(factor: 0.5, fn: fn)
 
 | Profile | Extends | Scope |
 |---|---|---|
-| `core` | — | Scalar/vector math, logic, noise, `repeat` (`maths.bn`) |
+| `core` | — | Scalar/vector math, logic, noise, `repeat` (`math.bn`) |
 | `sdf2d` | `core` | `Position`, `Normal`, `Index`, `ID` (`sdf2d.bn`) |
-| `vector2d` | `sdf2d` | `Geometry`, `Material`, 2D curves/meshes/points, `foreach` (`courbes2d.bn`, `motifs2d.bn`) |
+| `vector2d` | `sdf2d` | `Geometry`, `Material`, 2D curves/meshes/points, `foreach` (`curves2d.bn`, `patterns2d.bn`) |
 | `raster2d` | `sdf2d` | `Image`, blend modes, filters, vectorize/rasterize |
 | `blender-geometry` | `vector2d` | Full Blender 5.2+ Geometry Nodes (3D, volumes, `simulate`, `closure`, `Bundle`) |

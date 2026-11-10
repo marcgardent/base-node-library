@@ -73,14 +73,14 @@ def test_names_cross_frames(schema):
 
 def test_unknown_color(schema):
     src = ROCKS.replace("#tomato", "#nope")
-    assert errors(src, schema) == ["couleur « #nope » inconnue : #rrggbb, #rgb ou un nom CSS (#orange, #teal…)"]
+    assert errors(src, schema) == ["unknown color '#nope': expected #rrggbb, #rgb or CSS name (#orange, #teal…)"]
 
 
 def test_a_note_may_follow_return(schema):
     body = ROCKS.replace('  "Check the scale" #tomato {}\n', "")
     compile_one(body.replace("  }\n}\n", '  }\n  "Done" {}\n}\n'), schema)
     late = body.replace("  }\n}\n", '  }\n  "Late" {\n    x = 1.0\n  }\n}\n')
-    assert errors(late, schema) == ["instruction après return"]
+    assert errors(late, schema) == ["statement after return"]
 
 
 def test_a_title_needs_quotes():
@@ -143,10 +143,10 @@ def test_a_continued_frame_is_the_same_frame(schema):
 
 def test_a_continued_frame_needs_one_above(schema):
     src = SPLIT.replace('  "Ends" .. {\n', '  "Nope" .. {\n')
-    assert errors(src, schema)[0] == "pas de frame « Nope » plus haut dans ce bloc à continuer"
+    assert errors(src, schema)[0] == "no earlier 'Nope' frame in this block to continue"
     top = SPLIT.replace('  "Ends" .. {\n    .. {\n      e = d * 0.5\n    }\n  }\n', '  .. {\n    e = d * 0.5\n  }\n')
-    assert errors(top, schema) == ["pas de frame sans titre plus haut dans ce bloc à continuer", "nom inconnu « e »"]
-    with pytest.raises(BnError, match="garde sa couleur"):
+    assert errors(top, schema) == ["no earlier untitled frame in this block to continue", "unknown name 'e'"]
+    with pytest.raises(BnError, match="keeps its color"):
         parse(SPLIT.replace('"Ends" .. {', '"Ends" .. #red {'))
 
 

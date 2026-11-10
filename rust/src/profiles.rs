@@ -192,7 +192,7 @@ fn check_expr(e: &Expr, ctx: &mut CheckCtx<'_>) {
 
                 if !is_builtin && !is_allowed_node && !is_declared && !is_imported {
                     ctx.errors.push(format!(
-                        "Graphe '{}' : nœud ou fonction '{}' hors du profil '{}'",
+                        "Graph '{}': node or function '{}' not in profile '{}'",
                         ctx.g_name, c.name, ctx.prof_name
                     ));
                 }
@@ -233,7 +233,7 @@ fn check_stmt(s: &Stmt, ctx: &mut CheckCtx<'_>) {
             AssignValue::Repeat(r) => {
                 if !ctx.allowed_zones.contains("repeat") {
                     ctx.errors.push(format!(
-                        "Graphe '{}' : zone 'repeat' non autorisée par le profil '{}'",
+                        "Graph '{}': zone 'repeat' not allowed by profile '{}'",
                         ctx.g_name, ctx.prof_name
                     ));
                 }
@@ -248,7 +248,7 @@ fn check_stmt(s: &Stmt, ctx: &mut CheckCtx<'_>) {
             AssignValue::Foreach(f) => {
                 if !ctx.allowed_zones.contains("foreach") {
                     ctx.errors.push(format!(
-                        "Graphe '{}' : zone 'foreach' non autorisée par le profil '{}'",
+                        "Graph '{}': zone 'foreach' not allowed by profile '{}'",
                         ctx.g_name, ctx.prof_name
                     ));
                 }
@@ -263,7 +263,7 @@ fn check_stmt(s: &Stmt, ctx: &mut CheckCtx<'_>) {
             AssignValue::Simulate(sim) => {
                 if !ctx.allowed_zones.contains("simulate") {
                     ctx.errors.push(format!(
-                        "Graphe '{}' : zone 'simulate' non autorisée par le profil '{}'",
+                        "Graph '{}': zone 'simulate' not allowed by profile '{}'",
                         ctx.g_name, ctx.prof_name
                     ));
                 }
@@ -277,7 +277,7 @@ fn check_stmt(s: &Stmt, ctx: &mut CheckCtx<'_>) {
             AssignValue::Closure(c) => {
                 if !ctx.allowed_zones.contains("closure") {
                     ctx.errors.push(format!(
-                        "Graphe '{}' : zone 'closure' non autorisée par le profil '{}'",
+                        "Graph '{}': zone 'closure' not allowed by profile '{}'",
                         ctx.g_name, ctx.prof_name
                     ));
                 }
@@ -353,7 +353,7 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
         // 1. Kind check
         if !allowed_kinds.contains(g.kind.as_str()) {
             errors.push(format!(
-                "Graphe '{}' : type d'arbre '{}' non autorisé par le profil '{}'",
+                "Graph '{}': tree kind '{}' not allowed by profile '{}'",
                 g.name, g.kind, profile.name
             ));
         }
@@ -362,7 +362,7 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
         for p in &g.params {
             if !allowed_types.contains(p.type_name.as_str()) {
                 errors.push(format!(
-                    "Graphe '{}' : entrée '{}' de type '{}' non autorisé par le profil '{}'",
+                    "Graph '{}': input '{}' of type '{}' not allowed by profile '{}'",
                     g.name, p.name, p.type_name, profile.name
                 ));
             }
@@ -372,7 +372,7 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
                     && !allowed_implicits.contains(c.name.as_str())
                 {
                     errors.push(format!(
-                        "Graphe '{}' : entrée implicite '{}' pour '{}' non autorisée par le profil '{}'",
+                        "Graph '{}': implicit input '{}' for '{}' not allowed by profile '{}'",
                         g.name, c.name, p.name, profile.name
                     ));
                 }
@@ -382,7 +382,7 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
         for out in &g.outputs {
             if !allowed_types.contains(out.type_name.as_str()) {
                 errors.push(format!(
-                    "Graphe '{}' : sortie '{}' de type '{}' non autorisé par le profil '{}'",
+                    "Graph '{}': output '{}' of type '{}' not allowed by profile '{}'",
                     g.name, out.name, out.type_name, profile.name
                 ));
             }

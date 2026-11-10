@@ -1,0 +1,356 @@
+// Mathematical toolkit for Geometry Nodes: shaping curves, waves, angles,
+// vectors, signed distance fields (SDF), and random distributions.
+// Shaping curves and SDFs follow formulas published by Inigo Quilez (iquilezles.org).
+// The string at the head of each graph is its docstring / asset description. An input
+// p = Position() binds the point position when unconnected, id = ID() its identifier.
+
+// ---- Curves: x from 0 to 1 produces 0 to 1 ----
+
+geometry graph bias(x: Float, force: Float = 0.25 in 0.001..0.999) -> Float {
+  "Pushes values toward 0 (force < 0.5) or toward 1 (force > 0.5); 0.5 has no effect"
+  return x / ((1.0 / force - 2.0) * (1.0 - x) + 1.0)
+}
+
+geometry graph gain(x: Float, contrast: Float = 0.25 in 0.001..0.999) -> Float {
+  "S-curve around 0.5 (contrast < 0.5) or its inverse (> 0.5); 0.5 has no effect"
+  low = bias(x * 2.0, contrast) * 0.5
+  high = 1.0 - bias(2.0 - x * 2.0, contrast) * 0.5
+  return Switch(x < 0.5, high, low)
+}
+
+geometry graph "ease in"(t: Float, power: Float = 2.0 in 0.0..) -> Float {
+  "Starts slowly: t raised to power"
+  return pow(t, power)
+}
+
+geometry graph "ease out"(t: Float, power: Float = 2.0 in 0.0..) -> Float {
+  "Ends slowly: inverse of ease in"
+  return 1.0 - pow(1.0 - t, power)
+}
+
+geometry graph "ease in out"(t: Float, power: Float = 2.0 in 0.0..) -> Float {
+  "Starts and ends slowly, passes through 0.5 at midpoint"
+  return Switch(t < 0.5, 1.0 - pow(2.0 - t * 2.0, power) * 0.5, pow(t * 2.0, power) * 0.5)
+}
+
+geometry graph impulse(x: Float, stiffness: Float = 4.0) -> Float {
+  "Rises quickly to 1 at x = 1 / stiffness, then falls slowly: shock, bounce"
+  h = stiffness * x
+  return h * exp(1.0 - h)
+}
+
+geometry graph bump(
+    x: Float,
+    center: Float = 0.5,
+    "half width": Float = 0.25 in 0.0001..
+) -> Float {
+  "Smooth bump: 1 at center, 0 beyond half width"
+  d = min(abs(x - center) / half_width, 1.0)
+  return 1.0 - d * d * (3.0 - d * 2.0)
+}
+
+geometry graph parabola(x: Float, sharpness: Float = 1.0 in 0.0..) -> Float {
+  "0 at edges, 1 at midpoint; sharpness 1 gives a parabola, higher sharpens it"
+  return pow(x * 4.0 * (1.0 - x), sharpness)
+}
+
+geometry graph steps(x: Float, rise: Float = 0.25 in 0.0001..1.0) -> Float {
+  "Stair steps: each step rises smoothly over its final fraction 'rise'"
+  return floor(x) + MapRange(fract(x), 1.0 - rise, interpolation_type: SMOOTHSTEP)
+}
+
+geometry graph bounce(t: Float) -> Float {
+  "Falls and bounces three times before settling at 1: a ball"
+  u = t - 0.5454545
+  v = t - 0.8181818
+  w = t - 0.9545454
+  return Switch(
+    t < 0.3636364,
+    Switch(t < 0.7272727, Switch(t < 0.9090909, w * w * 7.5625 + 0.984375, v * v * 7.5625 + 0.9375), u * u * 7.5625 + 0.75),
+    t * t * 7.5625)
+}
+
+geometry graph elastic(t: Float) -> Float {
+  "Overshoots 1 and oscillates back: a released spring"
+  return exp(t * -6.931472) * sin((t * 10.0 - 0.75) * 2.094395) + 1.0
+}
+
+geometry graph recoil(t: Float, force: Float = 1.70158) -> Float {
+  "Pulls back before advancing: force 1.70158 recoils by 10%"
+  return (force + 1.0) * t * t * t - force * t * t
+}
+
+// ---- Waves of period 1 ----
+
+geometry graph triangle(x: Float) -> Float {
+  "Triangle wave: 0 at integers, 1 at midpoints"
+  return 1.0 - abs(fract(x) * 2.0 - 1.0)
+}
+
+geometry graph square(x: Float, duty_cycle: Float = 0.5 in 0.0..1.0) -> Float {
+  "Square wave: 1 during duty cycle fraction of each period, 0 otherwise"
+  return fract(x) < duty_cycle
+}
+
+geometry graph sine01(x: Float) -> Float {
+  "Sine between 0 and 1: 0.5 at integers, 1 at quarter-period"
+  return sin(x * 6.283185) * 0.5 + 0.5
+}
+
+// ---- Vectors ----
+
+geometry graph "project on plane"(v: Vector, normal: Vector = (0.0, 0.0, 1.0)) -> Vector {
+  "Projection of v onto the plane perpendicular to normal"
+  n = normalize(normal)
+  return v - n * (v ⋅ n)
+}
+
+geometry graph perpendicular(v: Vector) -> Vector {
+  "Unit vector perpendicular to v"
+  return normalize(
+    Switch(abs(v.x) > abs(v.z), CombineXYZ(y: -v.z, z: v.y), CombineXYZ(-v.y, v.x), input_type: VECTOR))
+}
+
+geometry graph "max component"(v: Vector) -> Float {
+  "Largest of the three vector components"
+  return max(max(v.x, v.y), v.z)
+}
+
+geometry graph "min component"(v: Vector) -> Float {
+  "Smallest of the three vector components"
+  return min(min(v.x, v.y), v.z)
+}
+
+geometry graph "closest on segment"(
+    p: Vector = Position(),
+    a: Vector,
+    b: Vector = (0.0, 0.0, 1.0)
+) -> (Distance: Float, Factor: Float, Point: Vector) {
+  "Closest point on segment [a, b] to p, its distance to p and factor (0 at a, 1 at b)"
+  ab = b - a
+  t = Clamp(((p - a) ⋅ ab) / (ab ⋅ ab))
+  point = a + ab * t
+  return (Distance: distance(p, point), Factor: t, Point: point)
+}
+
+// ---- Angles, in radians ----
+
+geometry graph "wrap angle"(angle: Float) -> Float {
+  "Wraps an angle into [-π, π]"
+  return Math(angle, 3.141593, -3.141593, operation: WRAP)
+}
+
+geometry graph "angle between"(u: Vector, v: Vector) -> Float {
+  "Angle between two vectors, from 0 to π, accurate even for nearly parallel vectors"
+  return atan2(length(u × v), u ⋅ v)
+}
+
+geometry graph "signed angle"(u: Vector, v: Vector, axis: Vector = (0.0, 0.0, 1.0)) -> Float {
+  "Signed rotation angle from u to v around axis, from -π to π"
+  a = project_on_plane(u, axis)
+  b = project_on_plane(v, axis)
+  return atan2((a × b) ⋅ normalize(axis), a ⋅ b)
+}
+
+// ---- Colors ----
+
+geometry graph luminance(color: Color) -> Float {
+  "Color luminance (Rec. 709): perceived brightness"
+  return color ⋅ (0.2126, 0.7152, 0.0722)
+}
+
+geometry graph palette(
+    t: Float,
+    a: Vector = (0.5, 0.5, 0.5),
+    b: Vector = (0.5, 0.5, 0.5),
+    c: Vector = (1.0, 1.0, 1.0),
+    d: Vector = (0.0, 0.33, 0.67)
+) -> Color {
+  "Inigo Quilez cosine palette: a + b × cos(2π (c × t + d)), one color for each t"
+  return a + b * cos((c * t + d) * 6.283185)
+}
+
+// ---- Signed Distance Fields: negative inside, zero on surface ----
+
+geometry graph "sdf sphere"(p: Vector = Position(), radius: Float = 1.0) -> Float {
+  "Sphere centered at origin"
+  return length(p) - radius
+}
+
+geometry graph "sdf box"(p: Vector = Position(), "half size": Vector = (1.0, 1.0, 1.0)) -> Float {
+  "Box centered at origin of given half-extents"
+  q = abs(p) - half_size
+  return length(max(q, 0.0)) + min(max_component(q), 0.0)
+}
+
+geometry graph "sdf torus"(
+    p: Vector = Position(),
+    "major radius": Float = 1.0,
+    "minor radius": Float = 0.25
+) -> Float {
+  "Flat torus centered around the Z axis"
+  return length(CombineXYZ(length(p * (1.0, 1.0, 0.0)) - major_radius, p.z)) - minor_radius
+}
+
+geometry graph "sdf cylinder"(
+    p: Vector = Position(),
+    radius: Float = 1.0,
+    "half height": Float = 1.0
+) -> Float {
+  "Capped cylinder along Z of height 2 × half height"
+  d = CombineXYZ(length(p * (1.0, 1.0, 0.0)) - radius, abs(p.z) - half_height)
+  return min(max(d.x, d.y), 0.0) + length(max(d, 0.0))
+}
+
+geometry graph "sdf capsule"(
+    p: Vector = Position(),
+    a: Vector,
+    b: Vector = (0.0, 0.0, 1.0),
+    radius: Float = 0.25
+) -> Float {
+  "Capsule: line segment from a to b thickened by radius"
+  return closest_on_segment(p, a, b).distance - radius
+}
+
+geometry graph "sdf cone"(
+    p: Vector = Position(),
+    "half height": Float = 1.0,
+    "bottom radius": Float = 1.0,
+    "top radius": Float in 0.0..
+) -> Float {
+  "Cone frustum along Z of height 2 × half height; top radius 0 gives a sharp cone"
+  q = CombineXYZ(length(p * (1.0, 1.0, 0.0)), p.z)
+  // Closest cap disc, top or bottom, then lateral flank
+  disc = CombineXYZ(
+    q.x - min(q.x, Switch(q.y < 0.0, top_radius, bottom_radius)),
+    abs(q.y) - half_height)
+  k1 = CombineXYZ(top_radius, half_height)
+  k2 = CombineXYZ(top_radius - bottom_radius, half_height * 2.0)
+  flank = q - k1 + k2 * Clamp(((k1 - q) ⋅ k2) / (k2 ⋅ k2))
+  sgn = Switch(flank.x < 0.0 and disc.y < 0.0, 1.0, -1.0)
+  return sgn * sqrt(min(disc ⋅ disc, flank ⋅ flank))
+}
+
+geometry graph "sdf ellipsoid"(p: Vector = Position(), radii: Vector = (1.0, 0.6, 0.4)) -> Float {
+  "Ellipsoid of given semi-axes; approximate distance, exact on surface"
+  k0 = length(p / radii)
+  return k0 * (k0 - 1.0) / length(p / (radii * radii))
+}
+
+geometry graph "sdf octahedron"(p: Vector = Position(), size: Float = 1.0) -> Float {
+  "Octahedron with vertices at distance size; approximate distance"
+  return (abs(p.x) + abs(p.y) + abs(p.z) - size) * 0.5773503
+}
+
+geometry graph "sdf circle"(p: Vector = Position(), radius: Float = 1.0) -> Float {
+  "Circle in the XY plane (2D: z ignored)"
+  return length(p * (1.0, 1.0, 0.0)) - radius
+}
+
+geometry graph "sdf rectangle"(p: Vector = Position(), "half size": Vector = (1.0, 0.5)) -> Float {
+  "Rectangle in the XY plane of given half-extents (2D: z ignored)"
+  d = CombineXYZ(abs(p.x) - half_size.x, abs(p.y) - half_size.y)
+  return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0)
+}
+
+geometry graph "smooth subtraction"(a: Float, b: Float, smoothness: Float = 0.1 in 0.0..) -> Float {
+  "Carves b out of a with rounded blend of given smoothness"
+  return Math(a, -b, smoothness, operation: SMOOTH_MAX)
+}
+
+geometry graph shell(distance: Float, thickness: Float = 0.1 in 0.0..) -> Float {
+  "Shell of given thickness centered on surface"
+  return abs(distance) - thickness * 0.5
+}
+
+geometry graph repetition(p: Vector = Position(), cell: Vector = (1.0, 1.0, 1.0)) -> Vector {
+  "Repeats space: wraps p into its origin-centered cell"
+  return p - cell * floor(p / cell + 0.5)
+}
+
+geometry graph twist(p: Vector = Position(), strength: Float = 1.0) -> Vector {
+  "Twists space around Z: strength radians per unit height"
+  a = p.z * strength
+  return CombineXYZ(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a), p.z)
+}
+
+geometry graph bend(p: Vector = Position(), strength: Float = 0.5) -> Vector {
+  "Bends space upward along X: strength radians per unit length"
+  a = p.x * strength
+  return CombineXYZ(p.x * cos(a) - p.z * sin(a), p.y, p.x * sin(a) + p.z * cos(a))
+}
+
+geometry graph "sdf normal"(d: Float, dx: Float, dy: Float, dz: Float) -> Vector {
+  "SDF normal via finite differences: value at p, then at slightly offset x, y, and z"
+  return normalize(CombineXYZ(dx - d, dy - d, dz - d))
+}
+
+// ---- Noise ----
+
+geometry graph fbm(
+    p: Vector = Position(),
+    octaves: Int = 5 in 1..16,
+    lacunarity: Float = 2.0,
+    persistence: Float = 0.5 in 0.0..1.0
+) -> Float {
+  "Fractal noise: octave layers of increasing frequency and decreasing amplitude, roughly -1 to 1"
+  r = repeat(octaves, sum: 0.0, amplitude: 0.5, frequency: 1.0) {
+    // Each octave offset: prevents identical noise near origin
+    noise = TexNoise(p * frequency + (1.7, 9.2, 3.1) * iteration, 1.0, 0.0).factor * 2.0 - 1.0
+    return (
+      sum: sum + noise * amplitude,
+      amplitude: amplitude * persistence,
+      frequency: frequency * lacunarity)
+  }
+  return r.sum
+}
+
+geometry graph "ridge fbm"(
+    p: Vector = Position(),
+    octaves: Int = 5 in 1..16,
+    lacunarity: Float = 2.0,
+    persistence: Float = 0.5 in 0.0..1.0
+) -> Float {
+  "Ridged fractal noise: sharp mountain ridges, roughly 0 to 1"
+  r = repeat(octaves, sum: 0.0, amplitude: 0.5, frequency: 1.0) {
+    ridge = 1.0 - abs(TexNoise(p * frequency + (1.7, 9.2, 3.1) * iteration, 1.0, 0.0).factor * 2.0 - 1.0)
+    return (
+      sum: sum + ridge * ridge * amplitude,
+      amplitude: amplitude * persistence,
+      frequency: frequency * lacunarity)
+  }
+  return r.sum
+}
+
+// ---- Random ----
+
+geometry graph "random direction"(id: Int = ID(), seed: Int) -> Vector {
+  "Uniform random direction on the unit sphere"
+  r = RandomValue(max: (1.0, 1.0, 0.0), id: id, seed: seed, data_type: FLOAT_VECTOR)
+  z = r.x * 2.0 - 1.0
+  s = sqrt(1.0 - z * z)
+  a = r.y * 6.283185
+  return CombineXYZ(s * cos(a), s * sin(a), z)
+}
+
+geometry graph "point in disk"(id: Int = ID(), seed: Int) -> Vector {
+  "Uniform random point inside the XY unit disk"
+  r = RandomValue(max: (1.0, 1.0, 0.0), id: id, seed: seed, data_type: FLOAT_VECTOR)
+  a = r.y * 6.283185
+  return CombineXYZ(cos(a), sin(a)) * sqrt(r.x)
+}
+
+// ---- Sampling ----
+
+geometry graph "fibonacci point"(index: Int = Index(), count: Int = 100 in 1..) -> Vector {
+  "Point at index from count points evenly distributed on the unit sphere"
+  z = 1.0 - (index * 2.0 + 1.0) / count
+  r = sqrt(1.0 - z * z)
+  a = index * 2.399963
+  return CombineXYZ(r * cos(a), r * sin(a), z)
+}
+
+geometry graph "r2 sequence"(index: Int = Index()) -> Vector {
+  "Point at index in the 2D R2 low-discrepancy sequence in [0, 1]²"
+  return CombineXYZ(fract(index * 0.7548777 + 0.5), fract(index * 0.5698403 + 0.5))
+}

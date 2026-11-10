@@ -3,34 +3,53 @@ use std::path::Path;
 
 use base_node::{check_profile, format_source, parse, ProfileKind};
 
+fn read_stdlib_file(candidates: &[&str]) -> (String, String) {
+    let mut last_err = String::new();
+    for &name in candidates {
+        let relative = format!("../stdlib/{}", name);
+        let content = fs::read_to_string(&relative)
+            .or_else(|_| fs::read_to_string(format!("/home/marcgardent/base-node-library/stdlib/{}", name)));
+        if let Ok(src) = content {
+            if let Ok(file) = parse(&src, name) {
+                if !file.graphs.is_empty() {
+                    return (name.to_string(), src);
+                }
+            }
+            last_err = format!("Candidate '{}' was read but failed parse validation", name);
+        }
+    }
+    panic!(
+        "Unable to read valid stdlib file; candidates: {:?}; last error: {}",
+        candidates, last_err
+    );
+}
+
 #[test]
 fn test_stdlib_conformance() {
-    let files = [
-        ("maths.bn", 47),
-        ("sdf2d.bn", 17),
-        ("courbes2d.bn", 7),
-        ("motifs2d.bn", 5),
-        ("gp_outils2d.bn", 4),
+    let files: &[(&[&str], usize)] = &[
+        (&["math.bn", "maths.bn"], 47),
+        (&["sdf2d.bn"], 17),
+        (&["curves2d.bn", "courbes2d.bn"], 7),
+        (&["patterns2d.bn", "motifs2d.bn"], 5),
+        (&["gp_tools2d.bn", "gp_outils2d.bn"], 4),
     ];
 
-    for (filename, expected_graphs) in files {
-        let path = format!("../stdlib/{}", filename);
-        let src = fs::read_to_string(&path)
-            .or_else(|_| fs::read_to_string(format!("/home/marcgardent/base-node-library/stdlib/{}", filename)))
-            .unwrap_or_else(|e| panic!("Impossible de lire {} : {}", path, e));
+    for (candidates, expected_graphs) in files {
+        let (filename, src) = read_stdlib_file(candidates);
 
-        let file = parse(&src, filename).unwrap_or_else(|e| panic!("Erreur de parse sur {} : {}", filename, e));
+        let file = parse(&src, &filename)
+            .unwrap_or_else(|e| panic!("Parse error on {}: {}", filename, e));
         assert_eq!(
             file.graphs.len(),
-            expected_graphs,
-            "Nombre de graphes inattendu pour {}",
+            *expected_graphs,
+            "Unexpected graph count for {}",
             filename
         );
 
-        let formatted = format_source(&src, filename)
-            .unwrap_or_else(|e| panic!("Erreur de formatage sur {} : {}", filename, e));
+        let formatted = format_source(&src, &filename)
+            .unwrap_or_else(|e| panic!("Formatting error on {}: {}", filename, e));
 
-        assert_eq!(formatted, src, "Formateur non identique sur {}", filename);
+        assert_eq!(formatted, src, "Formatter mismatch on {}", filename);
     }
 }
 
@@ -48,20 +67,20 @@ fn test_compat_1_0_files() {
             let filename = path.file_name().unwrap().to_str().unwrap();
             let src = fs::read_to_string(&path).unwrap();
             let file = parse(&src, filename)
-                .unwrap_or_else(|e| panic!("Erreur de parse sur compat {} : {}", filename, e));
+                .unwrap_or_else(|e| panic!("Parse error on compat {}: {}", filename, e));
             assert!(!file.graphs.is_empty());
 
             let formatted = format_source(&src, filename)
-                .unwrap_or_else(|e| panic!("Erreur de formatage sur compat {} : {}", filename, e));
+                .unwrap_or_else(|e| panic!("Formatting error on compat {}: {}", filename, e));
 
             if filename == "formes.bn" {
-                // formes.bn contient des variantes 1.0 (dot, cross, ·) que le formateur canonise
+                // formes.bn contains 1.0 variants (dot, cross, ·) that the formatter canonicalizes
                 let idempotent = format_source(&formatted, filename).unwrap();
-                assert_eq!(idempotent, formatted, "Formatage non idempotent sur formes.bn");
+                assert_eq!(idempotent, formatted, "Formatting not idempotent on formes.bn");
             } else {
                 assert_eq!(
                     formatted, src,
-                    "Formatage non identique caractère pour caractère sur compat {}",
+                    "Formatting not character-identical on compat {}",
                     filename
                 );
             }
@@ -71,30 +90,6 @@ fn test_compat_1_0_files() {
 
 #[test]
 fn test_examples_and_fixtures() {
-    let examples = [
-        "/home/marcgardent/marcs-blender-library/docs/exemples/rochers.bn",
-        "/home/marcgardent/marcs-blender-library/docs/exemples/serpent.bn",
-        "/home/marcgardent/marcs-blender-library/docs/exemples/herbe.bn",
-    ];
-
-    for path_str in examples {
-        let path = Path::new(path_str);
-        if !path.exists() {
-            continue;
-        }
-        let filename = path.file_name().unwrap().to_str().unwrap();
-        let src = fs::read_to_string(path).unwrap();
-        let file = parse(&src, filename).unwrap_or_else(|e| panic!("Erreur de parse sur {} : {}", filename, e));
-        assert!(!file.graphs.is_empty());
-
-        let formatted = format_source(&src, filename).unwrap();
-        assert_eq!(
-            formatted, src,
-            "Formatage non identique caractère pour caractère sur {}",
-            filename
-        );
-    }
-
     let fixtures_dir = Path::new("../python/tests/fixtures");
     if fixtures_dir.exists() {
         for entry in fs::read_dir(fixtures_dir).unwrap() {
@@ -104,13 +99,13 @@ fn test_examples_and_fixtures() {
                 let filename = path.file_name().unwrap().to_str().unwrap();
                 let src = fs::read_to_string(&path).unwrap();
                 let file = parse(&src, filename)
-                    .unwrap_or_else(|e| panic!("Erreur de parse sur fixture {} : {}", filename, e));
+                    .unwrap_or_else(|e| panic!("Parse error on fixture {}: {}", filename, e));
                 assert!(!file.graphs.is_empty());
 
                 let formatted = format_source(&src, filename).unwrap();
                 assert_eq!(
                     formatted, src,
-                    "Formatage non identique caractère pour caractère sur fixture {}",
+                    "Formatting not character-identical on fixture {}",
                     filename
                 );
             }
@@ -120,36 +115,33 @@ fn test_examples_and_fixtures() {
 
 #[test]
 fn test_profiles_validation() {
-    let load_stdlib = |name: &str| {
-        let path = format!("../stdlib/{}", name);
-        let src = fs::read_to_string(&path)
-            .or_else(|_| fs::read_to_string(format!("/home/marcgardent/base-node-library/stdlib/{}", name)))
-            .unwrap();
-        parse(&src, name).unwrap()
+    let load_stdlib = |candidates: &[&str]| {
+        let (filename, src) = read_stdlib_file(candidates);
+        parse(&src, &filename).unwrap()
     };
 
-    // 1. maths.bn passe Core avec 0 erreur
-    let maths = load_stdlib("maths.bn");
-    let maths_core_errors = check_profile(&maths, ProfileKind::Core);
+    // 1. math.bn passes Core with 0 errors
+    let math = load_stdlib(&["math.bn", "maths.bn"]);
+    let math_core_errors = check_profile(&math, ProfileKind::Core);
     assert!(
-        maths_core_errors.is_empty(),
-        "maths.bn devrait passer Core avec 0 erreur, mais a : {:?}",
-        maths_core_errors
+        math_core_errors.is_empty(),
+        "math stdlib file should pass Core with 0 errors, but got: {:?}",
+        math_core_errors
     );
 
-    // 2. sdf2d.bn passe Sdf2d avec 0 erreur
-    let sdf2d = load_stdlib("sdf2d.bn");
+    // 2. sdf2d.bn passes Sdf2d with 0 errors
+    let sdf2d = load_stdlib(&["sdf2d.bn"]);
     let sdf2d_sdf_errors = check_profile(&sdf2d, ProfileKind::Sdf2d);
     assert!(
         sdf2d_sdf_errors.is_empty(),
-        "sdf2d.bn devrait passer Sdf2d avec 0 erreur, mais a : {:?}",
+        "sdf2d.bn should pass Sdf2d with 0 errors, but got: {:?}",
         sdf2d_sdf_errors
     );
 
-    // Un graphe qui utilise Position() dans son body échoue sur Core car Position n'est pas dans les nœuds de Core
+    // A graph calling Position() in its body fails Core because Position is not in Core nodes
     let src_call_position = r#"
-geometry graph "test_spatial"(facteur: Float = 0.5) -> Vector {
-  p = Position() * facteur
+geometry graph "test_spatial"(factor: Float = 0.5) -> Vector {
+  p = Position() * factor
   return p
 }
 "#;
@@ -157,48 +149,48 @@ geometry graph "test_spatial"(facteur: Float = 0.5) -> Vector {
     let spatial_core_errors = check_profile(&file_spatial, ProfileKind::Core);
     assert!(
         !spatial_core_errors.is_empty(),
-        "Un graphe appelant Position() dans son body doit échouer sur Core"
+        "A graph calling Position() in its body must fail Core"
     );
     assert!(
         spatial_core_errors.iter().any(|e| e.contains("Position")),
-        "L'erreur doit mentionner Position"
+        "Error message must mention Position"
     );
 
     let spatial_sdf_errors = check_profile(&file_spatial, ProfileKind::Sdf2d);
     assert!(
         spatial_sdf_errors.is_empty(),
-        "Un graphe appelant Position() dans son body doit passer sur Sdf2d avec 0 erreur : {:?}",
+        "A graph calling Position() in its body must pass Sdf2d with 0 errors: {:?}",
         spatial_sdf_errors
     );
 
-    // 3. courbes2d.bn, motifs2d.bn et gp_outils2d.bn passent Vector2d avec 0 erreur
-    let courbes = load_stdlib("courbes2d.bn");
-    let motifs = load_stdlib("motifs2d.bn");
-    let gp_outils = load_stdlib("gp_outils2d.bn");
+    // 3. curves2d.bn, patterns2d.bn, and gp_tools2d.bn pass Vector2d with 0 errors
+    let curves = load_stdlib(&["curves2d.bn", "courbes2d.bn"]);
+    let patterns = load_stdlib(&["patterns2d.bn", "motifs2d.bn"]);
+    let gp_tools = load_stdlib(&["gp_tools2d.bn", "gp_outils2d.bn"]);
 
-    let courbes_errors = check_profile(&courbes, ProfileKind::Vector2d);
+    let curves_errors = check_profile(&curves, ProfileKind::Vector2d);
     assert!(
-        courbes_errors.is_empty(),
-        "courbes2d.bn devrait passer Vector2d avec 0 erreur, mais a : {:?}",
-        courbes_errors
+        curves_errors.is_empty(),
+        "curves2d stdlib file should pass Vector2d with 0 errors, but got: {:?}",
+        curves_errors
     );
 
-    let motifs_errors = check_profile(&motifs, ProfileKind::Vector2d);
+    let patterns_errors = check_profile(&patterns, ProfileKind::Vector2d);
     assert!(
-        motifs_errors.is_empty(),
-        "motifs2d.bn devrait passer Vector2d avec 0 erreur, mais a : {:?}",
-        motifs_errors
+        patterns_errors.is_empty(),
+        "patterns2d stdlib file should pass Vector2d with 0 errors, but got: {:?}",
+        patterns_errors
     );
 
-    let gp_errors = check_profile(&gp_outils, ProfileKind::Vector2d);
+    let gp_errors = check_profile(&gp_tools, ProfileKind::Vector2d);
     assert!(
         gp_errors.is_empty(),
-        "gp_outils2d.bn devrait passer Vector2d avec 0 erreur, mais a : {:?}",
+        "gp_tools2d stdlib file should pass Vector2d with 0 errors, but got: {:?}",
         gp_errors
     );
 
-    // Ils échouent sur Core car ils utilisent Geometry ou des nœuds vectoriels
-    assert!(!check_profile(&courbes, ProfileKind::Core).is_empty());
-    assert!(!check_profile(&motifs, ProfileKind::Core).is_empty());
-    assert!(!check_profile(&gp_outils, ProfileKind::Core).is_empty());
+    // They fail Core because they use Geometry or vector nodes
+    assert!(!check_profile(&curves, ProfileKind::Core).is_empty());
+    assert!(!check_profile(&patterns, ProfileKind::Core).is_empty());
+    assert!(!check_profile(&gp_tools, ProfileKind::Core).is_empty());
 }

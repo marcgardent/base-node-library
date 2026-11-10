@@ -44,7 +44,7 @@ def build_source(source, filename="<text>"):
     builder = Builder(filename, graphs)
     for g in graphs:
         if g.kind != "geometry":
-            builder.fail(g, f"les arbres {g.kind} arrivent en v3")
+            builder.fail(g, f"{g.kind} trees will be supported in v3")
 
     scratch = {}
     try:
@@ -129,7 +129,7 @@ class Builder:
         calls whose first input and output are geometries is a modifier, and another is not."""
         unknown = [s for s in g.settings if s not in TREE_FLAGS or not hasattr(tree, s)]
         if unknown:
-            self.fail(g, f"réglage {unknown[0]} inconnu ; réglages : {', '.join(TREE_FLAGS)}")
+            self.fail(g, f"unknown setting '{unknown[0]}'; settings: {', '.join(TREE_FLAGS)}")
         modifier = bool(g.name not in self.called and g.inputs[:1] and g.outputs[:1]
                         and g.inputs[0][1] == g.outputs[0][1] == "Geometry")
         for flag, fresh in dict(TREE_FLAGS, is_modifier=modifier).items():
@@ -137,7 +137,7 @@ class Builder:
                 continue
             value = g.settings.get(flag, fresh)
             if not isinstance(value, bool):
-                self.fail(g, f"réglage {flag} : true ou false")
+                self.fail(g, f"setting '{flag}': true or false")
             setattr(tree, flag, value)
 
     def panels(self, tree, g):
@@ -146,13 +146,13 @@ class Builder:
         for p in g.panels:
             unknown = [o for o in p.options if o not in PANEL_OPTIONS]
             if unknown:
-                self.fail(p, f"panneau « {p.name} » : réglage {unknown[0]} inconnu ; réglages : "
+                self.fail(p, f"panel '{p.name}': unknown setting '{unknown[0]}'; settings: "
                              f"{', '.join(PANEL_OPTIONS)}")
             for option, fresh in PANEL_OPTIONS.items():
                 try:
                     setattr(made[p.id], option, p.options.get(option, fresh))
                 except (TypeError, ValueError) as e:
-                    self.fail(p, f"réglage {option} du panneau « {p.name} » : {e}")
+                    self.fail(p, f"panel '{p.name}' setting '{option}': {e}")
 
     def item(self, tree, io, k):
         """The interface socket of a text key, found again: setting some options makes it anew."""
@@ -168,7 +168,7 @@ class Builder:
                 wanted = g.options.get((io, k), {})
                 unknown = [o for o in wanted if o not in fresh]
                 if unknown:
-                    self.fail(g, f"« {name} » : option {unknown[0]} inconnue ; options : {', '.join(fresh)}")
+                    self.fail(g, f"'{name}': unknown option '{unknown[0]}'; options: {', '.join(fresh)}")
                 for option in sorted(fresh, key=lambda o: o != "subtype"):
                     value = wanted.get(option, fresh[option])
                     if same_option(option, getattr(item, option), value):
@@ -176,7 +176,7 @@ class Builder:
                     try:
                         setattr(item, option, value)
                     except (TypeError, ValueError) as e:
-                        self.fail(g, f"option {option} de « {name} » : {e}")
+                        self.fail(g, f"option '{option}' of '{name}': {e}")
                     item = self.item(tree, io, k)
 
     def defaults(self, tree, g):
@@ -196,7 +196,7 @@ class Builder:
             if item.socket_type.removeprefix("NodeSocket").upper() in DATABLOCKS and isinstance(value, str):
                 found = getattr(bpy.data, DATABLOCKS[item.socket_type.removeprefix("NodeSocket").upper()]).get(value)
                 if found is None:
-                    self.fail(g, f"« {name} » : {_type} « {value} » introuvable dans le fichier")
+                    self.fail(g, f"'{name}': {_type} '{value}' not found in file")
                 value = found
             elif item.socket_type == "NodeSocketVector" and hasattr(item, "dimensions"):
                 if item.dimensions != len(value):
@@ -210,7 +210,7 @@ class Builder:
             try:
                 item.default_value = value
             except (TypeError, ValueError) as e:
-                self.fail(g, f"valeur par défaut de « {name} » : {e}")
+                self.fail(g, f"default value of '{name}': {e}")
 
     def fill(self, tree, g, built, kept):
         pos = layout(g)
@@ -301,7 +301,7 @@ class Builder:
             bpy.context.view_layer.update()
         for n, made, src, dst in refused:
             if not made.is_valid:
-                self.fail(n, f"Blender refuse le lien {src.name} ({src.type}) → {dst.name} ({dst.type})")
+                self.fail(n, f"Blender rejected link {src.name} ({src.type}) → {dst.name} ({dst.type})")
         # Once linked: an item set to remove itself goes at once while nothing feeds it
         for item, option, value in self.late:
             setattr(item, option, value)
@@ -320,14 +320,14 @@ class Builder:
         # Fetched again, as adding items may move the earlier ones in memory
         for (name, _type), item in zip(items, getattr(node, shape.collection)):
             if shape.named and item.name != name:
-                self.fail(n, f"Blender renomme l'item « {name} » en « {item.name} » : "
-                             "un nom d'item n'est pas un chemin (ni « / », ni « . », ni « - », ni « : »)")
+                self.fail(n, f"Blender renames item '{name}' to '{item.name}': "
+                             "item names cannot be paths (no '/', '.', '-', or ':')")
             wanted = n.item_options.get(option_key(attr, name), {})
             known = item_option_names(item, shape)
             unknown = [o for o in wanted if o not in known]
             if unknown:
-                self.fail(n, f"item « {name} » : option {unknown[0]} inconnue ; "
-                             f"options : {', '.join(known) or 'aucune'}")
+                self.fail(n, f"item '{name}': unknown option '{unknown[0]}'; "
+                             f"options: {', '.join(known) or 'none'}")
             for option, value in wanted.items():
                 if option in LATE_OPTIONS:
                     self.late.append((item, option, value))
@@ -335,7 +335,7 @@ class Builder:
                 try:
                     setattr(item, option, value)
                 except (TypeError, ValueError) as e:
-                    self.fail(n, f"option {option} de l'item « {name} » : {e}")
+                    self.fail(n, f"option '{option}' of item '{name}': {e}")
 
     def socket(self, g, n, node, ident, side):
         """A Blender socket from its text identifier.
@@ -362,7 +362,7 @@ class Builder:
                 return sockets[fixed + int(ident[1:])]
             found = next((s for s in sockets[:fixed] if s.identifier == ident), None)
             if found is None:
-                self.fail(n, f"socket « {ident} » introuvable dans Blender")
+                self.fail(n, f"socket '{ident}' not found in Blender")
             return found
         elif n.items is not None and n.bl_idname in ITEM_NODES:
             # The fixed sockets by identifier, then the items by position
@@ -370,7 +370,7 @@ class Builder:
             sockets = [s for s in sockets if s.type != "CUSTOM"]
             fixed = shape.inputs if side == "inputs" else shape.outputs
             if ident.startswith("#"):
-                # An item with a key of its own (`Selection as capturé`), by its number
+                # An item with a key of its own (`Selection as captured`), by its number
                 return sockets[fixed + int(ident[1:])]
             found = next((s for s in sockets[:fixed] if s.identifier == ident), None)
             if found is not None:
@@ -385,14 +385,14 @@ class Builder:
             return sockets[[name for name, _t in names].index(ident)]
         sock = next((s for s in sockets if s.identifier == ident), None)
         if sock is None:
-            self.fail(n, f"socket « {ident} » introuvable dans Blender")
+            self.fail(n, f"socket '{ident}' not found in Blender")
         return sock
 
     def coerce(self, n, sock, value):
         if sock.type in DATABLOCKS and isinstance(value, str):
             found = getattr(bpy.data, DATABLOCKS[sock.type]).get(value)
             if found is None:
-                self.fail(n, f"{sock.type.title()} « {value} » introuvable dans le fichier")
+                self.fail(n, f"{sock.type.title()} '{value}' not found in file")
             return found
         return coerce(sock, value)
 

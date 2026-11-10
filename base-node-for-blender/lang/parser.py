@@ -54,7 +54,7 @@ class Parser:
     def expect(self, kind, text=None, what=None):
         if self.at(kind, text):
             return self.advance()
-        self.fail(f"{what or text or kind} attendu, trouvé {describe(self.tok)}")
+        self.fail(f"expected {what or text or kind}, found {describe(self.tok)}")
 
     def fail(self, message, tok=None):
         tok = tok or self.tok
@@ -68,10 +68,10 @@ class Parser:
             f.uses.append(self.use())
         while not self.at("EOF"):
             if self.at_use():
-                self.fail("les use vont en tête du fichier, avant le premier graph")
+                self.fail("use statements must be at the top of the file, before graphs")
             f.graphs.append(self.graph())
         if not f.graphs:
-            self.fail("fichier vide : aucun graph")
+            self.fail("empty file: no graph found")
         return f
 
     def at_use(self):
@@ -85,29 +85,29 @@ class Parser:
         if self.accept("("):
             names = []
             while not self.accept(")"):
-                names.append(self.expect("IDENT", what="nom de graph").text)
+                names.append(self.expect("IDENT", what="graph name").text)
                 if not self.accept(","):
                     self.expect(")")
                     break
             if not names:
-                self.fail("liste vide : écrire use " + name.text + " pour tout le module", t)
+                self.fail("empty list: write use " + name.text + " for the whole module", t)
         source = None
         if self.accept("IDENT", "from"):
-            source = self.expect("STRING", what="source entre guillemets").text
+            source = self.expect("STRING", what="quoted source").text
         return ast.Use(name.text, names, source, t.line, t.col)
 
     def graph(self):
-        kind = self.expect("IDENT", what="type d'arbre (geometry, shader, compositor)")
+        kind = self.expect("IDENT", what="tree kind (geometry, shader, compositor)")
         settings = self.args(named_only=True) if self.accept("(") else []
         self.expect("KEYWORD", "graph")
-        name = self.accept("STRING") or self.expect("IDENT", what="nom du graph")
+        name = self.accept("STRING") or self.expect("IDENT", what="graph name")
         self.expect("(")
         param_tree = self.typed_list(")", header=True)
         self.expect("->")
         if self.accept("("):
             output_tree, single = self.typed_list(")", header=True), False
         else:
-            t = self.expect("IDENT", what="type de retour")
+            t = self.expect("IDENT", what="return type")
             output_tree, single = [ast.Param(t.text, t.text, t.line, t.col)], True
         params, outputs = ast.flatten(param_tree), ast.flatten(output_tree)
         self.expect("{")
@@ -117,9 +117,9 @@ class Parser:
         body = []
         while not self.at("}"):
             if self.at("EOF"):
-                self.fail("« } » attendu avant la fin du fichier")
+                self.fail("'}' expected before end of file")
             if self.at_description():
-                self.fail("la description d'un graph va en première ligne de son corps")
+                self.fail("graph description must be on the first line of its body")
             body.append(self.statement())
         end = self.advance()
         g = ast.Graph(kind.text, name.text, params, outputs, single, body, kind.line, kind.col, end.line)
@@ -133,7 +133,7 @@ class Parser:
         return g
 
     def at_description(self):
-        # A string alone: `"Titre" {` and `"Titre" #couleur {` are frames
+        # A string alone: `"Title" {` and `"Title" #color {` are frames
         return self.at("STRING") and self.peek().kind not in ("{", "COLOR", "..")
 
     def typed_list(self, close, header=False):
@@ -145,17 +145,17 @@ class Parser:
         while not self.accept(close):
             if self.at("STRING") and self.peek().kind in ("{", "("):
                 if not header:
-                    self.fail("un panneau ne s'écrit que dans l'en-tête d'un graph")
+                    self.fail("panels can only be defined in a graph header")
                 items.append(self.panel())
                 if not self.accept(","):
                     self.expect(close)
                     break
                 continue
-            name = self.accept("STRING") or self.expect("IDENT", what="nom")
+            name = self.accept("STRING") or self.expect("IDENT", what="name")
             alias = None
             if self.at("IDENT", "as") and self.peek().kind == "IDENT":
                 if not header:
-                    self.fail("« as » ne s'écrit que dans l'en-tête d'un graph")
+                    self.fail("'as' can only be used in a graph header")
                 self.advance()
                 alias = self.advance().text
             self.expect(":")
@@ -169,10 +169,10 @@ class Parser:
                 # Either side may be left open: `in 0.0..`, `in ..1.0`
                 self.advance()
                 lo = None if self.at("..") else self.unary()
-                self.expect("..", what="« .. » entre le min et le max")
+                self.expect("..", what="'..' between min and max")
                 hi = self.unary() if self.tok.kind in ("NUMBER", "-") else None
                 if lo is None and hi is None:
-                    self.fail("bornes vides : écrire au moins le min ou le max")
+                    self.fail("empty range: specify at least min or max")
                 p.range = (lo, hi)
             items.append(p)
             if not self.accept(","):
@@ -183,7 +183,7 @@ class Parser:
     def panel(self):
         t = self.advance()
         options = self.args(named_only=True) if self.accept("(") else []
-        self.expect("{", what="« { » après le nom du panneau")
+        self.expect("{", what="'{' after panel name")
         items = self.typed_list("}", header=True)
         # typed_list took the closing brace
         return ast.Panel(t.text, items, t.line, t.col, options, self.tokens[self.i - 1].line)
@@ -202,8 +202,8 @@ class Parser:
             return ast.Return(self.expr(), t.line, t.col, self.look())
         if self.at("IDENT") and self.peek().kind == "=":
             if t.text in WORDS:
-                self.fail(f"« {t.text} » est réservé au produit {'scalaire' if t.text == 'dot' else 'vectoriel'} : "
-                          "choisir un autre nom")
+                self.fail(f"'{t.text}' is reserved for {'dot' if t.text == 'dot' else 'cross'} product: "
+                          "choose another name")
             self.advance()
             self.advance()
             if self.at("KEYWORD", "repeat"):
@@ -216,7 +216,7 @@ class Parser:
                 # A zone's output shows its look on the return of its body
                 return ast.Assign(t.text, self.expr(), t.line, t.col, self.look())
             return ast.Assign(t.text, value, t.line, t.col)
-        self.fail(f"instruction attendue (nom = …, return, ou un frame \"titre\" {{ … }}), trouvé {describe(t)}")
+        self.fail(f"statement expected (name = …, return, or a frame \"title\" {{ … }}), found {describe(t)}")
 
     def look(self):
         """`@ "Label" #color hide mute` at the end of a statement, each part optional, or None.
@@ -231,10 +231,10 @@ class Parser:
         flags = []
         while self.at("IDENT") and self.tok.text in LOOK_FLAGS and self.tok.line == at.line:
             if self.tok.text in flags:
-                self.fail(f"« {self.tok.text} » donné deux fois")
+                self.fail(f"'{self.tok.text}' given twice")
             flags.append(self.advance().text)
         if label is None and color is None and not flags:
-            self.fail(f"après @, sur sa ligne : un \"libellé\", une #couleur, {', '.join(LOOK_FLAGS)}")
+            self.fail(f"after @ on the same line: a \"label\", a #color, {', '.join(LOOK_FLAGS)}")
         return ast.Look(flags, at.line, at.col, label and label.text, color and color.text)
 
     def frame(self):
@@ -243,28 +243,28 @@ class Parser:
         continued = self.accept("..") is not None
         color = None if continued else self.accept("COLOR")
         if continued and self.at("COLOR"):
-            self.fail("un frame continué garde sa couleur : écrire seulement \"titre\" .. {")
+            self.fail("continued frame keeps its color: write only \"title\" .. {")
         self.expect("{")
         body = []
         while not self.at("}"):
             if self.at("EOF"):
-                self.fail("« } » attendu avant la fin du fichier")
+                self.fail("'}' expected before end of file")
             body.append(self.statement())
         end = self.advance()
         return ast.Frame(label and label.text, color and color.text, body, t.line, t.col, end.line, continued)
 
     def repeat(self):
         t = self.advance()
-        self.expect("(", what="« ( » après repeat")
+        self.expect("(", what="'(' after repeat")
         args = self.args()
         self.no_alias(args)
         if not args or args[0].name is not None:
-            self.fail("repeat attend d'abord le nombre de tours : repeat(10, état: départ, …)", t)
+            self.fail("repeat expects iteration count first: repeat(10, state: start, …)", t)
         if len(args) < 2:
-            self.fail("repeat attend au moins un état : repeat(10, état: départ)", t)
+            self.fail("repeat expects at least one state: repeat(10, state: start)", t)
         if any(a.options for a in args):
-            self.fail("un état de repeat ne prend pas d'options", t)
-        self.expect("{", what="« { » après repeat(…)")
+            self.fail("repeat state does not take options", t)
+        self.expect("{", what="'{' after repeat(…)")
         body, end = self.block()
         return ast.Repeat(args[0].value, args[1:], body, t.line, t.col, end.line)
 
@@ -288,10 +288,10 @@ class Parser:
         self.no_alias(args)
         if t.text == "simulate":
             if any(a.name is None for a in args):
-                self.fail("simulate attend des états nommés : simulate(état: départ, …)", t)
+                self.fail("simulate expects named states: simulate(state: start, …)", t)
         elif not args or args[0].name is not None or any(a.name is None for a in args[1:]):
-            self.fail("foreach attend d'abord la géométrie, puis des valeurs nommées : "
-                      "foreach(geometry, domain: FACE, valeur: champ, …)", t)
+            self.fail("foreach expects geometry first, then named items: "
+                      "foreach(geometry, domain: FACE, item: field, …)", t)
         self.expect("{")
         body, end = self.block()
         if t.text == "simulate":
@@ -303,7 +303,7 @@ class Parser:
         body = []
         while not self.at("}"):
             if self.at("EOF"):
-                self.fail("« } » attendu avant la fin du fichier")
+                self.fail("'}' expected before end of file")
             body.append(self.statement())
         return body, self.advance()
 
@@ -343,11 +343,11 @@ class Parser:
         params = self.typed_list(")")
         self.expect("->")
         outputs, single = self.outputs()
-        self.expect("{", what="« { » après closure(…) -> …")
+        self.expect("{", what="'{' after closure(…) -> …")
         body = []
         while not self.at("}"):
             if self.at("EOF"):
-                self.fail("« } » attendu avant la fin du fichier")
+                self.fail("'}' expected before end of file")
             body.append(self.statement())
         end = self.advance()
         return ast.Closure(params, outputs, single, body, t.line, t.col, end.line)
@@ -356,7 +356,7 @@ class Parser:
         """After `->`: `(name: Type, …)`, or one Type named as itself."""
         if self.accept("("):
             return self.typed_list(")"), False
-        t = self.expect("IDENT", what="type de retour")
+        t = self.expect("IDENT", what="return type")
         return [ast.Param(t.text, t.text, t.line, t.col)], True
 
     def expr(self):
@@ -366,7 +366,7 @@ class Parser:
             rhs = self.postfix()
             call = rhs.target if isinstance(rhs, ast.Member) else rhs
             if not isinstance(call, ast.Call):
-                self.fail("un appel de nœud est attendu après |>", op)
+                self.fail("node call expected after |>", op)
             left = ast.Pipe(left, rhs, op.line, op.col)
         return left
 
@@ -396,7 +396,7 @@ class Parser:
             op = self.advance()
             left = ast.BinOp(op.text, left, self.additive(), op.line, op.col)
             if self.tok.kind in COMPARE:
-                self.fail("une seule comparaison à la fois ; pour deux, passer par un nom")
+                self.fail("only one comparison at a time; assign to a name for multiple")
         return left
 
     def additive(self):
@@ -436,7 +436,7 @@ class Parser:
             if self.at("IDENT") or self.at("STRING"):
                 node = ast.Member(node, self.advance().text, dot.line, dot.col)
             else:
-                self.fail("nom de sortie attendu après « . »")
+                self.fail("output socket name expected after '.'")
         return node
 
     def primary(self):
@@ -449,7 +449,7 @@ class Parser:
         if self.accept("KEYWORD", "true") or self.accept("KEYWORD", "false"):
             return ast.Bool(t.text == "true", t.line, t.col)
         if self.at("KEYWORD", "repeat"):
-            self.fail("repeat s'écrit seul, en valeur d'un nom : r = repeat(10, état: départ) { … }")
+            self.fail("repeat must be assigned to a name: r = repeat(10, state: start) { … }")
         if self.at("KEYWORD", "xor") and self.peek().kind == "(":
             # The function form, kept from before `xor` was an operator
             self.advance()
@@ -467,7 +467,7 @@ class Parser:
                 items.append(self.expr())
             self.expect(")")
             return items[0] if len(items) == 1 else ast.Tuple(items, t.line, t.col)
-        self.fail(f"expression attendue, trouvé {describe(t)}")
+        self.fail(f"expression expected, found {describe(t)}")
 
     def args(self, named_only=False):
         """Arguments up to `)`, which is consumed."""
@@ -476,13 +476,12 @@ class Parser:
             t = self.tok
             if t.kind in ("IDENT", "STRING") and self.peek().text == "as" and self.peek().kind == "IDENT" \
                     and self.peek(2).kind == "IDENT" and self.peek(3).kind in (":", "("):
-                # `Selection as capturé: m`, an item under a key of its own
+                # `Selection as captured: m`, an item under a key of its own
                 self.advance()
                 self.advance()
                 alias = self.advance()
                 if named_only:
-                    self.fail("« as » nomme un item dans l'appel d'un nœud à items, ou une entrée dans l'en-tête "
-                              "d'un graph", alias)
+                    self.fail("'as' aliases an item in an item node call or an input in a graph header", alias)
                 options = self.args(named_only=True) if self.accept("(") else []
                 self.expect(":")
                 args.append(self.item(t, options))
@@ -492,17 +491,17 @@ class Parser:
                 self.advance()
                 args.append(self.item(t, []))
             elif not named_only and self.at_item_options():
-                # `Lisse(description: "…"): a`, an item and its options
+                # `Smooth(description: "…"): a`, an item and its options
                 self.advance()
                 self.advance()
                 options = self.args(named_only=True)
                 self.expect(":")
                 args.append(self.item(t, options))
             elif named_only:
-                self.fail("champ nommé attendu (nom: valeur)")
+                self.fail("named field expected (name: value)")
             else:
                 if any(a.name for a in args):
-                    self.fail("argument positionnel après un argument nommé")
+                    self.fail("positional argument after named argument")
                 args.append(ast.Arg(None, self.expr(), t.line, t.col))
             if not self.accept(","):
                 self.expect(")")
@@ -512,7 +511,7 @@ class Parser:
     def no_alias(self, args):
         for a in args:
             if a.alias:
-                self.fail(f"« {a.name} as {a.alias} » : « as » ne nomme que l'item d'un nœud à items", a)
+                self.fail(f"'{a.name} as {a.alias}': 'as' only aliases an item of an item node", a)
 
     def at_item_options(self):
         """`name(` … `):` ahead: an item with options, not a call given as a value."""
@@ -539,7 +538,7 @@ class Parser:
         if self.at("="):
             eq = self.advance()
             arg.type = self.item_type(t.text, value, eq)
-            # `nom: Type(option: …) = valeur` reads as `nom(option: …): Type = valeur`
+            # `name: Type(option: …) = value` reads as `name(option: …): Type = value`
             arg.options = arg.options + arg.type.options
             arg.type.options = []
             arg.value = self.expr()
@@ -551,10 +550,10 @@ class Parser:
             return ast.Param(name, e.name, e.line, e.col)
         if isinstance(e, ast.Call) and e.outputs is None and all(a.name and a.type is None for a in e.args):
             return ast.Param(name, e.name, e.line, e.col, options=e.args)
-        self.fail("un type est attendu avant « = » : nom: Type = valeur", at)
+        self.fail("type expected before '=': name: Type = value", at)
 
 
 def describe(tok):
     if tok.kind == "EOF":
-        return "la fin du fichier"
-    return f"« {tok.text} »"
+        return "end of file"
+    return f"'{tok.text}'"

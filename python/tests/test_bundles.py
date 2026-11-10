@@ -136,23 +136,23 @@ def test_picking_a_declared_output_takes_parentheses():
 
 @pytest.mark.parametrize("body, message", [
     ("  return EvaluateClosure(c, x: t)",
-     "EvaluateClosure : la signature de la closure n'est pas connue ici ; écrire ses items : "
+     "EvaluateClosure: closure signature is not known here; declare its items: "
      "EvaluateClosure(x: Float = …) -> (r: Float)"),
-    ("  return SeparateBundle(b).x", "SeparateBundle déclare ses items : SeparateBundle(b) -> (nom: Type, …)"),
+    ("  return SeparateBundle(b).x", "SeparateBundle declares items: SeparateBundle(b) -> (name: Type, …)"),
     ("  return SeparateBundle(b, x: Float)",
-     "SeparateBundle déclare ses items après « -> » : SeparateBundle(b) -> (nom: Type, …)"),
-    ("  return CombineBundle(g: _)", "« g » n'a pas de valeur : écrire son type, g: Float"),
-    ("  return CombineBundle(t)", "CombineBundle : les items se donnent par nom, CombineBundle(…, nom: valeur)"),
+     "SeparateBundle declares items after '->': SeparateBundle(b) -> (name: Type, …)"),
+    ("  return CombineBundle(g: _)", "'g' has no value: specify its type, g: Float"),
+    ("  return CombineBundle(t)", "CombineBundle: items are passed by name, CombineBundle(…, name: value)"),
     ("  return SetPosition(geometry, offset: Vector = Position())",
-     "« offset: Vector = … » donne le type d'un item : d'un nœud à items, d'une zone ou d'EvaluateClosure"),
-    ("  return Position() -> Vector", "« -> » déclare les items de SeparateBundle ou EvaluateClosure, pas de Position"),
+     "'offset: Vector = …' gives an item type: for item nodes, zones, or EvaluateClosure"),
+    ("  return Position() -> Vector", "'->' declares items of SeparateBundle or EvaluateClosure, not Position"),
     ("  f = closure(x: Float) -> (r: Float) {\n    return (s: x)\n  }\n  return f(x: t)",
-     "« s » n'est pas une sortie de la closure ; sorties : r"),
+     "'s' is not a closure output; outputs: r"),
     ("  f = closure(x: Float = 1.0) -> Float {\n    return x\n  }\n  return f()",
-     "un item de closure n'a ni valeur par défaut ni bornes"),
+     "a closure item has no default value or range"),
     ("  f = closure() -> Float {\n    return 1.0\n  }\n  return f(y: 1.0)",
-     "la closure n'a pas d'entrée « y » ; entrées : aucune"),
-    ("  f = closure(x: Float) -> Float {\n    d = x\n  }\n  return f(x: t)", "return manquant dans la closure de « f »"),
+     "closure has no input 'y'; inputs: none"),
+    ("  f = closure(x: Float) -> Float {\n    d = x\n  }\n  return f(x: t)", "missing return in closure of 'f'"),
 ])
 def test_wrong_bundles_and_closures_are_reported(schema, body, message):
     assert errors(graph(body), schema)[0] == message
@@ -160,4 +160,4 @@ def test_wrong_bundles_and_closures_are_reported(schema, body, message):
 
 def test_names_of_a_closure_body_stay_inside(schema):
     msgs = errors(graph("  f = closure(x: Float) -> Float {\n    d = x * 2.0\n    return d\n  }\n  return d"), schema)
-    assert msgs == ["nom inconnu « d »"]
+    assert msgs == ["unknown name 'd'"]

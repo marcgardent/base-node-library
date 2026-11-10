@@ -40,12 +40,12 @@ def test_each_named_value_is_a_capture_item(schema):
 
 def test_a_capture_takes_its_values_by_name(schema):
     src = graph("  return CaptureAttribute(geometry, true, t).geometry", "Geometry")
-    assert errors(src, schema) == ["CaptureAttribute : les valeurs se donnent par nom, CaptureAttribute(…, nom: valeur)"]
+    assert errors(src, schema) == ["CaptureAttribute: items are passed by name, CaptureAttribute(…, name: value)"]
 
 
 def test_a_capture_holds_fields_only(schema):
     src = graph("  return CaptureAttribute(geometry, g: geometry).geometry", "Geometry")
-    assert errors(src, schema)[0].startswith("CaptureAttribute : pas d'item Geometry")
+    assert errors(src, schema)[0].startswith("CaptureAttribute: no Geometry item")
 
 
 def test_an_index_switch_takes_the_type_of_its_first_item(schema):
@@ -82,7 +82,7 @@ def test_a_menu_value_picks_an_item(schema):
 
 def test_an_item_given_twice_fails(schema):
     src = graph("  return MenuSwitch(mode, a: 1.0, a: 2.0).output")
-    assert errors(src, schema) == ["MenuSwitch : « a » donné deux fois"]
+    assert errors(src, schema) == ["MenuSwitch: 'a' given twice"]
 
 
 def test_more_items_fixture_prints_back_unchanged(fixture_text):
@@ -101,7 +101,7 @@ def test_format_string_items_are_named_inputs(schema):
 
 def test_format_string_takes_numbers_and_strings_only(schema):
     src = graph('  return FormatString("{b}", b: true)', "String")
-    assert errors(src, schema) == ["FormatString : pas d'item Bool ; types : Float, Int, String"]
+    assert errors(src, schema) == ["FormatString: no Bool item; types: Float, Int, String"]
 
 
 def test_bake_items_give_their_outputs(schema):
@@ -144,17 +144,17 @@ def test_a_call_given_as_a_value_is_not_an_item():
 
 def test_options_only_go_on_items(schema):
     assert errors(graph("  return Math(Value(x: 1): 2.0)"), schema) == [
-        "« Value(…) » : seuls les items d'un nœud à items prennent des options"]
+        "'Value(…)': only item node items take options"]
     assert errors(graph("  return FieldToList(Count(x: 1): 3, a: t).a"), schema) == [
-        "FieldToList : « Count » est une entrée du nœud, pas un item ; elle ne prend pas d'options"]
+        "FieldToList: 'Count' is a node input, not an item; it does not take options"]
     assert errors(graph("  return Bake(h(socket_type: INT): t).h"), schema) == [
-        "Bake : le nom et le type d'un item s'écrivent « nom: valeur »"]
+        "Bake: item name and type must be written 'name: value'"]
 
 
 def test_a_repeat_state_takes_no_options():
     with pytest.raises(BnError) as err:
         parse("geometry graph g(x: Float) -> Float {\n  r = repeat(3, s(a: 1): x) {\n    return s\n  }\n  return r\n}\n")
-    assert err.value.diagnostics[0].message == "un état de repeat ne prend pas d'options"
+    assert err.value.diagnostics[0].message == "repeat state does not take options"
 
 
 def test_an_item_named_like_an_input_goes_by_a_key_of_its_own(schema):
@@ -175,8 +175,8 @@ def test_an_item_key_with_options_prints_back():
 
 def test_a_key_must_be_free_and_only_names_an_item(schema):
     taken = graph("  return CaptureAttribute(geometry, a as selection: t).geometry", "Geometry")
-    assert errors(taken, schema) == ["CaptureAttribute : la clé « selection » est déjà une entrée, un réglage ou un item du nœud"]
+    assert errors(taken, schema) == ["CaptureAttribute: key 'selection' is already an input, setting, or item of the node"]
     plain = graph("  return SetPosition(geometry, offset as o: (0.0, 0.0, 1.0)).geometry", "Geometry")
-    assert errors(plain, schema)[0].startswith("« offset as o » : seuls les items")
-    with pytest.raises(BnError, match="ne nomme que l'item"):
+    assert errors(plain, schema)[0].startswith("'offset as o': only item node items")
+    with pytest.raises(BnError, match="'as' only aliases an item"):
         parse(graph("  r = repeat(3, a as b: 0.0) {\n    return a\n  }\n  return r"))

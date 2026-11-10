@@ -48,11 +48,11 @@ class Arg:
     value: object
     line: int
     col: int
-    # `Lisse(description: "…"): a`: an item's other settings, by their Blender name
+    # `Smooth(description: "…"): a`: an item's other settings, by their Blender name
     options: list = field(default_factory=list)  # of Arg, all named
-    # `hauteur: Float = h`: an item given its type, a Param (its options are merged into `options`)
+    # `height: Float = h`: an item given its type, a Param (its options are merged into `options`)
     type: object = None
-    # `Selection as capturé: m`: the key of an item named like an input or a setting of its node
+    # `Selection as captured: m`: the key of an item named like an input or a setting of its node
     alias: str | None = None
 
 
@@ -62,7 +62,7 @@ class Call:
     args: list
     line: int
     col: int
-    # `SeparateBundle(b) -> (hauteur: Float)`: the output items it declares, Params
+    # `SeparateBundle(b) -> (height: Float)`: the output items it declares, Params
     outputs: list | None = None
     single_output: bool = False  # `-> Float` rather than `-> (name: Float)`
 
@@ -294,9 +294,9 @@ class Graph:
 
 @dataclass
 class Use:
-    """`use maths (fbm, bosse) from "//lib/maths.bn"`: the list and the source are optional.
+    """`use math (fbm, bump) from "//lib/math.bn"`: the list and the source are optional.
 
-    With no source, the module is the text `maths.bn` of the same .blend.
+    With no source, the module is the text `math.bn` of the same .blend.
     """
     name: str
     names: list | None  # graph keys; None imports every graph of the module

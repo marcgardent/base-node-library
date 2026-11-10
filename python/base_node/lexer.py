@@ -80,7 +80,7 @@ def tokenize(source, filename="<text>", strict=True):
                 i += 1
                 text, kind = source[start + 1:i - 1], "STRING"
             elif strict:
-                fail("chaîne non fermée")
+                fail("unclosed string")
             else:
                 text, kind = source[start + 1:i], "OPEN_STRING"
         else:
@@ -91,7 +91,7 @@ def tokenize(source, filename="<text>", strict=True):
                     break
             else:
                 if strict:
-                    fail(f"caractère inattendu « {c} »")
+                    fail(f"unexpected character '{c}'")
                 i, col = i + 1, col + 1
                 continue
 

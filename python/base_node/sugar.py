@@ -63,12 +63,12 @@ def choose(op, types):
     if op in PRODUCTS:
         for t in types:
             if kind(t) != "vector":
-                raise ValueError(f"« {op} » attend deux Vector, pas {t}")
+                raise ValueError(f"'{op}' expects two Vectors, not {t}")
         return "VectorMath", {"operation": PRODUCTS[op]}, (0, 1)
     if op in LOGIC or op in BOOL_FUNCS:
         for t in types:
             if kind(t) != "scalar":
-                raise ValueError(f"« {op} » attend des Bool, pas {t}")
+                raise ValueError(f"'{op}' expects Bool, not {t}")
         return "BooleanMath", {"operation": LOGIC.get(op) or BOOL_FUNCS[op]}, tuple(range(len(types)))
     node, operation, order = math(op, types)
     return node, {"operation": operation}, order
@@ -79,17 +79,17 @@ def compare(op, types):
     equality = op in ("==", "!=")
     if "String" in types:
         if set(types) != {"String"} or not equality:
-            raise ValueError(f"« {op} » : une String ne se compare qu'à une String, par == ou !=")
+            raise ValueError(f"'{op}': String can only be compared to String with == or !=")
         data = "STRING"
     elif set(types) == {"Color"}:
         if not equality:
-            raise ValueError(f"« {op} » : deux couleurs se comparent par == ou !=")
+            raise ValueError(f"'{op}': Color can only be compared to Color with == or !=")
         data = "RGBA"
     else:
         kinds = [kind(t) for t in types]
         for t, k in zip(types, kinds):
             if k is None:
-                raise ValueError(f"« {op} » ne s'applique pas à {t}")
+                raise ValueError(f"'{op}' cannot be applied to {t}")
         data = "VECTOR" if "vector" in kinds else "INT" if set(types) == {"Int"} else "FLOAT"
     return {"data_type": data, "operation": COMPARE[op]}
 
@@ -98,7 +98,7 @@ def math(op, types):
     kinds = [kind(t) for t in types]
     for t, k in zip(types, kinds):
         if k is None:
-            raise ValueError(f"« {op} » ne s'applique pas à {t}")
+            raise ValueError(f"'{op}' cannot be applied to {t}")
     order = tuple(range(len(types)))
     vector = "vector" in kinds
     if op == "neg":
@@ -112,10 +112,10 @@ def math(op, types):
         return "VectorMath", BINOPS[op], order
     if vector:
         if op not in VECTOR_FUNCS:
-            raise ValueError(f"{op} n'existe pas pour Vector")
+            raise ValueError(f"{op} does not exist for Vector")
         return "VectorMath", VECTOR_FUNCS[op], order
     if op not in MATH_FUNCS:
-        raise ValueError(f"{op} attend des vecteurs")
+        raise ValueError(f"{op} expects vectors")
     return "Math", MATH_FUNCS[op], order
 
 

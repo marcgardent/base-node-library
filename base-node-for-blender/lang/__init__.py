@@ -21,7 +21,7 @@ def compile_source(source, schema, filename="<text>", load=None):
     return check(parse(source, filename), schema, filename, load)
 
 
-# Enregistre l'alias interne base_node.lang pointant sur base_node
+# Register internal alias base_node.lang pointing to base_node
 if __name__ + ".lang" not in sys.modules:
     sys.modules[__name__ + ".lang"] = sys.modules[__name__]
 

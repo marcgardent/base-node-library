@@ -19,18 +19,18 @@ class TEXT_PT_bnodes(bpy.types.Panel):
         text = context.space_data.text
         col = layout.column(align=True)
         col.operator("bnodes.text_to_tree", icon="NODETREE")
-        col.operator("bnodes.format", text="Formater", icon="ALIGN_LEFT")
+        col.operator("bnodes.format", text="Format", icon="ALIGN_LEFT")
         layout.prop(context.window_manager, "bnodes_sync")
         options = prefs.get()
         if isinstance(options, bpy.types.AddonPreferences):
             row = layout.row(align=True)
             row.prop(options, "highlight", toggle=True)
-            row.prop(options, "auto_complete", text="Suggestions auto", toggle=True)
+            row.prop(options, "auto_complete", text="Auto Suggestions", toggle=True)
 
         trees = actions.linked_trees(text)
         if trees:
             box = layout.box()
-            box.label(text="Arbres liés")
+            box.label(text="Linked Trees")
             for tree in trees:
                 row = box.row(align=True)
                 row.label(text=tree.name, icon="GEOMETRY_NODES")
@@ -41,7 +41,7 @@ class TEXT_PT_bnodes(bpy.types.Panel):
         diags = actions.DIAGNOSTICS.get(text.name)
         if diags:
             box = layout.box()
-            box.label(text=f"{len(diags)} erreur(s)", icon="ERROR")
+            box.label(text=f"{len(diags)} error(s)", icon="ERROR")
             for d in diags:
                 op = box.operator("bnodes.goto", text=f"{d.line}:{d.col}  {d.message}", emboss=False)
                 op.line, op.col = d.line, d.col
@@ -49,7 +49,7 @@ class TEXT_PT_bnodes(bpy.types.Panel):
         warnings = actions.WARNINGS.get(text.name)
         if warnings:
             box = layout.box()
-            box.label(text=f"{len(warnings)} avertissement(s) d'export", icon="INFO")
+            box.label(text=f"{len(warnings)} export warning(s)", icon="INFO")
             for w in warnings:
                 box.label(text=w)
 
@@ -67,9 +67,9 @@ class NODE_PT_bnodes(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         tree = edit_tree(context)
-        layout.operator("bnodes.tree_to_text", text="Ouvrir en texte", icon="TEXT")
+        layout.operator("bnodes.tree_to_text", text="Open as Text", icon="TEXT")
         if tree.bnodes_text:
-            layout.label(text=f"Texte : {tree.bnodes_text.name}", icon="LINKED")
+            layout.label(text=f"Text: {tree.bnodes_text.name}", icon="LINKED")
         layout.prop(context.window_manager, "bnodes_sync")
 
 

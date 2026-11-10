@@ -254,7 +254,7 @@ class Context:
             return [Item("graph", "graph ", kind="keyword")]
         if t and t[-1].kind not in ("}",):
             return []
-        return [Item(k, k + " graph ", "arbre", "keyword") for k in TREE_KINDS]
+        return [Item(k, k + " graph ", "tree", "keyword") for k in TREE_KINDS]
 
     def in_body(self, body):
         t = self.t
@@ -304,9 +304,9 @@ class Context:
                for name, call in self.locals(body)]
         out += [Item(key(n), key(n), ty, "param") for n, ty in (self.g.params if self.g else [])]
         current = key(self.g.name) if self.g else None
-        out += [Item(k, k + "(", "groupe", "graph") for k in sorted(self.graphs) if k != current]
-        out += [Item(f, f + "(", "formule", "function") for f in sorted(FUNCS)]
-        out += [Item(n, n + "(", "nœud", "node") for n in self.schema.node_names(self.kind)]
+        out += [Item(k, k + "(", "group", "graph") for k in sorted(self.graphs) if k != current]
+        out += [Item(f, f + "(", "function", "function") for f in sorted(FUNCS)]
+        out += [Item(n, n + "(", "node", "node") for n in self.schema.node_names(self.kind)]
         out += [Item(b, b, kind="keyword") for b in ("true", "false")]
         out += [Item("not", "not ", kind="keyword")]
         return out

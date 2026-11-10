@@ -48,7 +48,7 @@ def test_a_statement_nothing_reads_is_built(schema):
 
 def test_a_look_needs_a_node_of_its_own(schema):
     src = "geometry graph g(geometry: Geometry) -> Geometry {\n  a = geometry @ mute\n  return a\n}\n"
-    with pytest.raises(BnError, match="« a » ne fait pas de nœud à lui"):
+    with pytest.raises(BnError, match="does not produce its own node"):
         compile_source(src, schema, "t.bn")
 
 
@@ -62,14 +62,14 @@ def test_the_next_line_is_the_next_statement():
 
 def test_an_unknown_look_color_is_an_error(schema):
     src = "geometry graph g(geometry: Geometry) -> Geometry {\n  a = Position() @ #nope\n  return geometry\n}\n"
-    with pytest.raises(BnError, match="couleur « #nope » inconnue"):
+    with pytest.raises(BnError, match="unknown color '#nope'"):
         compile_source(src, schema, "t.bn")
 
 
 def test_an_empty_look_is_an_error():
-    with pytest.raises(BnError, match="après @, sur sa ligne"):
+    with pytest.raises(BnError, match="after @ on the same line"):
         parse("geometry graph g(geometry: Geometry) -> Geometry {\n  a = Position() @\n  return geometry\n}\n")
-    with pytest.raises(BnError, match="donné deux fois"):
+    with pytest.raises(BnError, match="given twice"):
         parse("geometry graph g(geometry: Geometry) -> Geometry {\n  a = Position() @ mute mute\n  return geometry\n}\n")
 
 
@@ -99,5 +99,5 @@ def test_a_zone_shows_its_look_on_the_return_of_its_body(schema):
 
 
 def test_a_zone_takes_no_look_after_its_brace():
-    with pytest.raises(BnError, match="instruction attendue"):
+    with pytest.raises(BnError, match="statement expected"):
         parse(ZONES.replace('    return total + t @ "Pas" mute\n  }\n', "    return total + t\n  } @ mute\n"))
