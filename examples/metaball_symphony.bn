@@ -1,0 +1,87 @@
+use curves2d (morph_curves_2d, parallel_contour_2d, ribbon_2d, wave_curve_2d)
+use math (ease_in_out, sdf_sphere, sdf_torus, sine01, smooth_subtraction, triangle, twist)
+use patterns2d (triangular_grid_2d)
+use sdf2d (
+  sdf_chamfer_union,
+  sdf_hexagon_2d,
+  sdf_isolines,
+  sdf_polar_repeat_2d,
+  sdf_ring_2d,
+  sdf_star_2d,
+)
+
+// 3D morphing SDF sculpture blending twisted 3D primitives and 2D polar star rings
+geometry graph "metaball core"(phase: Float = 0.0 in 0.0..1.0) -> Geometry {
+  "Morphs smoothly between a twisted torus-lattice and a 6-fold chamfered star ring"
+  t = ease_in_out(triangle(phase), 2.5)
+  tau = phase * 6.283185
+  p = Position()
+
+  // Shape A: twisted 3D torus + polar sphere satellites
+  pt = twist(p, strength: 1.6 * sin(tau))
+  sec = sdf_polar_repeat_2d(p, sectors: 6)
+  orbs = sdf_sphere(CombineXYZ(sec.x - 0.82, sec.y, p.z), radius: 0.24)
+  shape_a = sdf_chamfer_union(
+    sdf_torus(pt, major_radius: 0.72, minor_radius: 0.21),
+    orbs,
+    chamfer: 0.14)
+
+  // Shape B: hollowed 2D star-hexagon ring extruded with bevel
+  star_ring = sdf_ring_2d(sdf_star_2d(p, radius: 1.02, points: 6, indent: 0.42), thickness: 0.16)
+  hex_core = sdf_ring_2d(sdf_hexagon_2d(p, radius: 0.42), thickness: 0.13)
+  d2 = sdf_chamfer_union(star_ring, hex_core, chamfer: 0.1)
+  dz = abs(p.z) - 0.16
+  shape_b = max(d2, dz) + min(max(d2, dz), 0.0) - 0.03
+
+  blended = Mix(t, shape_a, shape_b)
+  carver = CombineXYZ(cos(tau) * 0.65, sin(tau) * 0.65, 0.25)
+  carved = smooth_subtraction(blended, sdf_sphere(p - carver, radius: 0.32), smoothness: 0.14)
+
+  vol = VolumeCube(
+    -carved,
+    -1.0,
+    min: (-1.35, -1.35, -0.65),
+    max: (1.35, 1.35, 0.65),
+    resolution_x: 110,
+    resolution_y: 110,
+    resolution_z: 56)
+  return VolumeToMesh(vol, threshold: 0.0) |> SetShadeSmooth()
+    |> SetMaterial(material: "IridescentCore")
+}
+
+// Complete SDF Morphing & Vector Contour Symphony
+geometry graph "metaball symphony"(phase: Float = 0.0 in 0.0..1.0) -> Geometry {
+  "Combines 3D/2D SDF morphing, triangular iso-field pedestal, and morphing vector ribbons"
+  t = ease_in_out(triangle(phase), 2.5)
+  tau = phase * 6.283185
+
+  "Sculpture Core" #orchid {
+    core = metaball_core(phase) |> Transform(translation: (0.0, 0.0, 0.28))
+  }
+
+  "Iso-Field Pedestal" #slategray {
+    tri = triangular_grid_2d(columns: 32, rows: 32, side: 0.12)
+    p = Position()
+    d_ped = Mix(t, length(p) - 0.85, sdf_star_2d(p, radius: 0.95, points: 6, indent: 0.5))
+    iso_z = sdf_isolines(d_ped - phase * 0.4, step: 0.22, width: 0.045)
+    pedestal = tri |> SetPosition(offset: CombineXYZ(z: Clamp(-iso_z * 1.8, -0.04, 0.06) - 0.28))
+      |> ExtrudeMesh(offset_scale: 0.03)
+      |> SetMaterial(material: "DarkSlate")
+  }
+
+  "Morphing Vector Ribbons" #teal {
+    base_c = CurvePrimitiveCircle(resolution: 160, radius: 1.32)
+    c_three = wave_curve_2d(base_c, amplitude: 0.14, periods: 3.0, phase: phase, resolution: 160)
+    c_six = wave_curve_2d(base_c, amplitude: 0.18, periods: 6.0, phase: -phase, resolution: 160)
+    morphed = morph_curves_2d(c_three, c_six, factor: t, points: 180)
+    outer = parallel_contour_2d(morphed, offset: 0.11 + sine01(phase * 2.0) * 0.04)
+
+    rib_main = ribbon_2d(morphed, width: 0.055, taper: 0.0) |> Transform(translation: (0.0, 0.0, 0.16), rotation: CombineXYZ(0.14 * sin(tau), 0.14 * cos(tau), tau / 6.0))
+      |> SetMaterial(material: "NeonAmber")
+
+    rib_outer = ribbon_2d(outer, width: 0.032, taper: 0.0) |> Transform(translation: (0.0, 0.0, 0.1), rotation: CombineXYZ(-0.1 * cos(tau), 0.1 * sin(tau), -tau / 6.0))
+      |> SetMaterial(material: "NeonCyan")
+  }
+
+  return core + pedestal + rib_main + rib_outer
+}

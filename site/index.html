@@ -275,14 +275,87 @@
 
     <section id="examples">
       <div class="tabs" role="tablist" aria-label=".bn code examples">
-        <button class="tab-btn" role="tab" aria-selected="true" data-tab="ex-sdf">sdf2d.bn</button>
+        <button class="tab-btn" role="tab" aria-selected="true" data-tab="ex-hud">chrono_hud.bn</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-diorama">living_diorama.bn</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-symphony">metaball_symphony.bn</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-sdf">sdf2d.bn</button>
         <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-curves">curves2d.bn</button>
         <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-grid">patterns2d.bn</button>
         <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-repeat">math.bn (repeat)</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ex-panels">panels &amp; @</button>
       </div>
 
-      <div id="ex-sdf" class="tab-panel active">
+      <div id="ex-hud" class="tab-panel active">
+        <pre><code>use curves2d (arrow_2d, ribbon_2d, ring_2d, wave_curve_2d)
+use math (sine01, steps)
+use patterns2d (hexagonal_grid_2d)
+use sdf2d (sdf_chamfer_subtraction, sdf_chamfer_union, sdf_polar_repeat_2d, sdf_ring_2d, sdf_rounded_box_2d, sdf_star_2d)
+
+geometry graph "chrono hud"(phase: Float = 0.0 in 0.0..1.0) -&gt; Geometry {
+  tau = phase * 6.283185
+  hex = hexagonal_grid_2d(columns: 11, rows: 11, radius: 0.26, margin: 0.14).mesh
+  base = hex |&gt; SetPosition(offset: CombineXYZ(z: sine01(phase * 2.0 - length(Position()) * 0.55) * 0.08 - 0.28))
+    |&gt; ExtrudeMesh(offset_scale: 0.05) |&gt; SetMaterial(material: "DarkSlate")
+  rotor = hud_rotor(phase) // 6-tooth chamfered SDF escapement stepped by math.steps()
+  osc = wave_curve_2d(CurvePrimitiveCircle(160, 1.72), amplitude: 0.09, periods: 12.0, phase: phase * 3.0)
+  wave_rib = ribbon_2d(osc, width: 0.055) |&gt; Transform(translation: (0.0, 0.0, 0.12), rotation: CombineXYZ(z: -tau / 6.0))
+  pointer = arrow_2d(CurvePrimitiveCircle(96, 1.25) |&gt; TrimCurve(start: 0.08, end: 0.42), 0.06, 0.18, 0.22)
+    |&gt; Transform(translation: (0.0, 0.0, 0.19), rotation: CombineXYZ(z: tau))
+  return base + rotor + ring_2d(1.52, 1.38, 96) + wave_rib + pointer
+}</code></pre>
+        <video class="preview-img" autoplay loop muted playsinline poster="images/showcase-chrono-hud.png" width="960" height="640">
+          <source src="images/showcase-chrono-hud.mp4" type="video/mp4">
+        </video>
+      </div>
+
+      <div id="ex-diorama" class="tab-panel">
+        <pre><code>use curves2d (ribbon_2d, ring_2d, wave_curve_2d)
+use gp_tools2d (gp_living_ink, gp_taper_ends)
+use math (ridge_fbm, sine01, steps)
+use patterns2d (phyllotaxis_spiral_2d)
+use sdf2d (sdf_isolines)
+
+geometry graph "living diorama"(phase: Float = 0.0 in 0.0..1.0) -&gt; Geometry {
+  tide = sine01(phase) * 0.22
+  p = Position()
+  r = length(CombineXYZ(p.x, p.y))
+  raw_elev = (ridge_fbm(p * 0.68 + (0.0, 0.0, 1.2), octaves: 5) * 1.65 - 0.22) * Clamp(1.0 - r * 0.62)
+  terraced = Mix(0.35, raw_elev, steps(raw_elev * 6.0, 0.28) / 6.0)
+  terrain = MeshGrid(3.1, 3.1, 180, 180) |&gt; DeleteGeometry(r &gt; 1.52) |&gt; SetPosition(offset: CombineXYZ(z: terraced))
+  iso = sdf_isolines(r - phase * 0.44, step: 0.22, width: 0.06)
+  water = MeshGrid(3.15, 3.15, 160, 160) |&gt; DeleteGeometry(r &gt; 1.55)
+    |&gt; SetPosition(offset: CombineXYZ(z: 0.08 + tide * 0.38 + Clamp(-iso * 0.45, -0.02, 0.035)))
+  // + phyllotaxis_spiral_2d(95, 1.18) pine scatter &amp; gp_living_ink() wind stream ribbon
+  return terrain + water + border + trees + stream
+}</code></pre>
+        <video class="preview-img" autoplay loop muted playsinline poster="images/showcase-living-diorama.png" width="960" height="640">
+          <source src="images/showcase-living-diorama.mp4" type="video/mp4">
+        </video>
+      </div>
+
+      <div id="ex-symphony" class="tab-panel">
+        <pre><code>use curves2d (morph_curves_2d, parallel_contour_2d, ribbon_2d, wave_curve_2d)
+use math (ease_in_out, sdf_sphere, sdf_torus, sine01, smooth_subtraction, triangle, twist)
+use patterns2d (triangular_grid_2d)
+use sdf2d (sdf_chamfer_union, sdf_hexagon_2d, sdf_isolines, sdf_polar_repeat_2d, sdf_ring_2d, sdf_star_2d)
+
+geometry graph "metaball symphony"(phase: Float = 0.0 in 0.0..1.0) -&gt; Geometry {
+  t = ease_in_out(triangle(phase), 2.5)
+  core = metaball_core(phase) |&gt; Transform(translation: (0.0, 0.0, 0.28))
+  tri = triangular_grid_2d(columns: 32, rows: 32, side: 0.12)
+  d_ped = Mix(t, length(Position()) - 0.85, sdf_star_2d(Position(), radius: 0.95, points: 6, indent: 0.5))
+  iso_z = sdf_isolines(d_ped - phase * 0.4, step: 0.22, width: 0.045)
+  pedestal = tri |&gt; SetPosition(offset: CombineXYZ(z: Clamp(-iso_z * 1.8, -0.04, 0.06) - 0.28))
+  base_c = CurvePrimitiveCircle(resolution: 160, radius: 1.32)
+  morphed = morph_curves_2d(wave_curve_2d(base_c, 0.14, 3.0, phase), wave_curve_2d(base_c, 0.18, 6.0, -phase), factor: t)
+  outer = parallel_contour_2d(morphed, offset: 0.11 + sine01(phase * 2.0) * 0.04)
+  return core + pedestal + ribbon_2d(morphed, 0.055) + ribbon_2d(outer, 0.032)
+}</code></pre>
+        <video class="preview-img" autoplay loop muted playsinline poster="images/showcase-metaball-symphony.png" width="960" height="640">
+          <source src="images/showcase-metaball-symphony.mp4" type="video/mp4">
+        </video>
+      </div>
+
+      <div id="ex-sdf" class="tab-panel">
         <pre><code>// 2D rounded box signed distance field (profile: sdf2d)
 geometry graph "sdf rounded box 2d"(
     p: Vector = Position(),

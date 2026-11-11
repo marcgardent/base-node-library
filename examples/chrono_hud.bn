@@ -1,0 +1,85 @@
+use curves2d (arrow_2d, ribbon_2d, ring_2d, wave_curve_2d)
+use math (sine01, steps)
+use patterns2d (hexagonal_grid_2d)
+use sdf2d (
+  sdf_chamfer_subtraction,
+  sdf_chamfer_union,
+  sdf_polar_repeat_2d,
+  sdf_ring_2d,
+  sdf_rounded_box_2d,
+  sdf_star_2d,
+)
+
+// Rotating 2.5D SDF escapement rotor meshed from a signed distance volume
+geometry graph "hud rotor"(phase: Float = 0.0 in 0.0..1.0) -> Geometry {
+  "Mechanical 6-tooth star escapement with chamfered spokes and stepped clockwork rotation"
+  p = Position()
+  // 6 mechanical escapement steps per period (60 degrees = 1 tooth pitch for seamless loop)
+  ang = steps(phase * 6.0, 0.35) * 1.047198
+  ca = cos(ang)
+  sa = sin(ang)
+  pr = CombineXYZ(p.x * ca - p.y * sa, p.x * sa + p.y * ca)
+
+  star = sdf_star_2d(pr, radius: 1.05, points: 6, indent: 0.52)
+  sector = sdf_polar_repeat_2d(pr, sectors: 6)
+  teeth = sdf_rounded_box_2d(sector - (0.95, 0.0, 0.0), (0.24, 0.14, 0.0), radius: 0.05)
+  wheel = sdf_chamfer_union(star, teeth, chamfer: 0.12)
+  bore = sdf_ring_2d(length(pr) - 0.48, thickness: 0.14)
+  d2d = sdf_chamfer_subtraction(wheel, bore, chamfer: 0.06)
+
+  // Extrude 2D SDF into a beveled 3D plate of half-thickness 0.14
+  dz = abs(p.z) - 0.14
+  d3d = max(d2d, dz) + min(max(d2d, dz), 0.0) - 0.03
+  vol = VolumeCube(
+    -d3d,
+    -1.0,
+    min: (-1.45, -1.45, -0.3),
+    max: (1.45, 1.45, 0.3),
+    resolution_x: 110,
+    resolution_y: 110,
+    resolution_z: 36)
+  return VolumeToMesh(vol, threshold: 0.0) |> SetShadeSmooth()
+    |> SetMaterial(material: "BrassGear")
+}
+
+// Complete Chrono-HUD showcase combining math, sdf2d, curves2d, and patterns2d
+geometry graph "chrono hud"(phase: Float = 0.0 in 0.0..1.0) -> Geometry {
+  "Animated horology & telemetry HUD combining SDF gears, wave ribbons, and hex tiling"
+  tau = phase * 6.283185
+
+  "Hex Substrate" #slategray {
+    hex = hexagonal_grid_2d(columns: 11, rows: 11, radius: 0.26, margin: 0.14).mesh
+    p = Position()
+    wave_z = sine01(phase * 2.0 - length(p) * 0.55) * 0.08 - 0.28
+    base = hex |> SetPosition(offset: CombineXYZ(z: wave_z))
+      |> ExtrudeMesh(offset_scale: 0.05)
+      |> SetMaterial(material: "DarkSlate")
+  }
+
+  "SDF Escapement" #peru {
+    rotor = hud_rotor(phase)
+  }
+
+  "Telemetry Curves" #teal {
+    dial = ring_2d(outer_radius: 1.52, inner_radius: 1.38, resolution: 96) |> Transform(translation: (0.0, 0.0, 0.04))
+      |> SetMaterial(material: "SteelRing")
+
+    // Oscilloscope carrier wave modulated around the outer perimeter
+    carrier = CurvePrimitiveCircle(resolution: 160, radius: 1.72)
+    osc = wave_curve_2d(
+      carrier,
+      amplitude: 0.09,
+      periods: 12.0,
+      phase: phase * 3.0,
+      resolution: 192)
+    wave_rib = ribbon_2d(osc, width: 0.055, taper: 0.0) |> Transform(translation: (0.0, 0.0, 0.12), rotation: CombineXYZ(z: -tau / 6.0))
+      |> SetMaterial(material: "NeonCyan")
+
+    // Counter-rotating telemetry indicator arc with arrowhead
+    arc = CurvePrimitiveCircle(resolution: 96, radius: 1.25) |> TrimCurve(start: 0.08, end: 0.42)
+    pointer = arrow_2d(arc, body_width: 0.06, head_width: 0.18, head_length: 0.22) |> Transform(translation: (0.0, 0.0, 0.19), rotation: CombineXYZ(z: tau))
+      |> SetMaterial(material: "NeonAmber")
+  }
+
+  return base + rotor + dial + wave_rib + pointer
+}

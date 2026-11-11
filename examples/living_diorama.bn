@@ -1,0 +1,67 @@
+use curves2d (ribbon_2d, ring_2d, wave_curve_2d)
+use gp_tools2d (gp_living_ink, gp_taper_ends)
+use math (ridge_fbm, sine01, steps)
+use patterns2d (phyllotaxis_spiral_2d)
+use sdf2d (sdf_isolines, sdf_rounded_box_2d)
+
+// Procedural island relief + terraced bathymetric water + phyllotaxis forest + living ink wind
+geometry graph "living diorama"(phase: Float = 0.0 in 0.0..1.0) -> Geometry {
+  "Topographic island diorama combining ridged fractal terrain, SDF isolines, phyllotaxis scatter, and ink ribbons"
+  tide = sine01(phase) * 0.22
+  p = Position()
+  r = length(CombineXYZ(p.x, p.y))
+
+  "Island Relief" #peru {
+    falloff = Clamp(1.0 - r * 0.62)
+    raw_elev = (ridge_fbm(p * 0.68 + (0.0, 0.0, 1.2), octaves: 5) * 1.65 - 0.22) * falloff
+    // Terraced topographic contour steps blended with smooth mountain ridges
+    terraced = Mix(0.35, raw_elev, steps(raw_elev * 6.0, 0.28) / 6.0)
+    terrain = MeshGrid(3.1, 3.1, 180, 180) |> DeleteGeometry(r > 1.52)
+      |> SetPosition(offset: CombineXYZ(z: terraced))
+      |> SetShadeSmooth()
+      |> SetMaterial(material: "WarmTerrain")
+  }
+
+  "Bathymetric Water" #teal {
+    // Smooth coastal water disk with concentric SDF isoline wave ripples
+    iso = sdf_isolines(r - phase * 0.44, step: 0.22, width: 0.06)
+    ripple = Clamp(-iso * 0.45, -0.02, 0.035)
+    water = MeshGrid(3.15, 3.15, 160, 160) |> DeleteGeometry(r > 1.55)
+      |> SetPosition(offset: CombineXYZ(z: 0.08 + tide * 0.38 + ripple))
+      |> SetShadeSmooth()
+      |> SetMaterial(material: "OceanTeal")
+
+    border = ring_2d(outer_radius: 1.64, inner_radius: 1.55, resolution: 128) |> ExtrudeMesh(offset_scale: 0.12)
+      |> Transform(translation: (0.0, 0.0, 0.02))
+      |> SetMaterial(material: "DarkSlate")
+  }
+
+  "Phyllotaxis Pines" #seagreen {
+    spiral = phyllotaxis_spiral_2d(count: 95, radius: 1.18).points
+    sp = Position()
+    sr = length(CombineXYZ(sp.x, sp.y))
+    s_falloff = Clamp(1.0 - sr * 0.62)
+    s_elev = (ridge_fbm(sp * 0.68 + (0.0, 0.0, 1.2), octaves: 5) * 1.65 - 0.22) * s_falloff
+    sway = sin(phase * 6.283185 + sp.x * 2.5) * 0.08
+    pine = MeshCone(vertices: 8, radius_top: 0.0, radius_bottom: 0.068, depth: 0.24) |> Transform(translation: (0.0, 0.0, 0.12))
+    trees = spiral |> SetPosition(offset: CombineXYZ(z: s_elev))
+      |> InstanceOnPoints(selection: s_elev > 0.16 + tide * 0.35 and sr < 1.12, instance: pine, rotation: CombineXYZ(sway, sway * 0.7, 0.0), scale: CombineXYZ(1.0, 1.0, 0.85 + s_falloff * 0.65))
+      |> RealizeInstances()
+      |> SetMaterial(material: "EmeraldPine")
+  }
+
+  "Living Ink Wind" #orange {
+    wind_arc = CurvePrimitiveCircle(resolution: 128, radius: 1.12) |> TrimCurve(start: 0.08, end: 0.72)
+    waved = wave_curve_2d(
+      wind_arc,
+      amplitude: 0.07,
+      periods: 5.0,
+      phase: phase * 2.0,
+      resolution: 140)
+    inked = gp_living_ink(waved, amplitude: 0.02, frequency: 2.0, radius_variation: 0.35, octaves: 3) |> gp_taper_ends(smoothness: 0.35)
+    stream = ribbon_2d(inked, width: 0.065, taper: 0.85) |> Transform(translation: (0.0, 0.0, 0.62), rotation: CombineXYZ(0.12, -0.1, phase * 6.283185))
+      |> SetMaterial(material: "NeonAmber")
+  }
+
+  return terrain + water + border + trees + stream
+}

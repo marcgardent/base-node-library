@@ -302,8 +302,19 @@ def check_profile(graphs: Any, profile: str | dict[str, Any] = "vector2d") -> li
 
         # Check interface inputs / outputs
         # Compatible with IR (g.inputs: list[tuple[name, type]]) and AST (g.params: list[Param])
-        inputs = g.inputs if hasattr(g, "inputs") else [(p.name, p.type) for p in getattr(g, "params", [])]
-        outputs = g.outputs if hasattr(g, "outputs") else [(r.name, r.type) for r in getattr(g, "outputs", [])]
+        def _extract_params(items: Any) -> list[tuple[str, str]]:
+            res: list[tuple[str, str]] = []
+            for item in items or ():
+                if isinstance(item, tuple) and len(item) == 2:
+                    res.append(item)
+                elif hasattr(item, "items"):  # ast.Panel
+                    res.extend(_extract_params(item.items))
+                elif hasattr(item, "name") and hasattr(item, "type"):  # ast.Param
+                    res.append((item.name, item.type))
+            return res
+
+        inputs = _extract_params(g.inputs if hasattr(g, "inputs") else getattr(g, "params", ()))
+        outputs = _extract_params(getattr(g, "outputs", ()))
 
         for name, typ in inputs:
             if typ not in allowed_types:

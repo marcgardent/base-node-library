@@ -12,6 +12,10 @@ geometry graph relief(geometry: Geometry, height: Float = 0.4 in 0.0..2.0) -> Ge
 }
 ```
 
+| [`examples/chrono_hud.bn`](examples/chrono_hud.bn) | [`examples/living_diorama.bn`](examples/living_diorama.bn) | [`examples/metaball_symphony.bn`](examples/metaball_symphony.bn) |
+|---|---|---|
+| ![chrono-hud](site/images/showcase-chrono-hud.gif) | ![living-diorama](site/images/showcase-living-diorama.gif) | ![metaball-symphony](site/images/showcase-metaball-symphony.gif) |
+
 | `stdlib/sdf2d.bn` | `stdlib/curves2d.bn` |
 |---|---|
 | ![sdf2d](site/images/sdf2d.png) | ![curves2d](site/images/curves2d.png) |
