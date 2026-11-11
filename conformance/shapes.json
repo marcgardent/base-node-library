@@ -1,0 +1,336 @@
+{
+  "graphs": [
+    {
+      "kind": "geometry",
+      "name": "shapes",
+      "params": [
+        {
+          "name": "u",
+          "type": "Vector",
+          "line": 2,
+          "col": 23,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "v",
+          "type": "Vector",
+          "line": 2,
+          "col": 34,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "a",
+          "type": "Bool",
+          "line": 2,
+          "col": 45,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "b",
+          "type": "Bool",
+          "line": 2,
+          "col": 54,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "geometry",
+          "type": "Geometry",
+          "line": 2,
+          "col": 63,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Geometry",
+          "type": "Geometry",
+          "line": 3,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "d",
+          "type": "Float",
+          "line": 4,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "x",
+          "type": "Bool",
+          "line": 5,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        }
+      ],
+      "single_output": false,
+      "body": [
+        {
+          "label": "Short",
+          "color": "#e73",
+          "body": [
+            {
+              "name": "d",
+              "value": {
+                "op": "+",
+                "left": {
+                  "op": "+",
+                  "left": {
+                    "op": "+",
+                    "left": {
+                      "op": "⋅",
+                      "left": {
+                        "name": "u",
+                        "line": 8,
+                        "col": 9
+                      },
+                      "right": {
+                        "name": "v",
+                        "line": 8,
+                        "col": 15
+                      },
+                      "line": 8,
+                      "col": 11
+                    },
+                    "right": {
+                      "name": "length",
+                      "args": [
+                        {
+                          "name": null,
+                          "value": {
+                            "op": "×",
+                            "left": {
+                              "name": "u",
+                              "line": 8,
+                              "col": 26
+                            },
+                            "right": {
+                              "name": "v",
+                              "line": 8,
+                              "col": 34
+                            },
+                            "line": 8,
+                            "col": 28
+                          },
+                          "line": 8,
+                          "col": 26,
+                          "options": [],
+                          "type": null,
+                          "alias": null
+                        }
+                      ],
+                      "line": 8,
+                      "col": 19,
+                      "outputs": null,
+                      "single_output": false
+                    },
+                    "line": 8,
+                    "col": 17
+                  },
+                  "right": {
+                    "op": "⋅",
+                    "left": {
+                      "name": "u",
+                      "line": 8,
+                      "col": 39
+                    },
+                    "right": {
+                      "name": "v",
+                      "line": 8,
+                      "col": 43
+                    },
+                    "line": 8,
+                    "col": 41
+                  },
+                  "line": 8,
+                  "col": 37
+                },
+                "right": {
+                  "name": "dot",
+                  "args": [
+                    {
+                      "name": null,
+                      "value": {
+                        "name": "u",
+                        "line": 8,
+                        "col": 51
+                      },
+                      "line": 8,
+                      "col": 51,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    },
+                    {
+                      "name": null,
+                      "value": {
+                        "name": "v",
+                        "line": 8,
+                        "col": 54
+                      },
+                      "line": 8,
+                      "col": 54,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    }
+                  ],
+                  "line": 8,
+                  "col": 47,
+                  "outputs": null,
+                  "single_output": false
+                },
+                "line": 8,
+                "col": 45
+              },
+              "line": 8,
+              "col": 5,
+              "look": null
+            }
+          ],
+          "line": 7,
+          "col": 3,
+          "end": 9,
+          "continued": false
+        },
+        {
+          "name": "x",
+          "value": {
+            "name": "xor",
+            "args": [
+              {
+                "name": null,
+                "value": {
+                  "name": "a",
+                  "line": 10,
+                  "col": 11
+                },
+                "line": 10,
+                "col": 11,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": null,
+                "value": {
+                  "name": "b",
+                  "line": 10,
+                  "col": 14
+                },
+                "line": 10,
+                "col": 14,
+                "options": [],
+                "type": null,
+                "alias": null
+              }
+            ],
+            "line": 10,
+            "col": 7,
+            "outputs": null,
+            "single_output": false
+          },
+          "line": 10,
+          "col": 3,
+          "look": null
+        },
+        {
+          "value": {
+            "fields": [
+              {
+                "name": "Geometry",
+                "value": {
+                  "left": {
+                    "name": "geometry",
+                    "line": 11,
+                    "col": 21
+                  },
+                  "call": {
+                    "name": "SetShadeSmooth",
+                    "args": [],
+                    "line": 11,
+                    "col": 33,
+                    "outputs": null,
+                    "single_output": false
+                  },
+                  "line": 11,
+                  "col": 30
+                },
+                "line": 11,
+                "col": 11,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "d",
+                "value": {
+                  "name": "d",
+                  "line": 11,
+                  "col": 54
+                },
+                "line": 11,
+                "col": 51,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "x",
+                "value": {
+                  "name": "x",
+                  "line": 11,
+                  "col": 60
+                },
+                "line": 11,
+                "col": 57,
+                "options": [],
+                "type": null,
+                "alias": null
+              }
+            ],
+            "line": 11,
+            "col": 3
+          },
+          "line": 11,
+          "col": 3,
+          "look": null
+        }
+      ],
+      "line": 2,
+      "col": 1,
+      "end": 12,
+      "description": null,
+      "description_line": 0,
+      "settings": [],
+      "param_tree": null,
+      "output_tree": null
+    }
+  ],
+  "uses": [],
+  "__class__": "File"
+}

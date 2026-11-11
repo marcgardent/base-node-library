@@ -2,7 +2,7 @@
   "name": "blender-geometry",
   "version": 1,
   "description": "Full Blender 5.2+ Geometry Nodes host profile (extends vector2d)",
-  "extends": "vector2d",
+  "extends": "ink2d",
   "allow_all_blender_nodes": true,
   "zones": [
     "simulate",

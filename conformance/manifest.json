@@ -1,14 +1,14 @@
 {
   "version": "1.0",
-  "description": "Corpus de conformité syntaxique et sémantique Base Node (.bn)",
+  "description": "Base Node (.bn) syntax and semantics conformance corpus",
   "files": [
     {
-      "file": "formes.bn",
+      "file": "shapes.bn",
       "graphs_count": 1,
       "canonically_formatted": false,
       "graphs": [
         {
-          "name": "formes",
+          "name": "shapes",
           "kind": "geometry",
           "inputs": [
             {
@@ -50,7 +50,7 @@
       ]
     },
     {
-      "file": "outils.bn",
+      "file": "tools.bn",
       "graphs_count": 2,
       "canonically_formatted": true,
       "graphs": [
@@ -71,7 +71,7 @@
           ]
         },
         {
-          "name": "décale",
+          "name": "offset_mesh",
           "kind": "geometry",
           "inputs": [
             {
@@ -79,7 +79,7 @@
               "type": "Geometry"
             },
             {
-              "name": "hauteur",
+              "name": "height",
               "type": "Float"
             }
           ],
@@ -93,12 +93,12 @@
       ]
     },
     {
-      "file": "tout.bn",
+      "file": "all_features.bn",
       "graphs_count": 4,
       "canonically_formatted": true,
       "graphs": [
         {
-          "name": "entrées",
+          "name": "inputs",
           "kind": "geometry",
           "inputs": [
             {
@@ -106,11 +106,11 @@
               "type": "Geometry"
             },
             {
-              "name": "force",
+              "name": "strength",
               "type": "Float"
             },
             {
-              "name": "Nombre de tours",
+              "name": "Turn Count",
               "type": "Int"
             },
             {
@@ -126,19 +126,19 @@
               "type": "Vector"
             },
             {
-              "name": "teinte",
+              "name": "tint",
               "type": "Color"
             },
             {
-              "name": "actif",
+              "name": "active",
               "type": "Bool"
             },
             {
-              "name": "nom",
+              "name": "name",
               "type": "String"
             },
             {
-              "name": "matière",
+              "name": "material",
               "type": "Material"
             },
             {
@@ -146,7 +146,7 @@
               "type": "Menu"
             },
             {
-              "name": "taille",
+              "name": "size",
               "type": "Float"
             }
           ],
@@ -156,17 +156,17 @@
               "type": "Geometry"
             },
             {
-              "name": "Hauteur",
+              "name": "Height",
               "type": "Float"
             },
             {
-              "name": "Choisi",
+              "name": "Selected",
               "type": "Bool"
             }
           ]
         },
         {
-          "name": "formules",
+          "name": "formulas",
           "kind": "geometry",
           "inputs": [
             {
@@ -196,21 +196,21 @@
           ],
           "outputs": [
             {
-              "name": "nombre",
+              "name": "number",
               "type": "Float"
             },
             {
-              "name": "vecteur",
+              "name": "vector",
               "type": "Vector"
             },
             {
-              "name": "vrai",
+              "name": "valid",
               "type": "Bool"
             }
           ]
         },
         {
-          "name": "nœuds",
+          "name": "nodes",
           "kind": "geometry",
           "inputs": [
             {
@@ -218,7 +218,7 @@
               "type": "Geometry"
             },
             {
-              "name": "densité",
+              "name": "density",
               "type": "Float"
             }
           ],
@@ -252,7 +252,7 @@
               "type": "Geometry"
             },
             {
-              "name": "Somme",
+              "name": "Sum",
               "type": "Float"
             }
           ]

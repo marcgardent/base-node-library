@@ -20,9 +20,9 @@ def show_text(context, text):
     return False
 
 
-class BNODES_OT_text_to_tree(bpy.types.Operator):
+class BASE_NODE_OT_text_to_tree(bpy.types.Operator):
     """Build the node trees written in this text"""
-    bl_idname = "bnodes.text_to_tree"
+    bl_idname = "base_node.text_to_tree"
     bl_label = "Text → Tree"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -46,9 +46,9 @@ class BNODES_OT_text_to_tree(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class BNODES_OT_format(bpy.types.Operator):
+class BASE_NODE_OT_format(bpy.types.Operator):
     """Rewrite this text in the canonical layout, keeping its comments"""
-    bl_idname = "bnodes.format"
+    bl_idname = "base_node.format"
     bl_label = "Format"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -67,9 +67,9 @@ class BNODES_OT_format(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class BNODES_OT_tree_to_text(bpy.types.Operator):
+class BASE_NODE_OT_tree_to_text(bpy.types.Operator):
     """Write this node tree, and the groups it calls, as text"""
-    bl_idname = "bnodes.tree_to_text"
+    bl_idname = "base_node.tree_to_text"
     bl_label = "Tree → Text"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -95,9 +95,9 @@ class BNODES_OT_tree_to_text(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class BNODES_OT_goto(bpy.types.Operator):
+class BASE_NODE_OT_goto(bpy.types.Operator):
     """Put the cursor on this line"""
-    bl_idname = "bnodes.goto"
+    bl_idname = "base_node.goto"
     bl_label = "Go to Line"
     bl_options = {"INTERNAL"}
 
@@ -115,9 +115,9 @@ class BNODES_OT_goto(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class BNODES_OT_add_modifier(bpy.types.Operator):
+class BASE_NODE_OT_add_modifier(bpy.types.Operator):
     """Add this node tree as a Geometry Nodes modifier of the active object"""
-    bl_idname = "bnodes.add_modifier"
+    bl_idname = "base_node.add_modifier"
     bl_label = "Add as Modifier"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -139,5 +139,5 @@ class BNODES_OT_add_modifier(bpy.types.Operator):
         return {"FINISHED"}
 
 
-classes = (BNODES_OT_text_to_tree, BNODES_OT_format, BNODES_OT_tree_to_text, BNODES_OT_goto,
-           BNODES_OT_add_modifier)
+classes = (BASE_NODE_OT_text_to_tree, BASE_NODE_OT_format, BASE_NODE_OT_tree_to_text, BASE_NODE_OT_goto,
+           BASE_NODE_OT_add_modifier)

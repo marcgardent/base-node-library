@@ -1,0 +1,41 @@
+{
+  "name": "ink2d",
+  "version": 1,
+  "description": "2D living ink, Grease Pencil strokes, dynamics, and attributes (extends vector2d)",
+  "extends": "vector2d",
+  "types": [
+    "Geometry",
+    "Material"
+  ],
+  "zones": [
+    "foreach"
+  ],
+  "nodes": [
+    "GreasePencilDrawTime",
+    "GreasePencilOpacity",
+    "GreasePencilColor",
+    "GreasePencilFillID",
+    "GreasePencilStrokeSoftness",
+    "GreasePencilStrokeVisibility",
+    "GreasePencilToCurves",
+    "CurvesToGreasePencil",
+    "SetGreasePencilColor",
+    "SetGreasePencilDepth",
+    "SetGreasePencilSoftness",
+    "CurveTilt",
+    "SetCurveTilt",
+    "SampleCurve",
+    "CurveLength",
+    "CurveToPoints",
+    "PointsToCurves",
+    "InterpolateCurves",
+    "OffsetPointInCurve",
+    "CurveOfPoint",
+    "PointsOfCurve",
+    "CurveEndpointSelection",
+    "CurveHandleTypeSelection",
+    "CurveHandlePositions",
+    "SetCurveHandlePositions",
+    "SetCurveNormal"
+  ]
+}

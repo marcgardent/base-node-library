@@ -22,7 +22,7 @@ def pairs(window):
     nodes = [a for a in areas if a.type == "NODE_EDITOR" and a.spaces.active.edit_tree is not None]
     for ta in texts:
         for na in nodes:
-            if na.spaces.active.edit_tree.bnodes_text == ta.spaces.active.text:
+            if na.spaces.active.edit_tree.base_node_text == ta.spaces.active.text:
                 yield ta, na
 
 
@@ -57,7 +57,7 @@ def follow(ta, na):
 
 def tick():
     wm = bpy.context.window_manager
-    if wm is None or not wm.bnodes_sync:
+    if wm is None or not wm.base_node_sync:
         return PERIOD
     for window in wm.windows:
         for ta, na in pairs(window):

@@ -27,20 +27,36 @@ CANONICAL_TO_BL_IDNAME: dict[str, str] = {
     "CombineXYZ": "ShaderNodeCombineXYZ",
     "Compare": "FunctionNodeCompare",
     "CurveCircle": "GeometryNodeCurvePrimitiveCircle",
+    "CurveEndpointSelection": "GeometryNodeCurveEndpointSelection",
+    "CurveHandlePositions": "GeometryNodeInputCurveHandlePositions",
+    "CurveHandleTypeSelection": "GeometryNodeCurveHandleTypeSelection",
+    "CurveLength": "GeometryNodeCurveLength",
     "CurveLine": "GeometryNodeCurvePrimitiveLine",
+    "CurveOfPoint": "GeometryNodeCurveOfPoint",
     "CurvePrimitiveCircle": "GeometryNodeCurvePrimitiveCircle",
     "CurvePrimitiveLine": "GeometryNodeCurvePrimitiveLine",
     "CurvePrimitiveQuadrilateral": "GeometryNodeCurvePrimitiveQuadrilateral",
     "CurveQuadrilateral": "GeometryNodeCurvePrimitiveQuadrilateral",
+    "CurvesToGreasePencil": "GeometryNodeCurvesToGreasePencil",
     "CurveSpiral": "GeometryNodeCurveSpiral",
     "CurveStar": "GeometryNodeCurveStar",
+    "CurveTilt": "GeometryNodeInputCurveTilt",
     "CurveToMesh": "GeometryNodeCurveToMesh",
+    "CurveToPoints": "GeometryNodeCurveToPoints",
     "FillCurve": "GeometryNodeFillCurve",
     "FilletCurve": "GeometryNodeFilletCurve",
+    "GreasePencilColor": "GeometryNodeGreasePencilColor",
+    "GreasePencilDrawTime": "GeometryNodeGreasePencilDrawTime",
+    "GreasePencilFillID": "GeometryNodeGreasePencilFillID",
+    "GreasePencilOpacity": "GeometryNodeGreasePencilOpacity",
+    "GreasePencilStrokeSoftness": "GeometryNodeGreasePencilStrokeSoftness",
+    "GreasePencilStrokeVisibility": "GeometryNodeGreasePencilStrokeVisibility",
+    "GreasePencilToCurves": "GeometryNodeGreasePencilToCurves",
     "ID": "GeometryNodeInputID",
     "Index": "GeometryNodeInputIndex",
     "IndexSwitch": "GeometryNodeIndexSwitch",
     "InstanceOnPoints": "GeometryNodeInstanceOnPoints",
+    "InterpolateCurves": "GeometryNodeInterpolateCurves",
     "JoinGeometry": "GeometryNodeJoinGeometry",
     "MapRange": "ShaderNodeMapRange",
     "Math": "ShaderNodeMath",
@@ -52,16 +68,26 @@ CANONICAL_TO_BL_IDNAME: dict[str, str] = {
     "Mix": "ShaderNodeMix",
     "NamedAttribute": "GeometryNodeInputNamedAttribute",
     "Normal": "GeometryNodeInputNormal",
+    "OffsetPointInCurve": "GeometryNodeOffsetPointInCurve",
     "Points": "GeometryNodePoints",
+    "PointsOfCurve": "GeometryNodePointsOfCurve",
+    "PointsToCurves": "GeometryNodePointsToCurves",
     "Position": "GeometryNodeInputPosition",
     "Radius": "GeometryNodeInputRadius",
     "RandomValue": "FunctionNodeRandomValue",
     "RealizeInstances": "GeometryNodeRealizeInstances",
     "ResampleCurve": "GeometryNodeResampleCurve",
     "ReverseCurve": "GeometryNodeReverseCurve",
+    "SampleCurve": "GeometryNodeSampleCurve",
     "SampleIndex": "GeometryNodeSampleIndex",
     "SeparateXYZ": "ShaderNodeSeparateXYZ",
+    "SetCurveHandlePositions": "GeometryNodeSetCurveHandlePositions",
+    "SetCurveNormal": "GeometryNodeSetCurveNormal",
     "SetCurveRadius": "GeometryNodeSetCurveRadius",
+    "SetCurveTilt": "GeometryNodeSetCurveTilt",
+    "SetGreasePencilColor": "GeometryNodeSetGreasePencilColor",
+    "SetGreasePencilDepth": "GeometryNodeSetGreasePencilDepth",
+    "SetGreasePencilSoftness": "GeometryNodeSetGreasePencilSoftness",
     "SetMaterial": "GeometryNodeSetMaterial",
     "SetPosition": "GeometryNodeSetPosition",
     "SplineParameter": "GeometryNodeSplineParameter",
@@ -150,6 +176,24 @@ BUILTIN_PROFILES: dict[str, dict[str, Any]] = {
             "IndexSwitch", "MenuSwitch", "SetMaterial"
         ],
     },
+    "ink2d": {
+        "name": "ink2d",
+        "version": 1,
+        "description": "2D living ink, Grease Pencil strokes, dynamics, and attributes (extends vector2d)",
+        "extends": "vector2d",
+        "types": ["Geometry", "Material"],
+        "zones": ["foreach"],
+        "nodes": [
+            "GreasePencilDrawTime", "GreasePencilOpacity", "GreasePencilColor",
+            "GreasePencilFillID", "GreasePencilStrokeSoftness", "GreasePencilStrokeVisibility",
+            "GreasePencilToCurves", "CurvesToGreasePencil", "SetGreasePencilColor",
+            "SetGreasePencilDepth", "SetGreasePencilSoftness", "CurveTilt", "SetCurveTilt",
+            "SampleCurve", "CurveLength", "CurveToPoints", "PointsToCurves",
+            "InterpolateCurves", "OffsetPointInCurve", "CurveOfPoint", "PointsOfCurve",
+            "CurveEndpointSelection", "CurveHandleTypeSelection", "CurveHandlePositions",
+            "SetCurveHandlePositions", "SetCurveNormal"
+        ],
+    },
     "raster2d": {
         "name": "raster2d",
         "version": 1,
@@ -165,7 +209,7 @@ BUILTIN_PROFILES: dict[str, dict[str, Any]] = {
         "name": "blender-geometry",
         "version": 1,
         "description": "Full Blender Geometry Nodes host profile (5.2+ / 5.3+)",
-        "extends": "vector2d",
+        "extends": "ink2d",
         "allow_all_blender_nodes": True,
         "zones": ["simulate", "closure"],
         "types": ["Bundle", "Closure", "Object", "Collection", "Texture"],
@@ -302,8 +346,19 @@ def check_profile(graphs: Any, profile: str | dict[str, Any] = "vector2d") -> li
 
         # Check interface inputs / outputs
         # Compatible with IR (g.inputs: list[tuple[name, type]]) and AST (g.params: list[Param])
-        inputs = g.inputs if hasattr(g, "inputs") else [(p.name, p.type) for p in getattr(g, "params", [])]
-        outputs = g.outputs if hasattr(g, "outputs") else [(r.name, r.type) for r in getattr(g, "outputs", [])]
+        def _extract_params(items: Any) -> list[tuple[str, str]]:
+            res: list[tuple[str, str]] = []
+            for item in items or ():
+                if isinstance(item, tuple) and len(item) == 2:
+                    res.append(item)
+                elif hasattr(item, "items"):  # ast.Panel
+                    res.extend(_extract_params(item.items))
+                elif hasattr(item, "name") and hasattr(item, "type"):  # ast.Param
+                    res.append((item.name, item.type))
+            return res
+
+        inputs = _extract_params(g.inputs if hasattr(g, "inputs") else getattr(g, "params", ()))
+        outputs = _extract_params(getattr(g, "outputs", ()))
 
         for name, typ in inputs:
             if typ not in allowed_types:

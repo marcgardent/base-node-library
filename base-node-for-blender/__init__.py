@@ -1,4 +1,4 @@
-"""Base Node for Blender (base_node / bnodes).
+"""Base Node for Blender (base_node).
 
 Nodes as Text (.bn) — Write and read node trees as functions.
 """
@@ -16,14 +16,9 @@ sys.modules["base_node"] = this_module
 sys.modules["base_node.lang"] = lang
 sys.modules["base_node.host"] = host
 
-sys.modules["bnodes"] = this_module
-sys.modules["bnodes.lang"] = lang
-sys.modules["bnodes.host"] = host
-
 try:
     from . import ui
     sys.modules["base_node.ui"] = ui
-    sys.modules["bnodes.ui"] = ui
 except Exception:
     ui = None
 

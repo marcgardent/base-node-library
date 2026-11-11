@@ -77,7 +77,7 @@ class BlenderSchema:
 
     def tree(self, kind):
         if kind not in self.scratch:
-            self.scratch[kind] = bpy.data.node_groups.new(f".bnodes_scratch_{kind}", TREE_TYPES[kind])
+            self.scratch[kind] = bpy.data.node_groups.new(f".base_node_scratch_{kind}", TREE_TYPES[kind])
         return self.scratch[kind]
 
     def specs(self, kind):
@@ -199,7 +199,7 @@ def root_panel(tree):
 
 
 # On a built group: {socket identifier: {"name", "key"}} for the sockets the text named with `as`
-ALIASES = "bnodes_aliases"
+ALIASES = "base_node_aliases"
 
 
 def socket_keys(tree, io):
@@ -235,7 +235,7 @@ _fresh_items = {}
 def fresh_item(socket_type):
     """{field: value} of a new group input of `socket_type`, fields it has only."""
     if socket_type not in _fresh_items:
-        tree = bpy.data.node_groups.new(".bnodes_fresh", "GeometryNodeTree")
+        tree = bpy.data.node_groups.new(".base_node_fresh", "GeometryNodeTree")
         try:
             item = tree.interface.new_socket("x", in_out="INPUT", socket_type=socket_type)
             _fresh_items[socket_type] = {f: snapshot(item) if f == "default_value" else getattr(item, f)
@@ -262,7 +262,7 @@ def option_names(item):
 def fresh_options(socket_type, in_out):
     """{option: value} of a new interface socket: what the text leaves out."""
     if (socket_type, in_out) not in _fresh_options:
-        tree = bpy.data.node_groups.new(".bnodes_fresh", "GeometryNodeTree")
+        tree = bpy.data.node_groups.new(".base_node_fresh", "GeometryNodeTree")
         try:
             item = tree.interface.new_socket("x", in_out=in_out, socket_type=socket_type)
             _fresh_options[(socket_type, in_out)] = {o: getattr(item, o) for o in option_names(item)}
@@ -303,7 +303,7 @@ def fresh_item_options(bl_idname, items, shape=None):
     shape = shape or ITEM_NODES[bl_idname]
     key = (bl_idname, shape.collection, tuple(items))
     if key not in _fresh_item_options:
-        tree = bpy.data.node_groups.new(".bnodes_fresh", "GeometryNodeTree")
+        tree = bpy.data.node_groups.new(".base_node_fresh", "GeometryNodeTree")
         try:
             node = tree.nodes.new(bl_idname)
             getattr(node, shape.collection).clear()
@@ -321,7 +321,7 @@ def fresh_item_value(bl_idname, collection, socket_type):
     """The value the input socket of a new item holds: a closure's output, an evaluation's input."""
     k = (bl_idname, collection, socket_type)
     if k not in _fresh_values:
-        tree = bpy.data.node_groups.new(".bnodes_fresh", "GeometryNodeTree")
+        tree = bpy.data.node_groups.new(".base_node_fresh", "GeometryNodeTree")
         try:
             node = tree.nodes.new(bl_idname)
             items = getattr(node, collection)

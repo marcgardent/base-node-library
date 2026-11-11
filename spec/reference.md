@@ -145,5 +145,6 @@ b = CombineBundle(factor: 0.5, fn: fn)
 | `core` | — | Scalar/vector math, logic, noise, `repeat` (`math.bn`) |
 | `sdf2d` | `core` | `Position`, `Normal`, `Index`, `ID` (`sdf2d.bn`) |
 | `vector2d` | `sdf2d` | `Geometry`, `Material`, 2D curves/meshes/points, `foreach` (`curves2d.bn`, `patterns2d.bn`) |
+| `ink2d` | `vector2d` | Living ink, Grease Pencil strokes, dynamics, tilt, draw_time (`gp_tools2d.bn`) |
 | `raster2d` | `sdf2d` | `Image`, blend modes, filters, vectorize/rasterize |
-| `blender-geometry` | `vector2d` | Full Blender 5.2+ Geometry Nodes (3D, volumes, `simulate`, `closure`, `Bundle`) |
+| `blender-geometry` | `ink2d` | Full Blender 5.2+ Geometry Nodes (3D, volumes, `simulate`, `closure`, `Bundle`) |

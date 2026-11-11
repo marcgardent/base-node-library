@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from . import ast, colors, ir, sugar
 from .errors import BnError, Diagnostic
 from .parser import parse
-from .schema import (CLOSURE_INPUT, CLOSURE_OUTPUT, COMBINE_BUNDLE, DATABLOCKS, EVALUATE_CLOSURE, FIELD_TYPES, IMPLICIT,
+from .schema import (CLOSURE_INPUT, CLOSURE_OUTPUT, CLOSURE_TO_LIST, COMBINE_BUNDLE, DATABLOCKS, EVALUATE_CLOSURE, FIELD_TYPES, IMPLICIT,
                      ITEM_NODES, ITEM_TYPES, NO_DEFAULT, NO_VALUE, RANGED, SEPARATE_BUNDLE, SIGNATURE_NODES, STRICT,
                      TREE_KINDS, TYPES, Socket, can_link, key, snake)
 
@@ -948,6 +948,9 @@ class GraphChecker:
             if spec.bl_idname == SEPARATE_BUNDLE:
                 self.error(positional[fixed][1], "SeparateBundle takes the bundle alone: "
                                                  "SeparateBundle(b) -> (name: Type, …)")
+            elif spec.bl_idname == CLOSURE_TO_LIST:
+                self.error(positional[fixed][1], "ClosureToList takes Count and Closure: "
+                                                 "ClosureToList(count, closure) -> (name: Type, …)")
             else:
                 self.error(positional[fixed][1], f"{c.name}: items are passed by name, {c.name}(…, name: value)")
             return None
@@ -958,15 +961,38 @@ class GraphChecker:
                 self.error(c, "CombineBundle has only one output, the bundle: no '->'")
                 return None
             items, values = self.given_items(c, named, options)
-        elif spec.bl_idname == SEPARATE_BUNDLE:
-            if named:
-                self.error(named[0][0], "SeparateBundle declares items after '->': "
-                                        "SeparateBundle(b) -> (name: Type, …)")
-                return None
+        elif spec.bl_idname in (SEPARATE_BUNDLE, CLOSURE_TO_LIST):
+            fixed_sockets = self.schema.sockets(self.g.kind, spec, node.props)[0][:fixed]
+            fixed_values = [None] * fixed
+            if spec.bl_idname == CLOSURE_TO_LIST and len(positional) == 1 and not named:
+                val, _arg = positional[0]
+                if value_type(val) == "Closure":
+                    fixed_values[1] = positional[0]
+                else:
+                    fixed_values[0] = positional[0]
+            else:
+                for idx, pos in enumerate(positional):
+                    if idx < fixed:
+                        fixed_values[idx] = pos
+            for a, v in named:
+                sock = find_socket(fixed_sockets, a.name)
+                if isinstance(sock, Socket):
+                    matched_idx = fixed_sockets.index(sock)
+                    if fixed_values[matched_idx] is not None:
+                        self.error(a, f"input '{a.name}' given twice")
+                        return None
+                    fixed_values[matched_idx] = (v, a.value)
+                else:
+                    usage = "SeparateBundle(b)" if spec.bl_idname == SEPARATE_BUNDLE else "ClosureToList(count, closure)"
+                    self.error(a, f"{spec.name} declares items after '->': "
+                                  f"{usage} -> (name: Type, …)")
+                    return None
             if c.outputs is None:
-                self.error(c, "SeparateBundle declares items: SeparateBundle(b) -> (name: Type, …)")
+                usage = "SeparateBundle(b)" if spec.bl_idname == SEPARATE_BUNDLE else "ClosureToList(count, closure)"
+                self.error(c, f"{spec.name} declares items: {usage} -> (name: Type, …)")
                 return None
             items, values = [], []
+            positional = fixed_values
         elif c.outputs is not None:
             items, values = self.given_items(c, named, options)
         else:
@@ -998,7 +1024,7 @@ class GraphChecker:
             return None
         if c.outputs is not None:
             node.out_items = self.declared(c.outputs, "out", options, c.name)
-        if spec.bl_idname != SEPARATE_BUNDLE:
+        if spec.bl_idname not in (SEPARATE_BUNDLE, CLOSURE_TO_LIST):
             node.items = items
         node.item_options = options
 
@@ -1010,9 +1036,11 @@ class GraphChecker:
         # Numbered once its arguments have made their own nodes
         node.id = f"n{len(self.nodes)}"
         self.nodes.append(node)
-        for (v, a), sock in zip(positional, inputs):
-            if v is not None:
-                self.connect(node, sock, v, a, c.name)
+        for pos, sock in zip(positional, inputs):
+            if pos is not None:
+                v, a = pos
+                if v is not None:
+                    self.connect(node, sock, v, a, c.name)
         names = [n for n, _t in node.items or []]
         for name, v, a in values:
             self.connect(node, inputs[fixed + names.index(name)], v, a, c.name)
@@ -1230,7 +1258,7 @@ class GraphChecker:
 
     def call(self, c, piped=None):
         spec = None if c.name in self.graphs or self.is_function(c.name) else self.schema.node(self.g.kind, c.name)
-        if spec is not None and spec.bl_idname in (COMBINE_BUNDLE, SEPARATE_BUNDLE, EVALUATE_CLOSURE):
+        if spec is not None and spec.bl_idname in (COMBINE_BUNDLE, SEPARATE_BUNDLE, EVALUATE_CLOSURE, CLOSURE_TO_LIST):
             return self.signature_call(c, spec, piped)
         if spec is None and c.name not in self.graphs and not self.is_function(c.name) \
                 and self.existing_group(c) is None and isinstance(self.env.get(c.name), Out) \

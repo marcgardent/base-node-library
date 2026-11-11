@@ -470,6 +470,12 @@ geometry graph fbm(
           <td>2D vector engines, Blender, <code>curves2d.bn</code>, <code>patterns2d.bn</code></td>
         </tr>
         <tr>
+          <td><code>ink2d</code></td>
+          <td><code>vector2d</code></td>
+          <td>Living ink, Grease Pencil strokes, dynamics, tilt, draw_time</td>
+          <td>Grease Pencil 3, 2D ink engines, <code>gp_tools2d.bn</code></td>
+        </tr>
+        <tr>
           <td><code>raster2d</code></td>
           <td><code>sdf2d</code></td>
           <td><code>Image</code> buffers, blend modes, filters, rasterize/vectorize</td>
@@ -477,7 +483,7 @@ geometry graph fbm(
         </tr>
         <tr>
           <td><code>blender-geometry</code></td>
-          <td><code>vector2d</code></td>
+          <td><code>ink2d</code></td>
           <td>Full Blender 5.2+ Geometry Nodes (3D meshes, volumes, <code>simulate</code>, <code>closure</code>, <code>Bundle</code>)</td>
           <td>Blender 5.2 LTS / 5.3 LTS</td>
         </tr>
@@ -521,7 +527,7 @@ let err = check_profile(&amp;f, ProfileKind::Vector2d);</code></pre>
 
     <h2 id="blender">3. Base Node for Blender (<code>base-node-for-blender/</code>)</h2>
     <p>
-      Blender 5.2+ extension (<code>id = "base_node"</code>, backwards-compatible with <code>bnodes</code>). Synchronizes Geometry Nodes trees and <code>.bn</code> text blocks in real time.
+      Blender 5.2+ extension (<code>id = "base_node"</code>). Synchronizes Geometry Nodes trees and <code>.bn</code> text blocks in real time.
     </p>
     <p><strong>One-click install via Blender Remote Extension Repository:</strong></p>
     <div class="endpoint-bar">

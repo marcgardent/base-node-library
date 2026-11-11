@@ -27,11 +27,11 @@ fn read_stdlib_file(candidates: &[&str]) -> (String, String) {
 #[test]
 fn test_stdlib_conformance() {
     let files: &[(&[&str], usize)] = &[
-        (&["math.bn", "maths.bn"], 47),
+        (&["math.bn"], 47),
         (&["sdf2d.bn"], 17),
-        (&["curves2d.bn", "courbes2d.bn"], 7),
-        (&["patterns2d.bn", "motifs2d.bn"], 5),
-        (&["gp_tools2d.bn", "gp_outils2d.bn"], 4),
+        (&["curves2d.bn"], 7),
+        (&["patterns2d.bn"], 5),
+        (&["gp_tools2d.bn"], 4),
     ];
 
     for (candidates, expected_graphs) in files {
@@ -73,10 +73,10 @@ fn test_compat_1_0_files() {
             let formatted = format_source(&src, filename)
                 .unwrap_or_else(|e| panic!("Formatting error on compat {}: {}", filename, e));
 
-            if filename == "formes.bn" {
-                // formes.bn contains 1.0 variants (dot, cross, ·) that the formatter canonicalizes
+            if filename == "shapes.bn" {
+                // shapes.bn contains 1.0 variants (dot, cross, ·) that the formatter canonicalizes
                 let idempotent = format_source(&formatted, filename).unwrap();
-                assert_eq!(idempotent, formatted, "Formatting not idempotent on formes.bn");
+                assert_eq!(idempotent, formatted, "Formatting not idempotent on shapes.bn");
             } else {
                 assert_eq!(
                     formatted, src,
@@ -121,7 +121,7 @@ fn test_profiles_validation() {
     };
 
     // 1. math.bn passes Core with 0 errors
-    let math = load_stdlib(&["math.bn", "maths.bn"]);
+    let math = load_stdlib(&["math.bn"]);
     let math_core_errors = check_profile(&math, ProfileKind::Core);
     assert!(
         math_core_errors.is_empty(),
@@ -164,9 +164,9 @@ geometry graph "test_spatial"(factor: Float = 0.5) -> Vector {
     );
 
     // 3. curves2d.bn, patterns2d.bn, and gp_tools2d.bn pass Vector2d with 0 errors
-    let curves = load_stdlib(&["curves2d.bn", "courbes2d.bn"]);
-    let patterns = load_stdlib(&["patterns2d.bn", "motifs2d.bn"]);
-    let gp_tools = load_stdlib(&["gp_tools2d.bn", "gp_outils2d.bn"]);
+    let curves = load_stdlib(&["curves2d.bn"]);
+    let patterns = load_stdlib(&["patterns2d.bn"]);
+    let gp_tools = load_stdlib(&["gp_tools2d.bn"]);
 
     let curves_errors = check_profile(&curves, ProfileKind::Vector2d);
     assert!(
@@ -187,6 +187,13 @@ geometry graph "test_spatial"(factor: Float = 0.5) -> Vector {
         gp_errors.is_empty(),
         "gp_tools2d stdlib file should pass Vector2d with 0 errors, but got: {:?}",
         gp_errors
+    );
+
+    let gp_ink_errors = check_profile(&gp_tools, ProfileKind::Ink2d);
+    assert!(
+        gp_ink_errors.is_empty(),
+        "gp_tools2d stdlib file should pass Ink2d with 0 errors, but got: {:?}",
+        gp_ink_errors
     );
 
     // They fail Core because they use Geometry or vector nodes

@@ -1,0 +1,79 @@
+// LTS 1 corpus: every language construct, at least once.
+use tools (offset_mesh)
+
+// Inputs: defaults, bounds, implicit fields, options, quoted names
+geometry graph inputs(
+    geometry: Geometry,
+    strength: Float(subtype: FACTOR, description: "The retained share") = 0.25 in 0.0..1.0,
+    "Turn Count": Int = 3 in 1..,
+    p: Vector = Position(),
+    id: Int = ID(),
+    uv: Vector = (0.5, 0.5),
+    tint: Color = (1.0, 0.5, 0.0),
+    active: Bool = true,
+    name: String = "height",
+    material: Material,
+    mode: Menu = Smooth,
+    size: Float(subtype: DISTANCE, structure_type: SINGLE) = 1.0
+) -> (Geometry: Geometry, Height: Float(description: "The height of each point"), Selected: Bool) {
+  "All kinds of inputs"
+  height = p.z * strength + turn_count + id * 0.01 + uv.x
+  m = MenuSwitch(mode, Smooth: geometry, Rough: offset_mesh(geometry, size))
+  return (
+    Geometry: m.output |> SetMaterial(material: material) |> StoreNamedAttribute(name: name, value: height),
+    Height: height,
+    Selected: active and m.smooth)
+}
+
+// Formulas: operators, functions, products, comparisons, logic, components
+geometry graph formulas(
+    a: Float,
+    b: Float,
+    u: Vector,
+    v: Vector,
+    i: Int,
+    j: Int
+) -> (number: Float, vector: Vector, valid: Bool) {
+  n = -a + b * 2.0 - a / b + sin(a) + atan2(a, b) + pow(a, 2.0) + mod(a, 3.0) + min(a, b)
+  w = normalize(u × v) * 2.0 + u - v / 2.0 + abs(-u)
+  d = u ⋅ v + length(w) + distance(u, v)
+  valid = (a < b and not i == j or a >= d) xor nand(i > 0, j != 1) and u == v
+  return (number: n + d, vector: w, valid: valid)
+}
+
+// Nodes: positional then named arguments, properties, outputs, chaining, + between geometries
+geometry graph nodes(geometry: Geometry, density: Float) -> Geometry {
+  "Scatter" #yellowgreen {
+    points = DistributePointsOnFaces(geometry, density: density)
+    pebbles = SetShadeSmooth(MeshIcoSphere(0.1, 2).mesh)
+  }
+  "Border" #ee7733 {
+    "Nested" {
+      border = geometry |> MeshToCurve()
+        |> CurveToMesh(CurvePrimitiveCircle(radius: 0.02))
+    }
+  }
+  {
+    scattered = InstanceOnPoints(points.points, instance: pebbles, rotation: points.rotation)
+  }
+  "To Adjust" #tomato {}
+  return geometry + scattered + border
+}
+
+// Zones and items: nested repeat, Capture Attribute, Index Switch, Menu Switch, empty item
+geometry graph zones(geometry: Geometry, n: Int, i: Int) -> (Geometry: Geometry, Sum: Float) {
+  r = repeat(n, mesh: geometry, sum: 0.0) {
+    top = Position().z >= sum
+    extruded = ExtrudeMesh(mesh, top, offset_scale: 0.1)
+    return (mesh: extruded.mesh, sum: sum + 0.1)
+  }
+  table = repeat(n, total: 0.0) {
+    columns = repeat(n, s: total) {
+      return s + iteration
+    }
+    return columns
+  }
+  c = CaptureAttribute(r.mesh, height: Position().z, "Rest Position": Position(), domain: FACE)
+  choice = IndexSwitch(i, c.geometry, _, MeshCube().mesh)
+  return (Geometry: choice, Sum: c.height + table + IndexSwitch(i, i, 2.0, data_type: FLOAT))
+}

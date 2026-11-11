@@ -1,0 +1,12 @@
+// Alternative syntactic forms accepted in 1.0: Formatter and Tree → Text rewrite them
+geometry graph shapes(u: Vector, v: Vector, a: Bool, b: Bool, geometry: Geometry) -> (
+    Geometry: Geometry,
+    d: Float,
+    x: Bool
+) {
+  "Short" #e73 {
+    d = u dot v + length(u cross v) + u · v + dot(u, v)
+  }
+  x = xor(a, b)
+  return (Geometry: geometry |> SetShadeSmooth(), d: d, x: x)
+}

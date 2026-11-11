@@ -1,0 +1,10 @@
+// Conformance corpus module: called via "use tools (offset_mesh)" from all_features.bn
+
+geometry graph double(x: Float) -> Float {
+  "Twice x"
+  return x * 2.0
+}
+
+geometry graph offset_mesh(geometry: Geometry, height: Float = 0.5) -> Geometry {
+  return SetPosition(geometry, offset: CombineXYZ(z: double(height)))
+}

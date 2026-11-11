@@ -7,6 +7,7 @@ use crate::ast::{AssignValue, Expr, File, Stmt};
 pub const CORE_JSON: &str = include_str!("../../profiles/core.json");
 pub const SDF2D_JSON: &str = include_str!("../../profiles/sdf2d.json");
 pub const VECTOR2D_JSON: &str = include_str!("../../profiles/vector2d.json");
+pub const INK2D_JSON: &str = include_str!("../../profiles/ink2d.json");
 pub const RASTER2D_JSON: &str = include_str!("../../profiles/raster2d.json");
 pub const BLENDER_GEOMETRY_JSON: &str = include_str!("../../profiles/blender-geometry.json");
 
@@ -15,6 +16,7 @@ pub enum ProfileKind {
     Core,
     Sdf2d,
     Vector2d,
+    Ink2d,
     Raster2d,
     BlenderGeometry,
 }
@@ -25,6 +27,7 @@ impl ProfileKind {
             ProfileKind::Core => "core",
             ProfileKind::Sdf2d => "sdf2d",
             ProfileKind::Vector2d => "vector2d",
+            ProfileKind::Ink2d => "ink2d",
             ProfileKind::Raster2d => "raster2d",
             ProfileKind::BlenderGeometry => "blender-geometry",
         }
@@ -35,6 +38,7 @@ impl ProfileKind {
             "core" => Some(ProfileKind::Core),
             "sdf2d" => Some(ProfileKind::Sdf2d),
             "vector2d" => Some(ProfileKind::Vector2d),
+            "ink2d" => Some(ProfileKind::Ink2d),
             "raster2d" => Some(ProfileKind::Raster2d),
             "blender-geometry" => Some(ProfileKind::BlenderGeometry),
             _ => None,
@@ -88,6 +92,7 @@ pub fn load_profile(kind: ProfileKind) -> Profile {
             ProfileKind::Core => CORE_JSON,
             ProfileKind::Sdf2d => SDF2D_JSON,
             ProfileKind::Vector2d => VECTOR2D_JSON,
+            ProfileKind::Ink2d => INK2D_JSON,
             ProfileKind::Raster2d => RASTER2D_JSON,
             ProfileKind::BlenderGeometry => BLENDER_GEOMETRY_JSON,
         };

@@ -153,9 +153,43 @@ def test_picking_a_declared_output_takes_parentheses():
     ("  f = closure() -> Float {\n    return 1.0\n  }\n  return f(y: 1.0)",
      "closure has no input 'y'; inputs: none"),
     ("  f = closure(x: Float) -> Float {\n    d = x\n  }\n  return f(x: t)", "missing return in closure of 'f'"),
+    ("  return ClosureToList(c)", "ClosureToList declares items: ClosureToList(count, closure) -> (name: Type, …)"),
+    ("  return ClosureToList(10, c, x: Float)",
+     "ClosureToList declares items after '->': ClosureToList(count, closure) -> (name: Type, …)"),
+    ("  return ClosureToList(10, c, 20)",
+     "ClosureToList takes Count and Closure: ClosureToList(count, closure) -> (name: Type, …)"),
 ])
 def test_wrong_bundles_and_closures_are_reported(schema, body, message):
     assert errors(graph(body), schema)[0] == message
+
+
+def test_closure_to_list_declares_outputs(schema):
+    src = graph("  res = ClosureToList(10, c) -> (a: Float, b: Vector)\n  return res.a")
+    (g,) = compile_all(src, schema)
+    (ctl,) = nodes(g, "GeometryNodeClosureToList")
+    assert ctl.items is None
+    assert ctl.out_items == [("a", "Float"), ("b", "Vector")]
+    assert ctl.values == {"Count": 10}
+    assert [ident for ident, _l in ctl.links] == ["Closure"]
+    assert g.node(ir.GROUP_OUTPUT).links == [("Float", ir.Link(ctl.id, "#0"))]
+
+
+def test_closure_to_list_single_output(schema):
+    src = graph("  return ClosureToList(c) -> Float")
+    (g,) = compile_all(src, schema)
+    (ctl,) = nodes(g, "GeometryNodeClosureToList")
+    assert ctl.out_items == [("Float", "Float")]
+    assert ctl.values == {}
+    assert [ident for ident, _l in ctl.links] == ["Closure"]
+    assert g.node(ir.GROUP_OUTPUT).links == [("Float", ir.Link(ctl.id, "#0"))]
+
+
+def test_closure_to_list_named_args(schema):
+    src = graph("  return ClosureToList(count: 5, closure: c) -> Float")
+    (g,) = compile_all(src, schema)
+    (ctl,) = nodes(g, "GeometryNodeClosureToList")
+    assert ctl.values == {"Count": 5}
+    assert [ident for ident, _l in ctl.links] == ["Closure"]
 
 
 def test_names_of_a_closure_body_stay_inside(schema):

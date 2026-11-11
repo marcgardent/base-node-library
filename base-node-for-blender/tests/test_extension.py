@@ -1,4 +1,4 @@
-"""Tests for Blender base_node extension and bnodes alias.
+"""Tests for Blender base_node extension.
 
 Run in Blender via:
     blender --background --factory-startup --python-exit-code 1 --python base-node-for-blender/tests/test_extension.py
@@ -23,25 +23,20 @@ sys.modules["base_node"] = base_node
 _spec.loader.exec_module(base_node)
 
 import bpy
-import bnodes
 
 
-def test_import_and_aliases():
-    """1. Verify import of base_node and bnodes alias."""
-    print("-> Test 1: Verifying imports and aliases...")
+def test_import_and_registration():
+    """1. Verify import and registration of base_node."""
+    print("-> Test 1: Verifying imports and registration...")
     assert base_node is not None, "base_node not found"
-    assert bnodes is not None, "bnodes not found"
-    assert base_node is bnodes, "bnodes is not an alias of base_node"
-    assert base_node.lang is bnodes.lang, "base_node.lang and bnodes.lang differ"
-    assert base_node.host is bnodes.host, "base_node.host and bnodes.host differ"
+    assert base_node.lang is not None, "base_node.lang missing"
+    assert base_node.host is not None, "base_node.host missing"
 
     # Register and unregister addon
     base_node.register()
     assert hasattr(bpy.types.NodeTree, "base_node_text"), "NodeTree.base_node_text missing"
-    assert hasattr(bpy.types.NodeTree, "bnodes_text"), "NodeTree.bnodes_text missing"
     assert hasattr(bpy.types.WindowManager, "base_node_sync"), "WindowManager.base_node_sync missing"
-    assert hasattr(bpy.types.WindowManager, "bnodes_sync"), "WindowManager.bnodes_sync missing"
-    print("   ✓ Imports and aliases verified")
+    print("   ✓ Imports and registration verified")
 
 
 def test_check_profile_stdlib():
@@ -52,23 +47,19 @@ def test_check_profile_stdlib():
     from base_node.lang.profiles import check_profile
 
     name_fallbacks = {
-        "math": ["math.bn", "maths.bn"],
-        "maths": ["math.bn", "maths.bn"],
+        "math": ["math.bn"],
         "sdf2d": ["sdf2d.bn"],
-        "curves2d": ["curves2d.bn", "courbes2d.bn"],
-        "courbes2d": ["curves2d.bn", "courbes2d.bn"],
-        "patterns2d": ["patterns2d.bn", "motifs2d.bn"],
-        "motifs2d": ["patterns2d.bn", "motifs2d.bn"],
-        "gp_tools2d": ["gp_tools2d.bn", "gp_outils2d.bn"],
-        "gp_outils2d": ["gp_tools2d.bn", "gp_outils2d.bn"],
+        "curves2d": ["curves2d.bn"],
+        "patterns2d": ["patterns2d.bn"],
+        "gp_tools2d": ["gp_tools2d.bn"],
     }
 
     target_specs = [
-        (["math.bn", "maths.bn"], "core"),
+        (["math.bn"], "core"),
         (["sdf2d.bn"], "sdf2d"),
-        (["curves2d.bn", "courbes2d.bn"], "vector2d"),
-        (["patterns2d.bn", "motifs2d.bn"], "vector2d"),
-        (["gp_tools2d.bn", "gp_outils2d.bn"], "vector2d"),
+        (["curves2d.bn"], "vector2d"),
+        (["patterns2d.bn"], "vector2d"),
+        (["gp_tools2d.bn"], "ink2d"),
     ]
 
     def loader(name: str, _caller: str):
@@ -120,7 +111,6 @@ geometry graph wave(geometry: Geometry, frequency: Float = 2.0, amplitude: Float
     assert len(tree.nodes) > 0, "Built tree contains no nodes"
 
     # Verify attached properties
-    assert hasattr(tree, "bnodes_text"), "Property bnodes_text missing on node group"
     assert hasattr(tree, "base_node_text"), "Property base_node_text missing on node group"
 
     # 2. Tree -> Text
@@ -142,7 +132,7 @@ geometry graph wave(geometry: Geometry, frequency: Float = 2.0, amplitude: Float
 def main():
     print("=== Starting Base Node Blender extension tests ===")
     tests = [
-        test_import_and_aliases,
+        test_import_and_registration,
         test_check_profile_stdlib,
         test_build_and_round_trip,
     ]

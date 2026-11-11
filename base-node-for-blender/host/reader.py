@@ -17,7 +17,7 @@ from ..lang import ast, sugar
 from ..lang.printer import to_source
 from ..lang.ir import (CLOSURE_INPUT, CLOSURE_OUTPUT, FOREACH_INPUT, FOREACH_OUTPUT, REPEAT_INPUT, REPEAT_OUTPUT,
                        SIMULATION_INPUT, ZONE_INPUTS, ZONE_OUTPUTS)
-from ..lang.schema import (COMBINE_BUNDLE, EVALUATE_CLOSURE, FIELD_TYPES, IMPLICIT, ITEM_NODES, ITEM_TYPES, NO_VALUE,
+from ..lang.schema import (CLOSURE_TO_LIST, COMBINE_BUNDLE, EVALUATE_CLOSURE, FIELD_TYPES, IMPLICIT, ITEM_NODES, ITEM_TYPES, NO_VALUE,
                            RESERVED, SEPARATE_BUNDLE, SIGNATURE_ITEMS, SIGNATURE_NODES, TYPES, key, snake)
 from .modules import module_of
 from .schema import (PANEL_OPTIONS, SOCKET_TYPES, TREE_FLAGS, TREE_TYPES, BlenderSchema, fresh_item,
@@ -51,7 +51,7 @@ COMPONENT = {"X": "x", "Y": "y", "Z": "z"}
 ITEM_TYPE_NAMES = {v: k for k, v in ITEM_TYPES.items()}
 # Where a node declared by the text keeps its items: (input items, output items), as the builder makes them
 SIGNATURE_READ = {COMBINE_BUNDLE: ("bundle_items", None), SEPARATE_BUNDLE: (None, "bundle_items"),
-                  EVALUATE_CLOSURE: ("input_items", "output_items")}
+                  EVALUATE_CLOSURE: ("input_items", "output_items"), CLOSURE_TO_LIST: (None, "list_items")}
 
 
 def export_tree(tree):
@@ -742,16 +742,21 @@ class GraphReader:
 
         positional = []
         if fixed:
-            links = incoming.get(sockets[0].identifier)
-            if links:
-                positional.append(ast.Arg(None, self.use(*links[0]), 0, 0))
+            for s in sockets[:fixed]:
+                links = incoming.get(s.identifier)
+                if links:
+                    positional.append(ast.Arg(None, self.use(*links[0]), 0, 0))
+                else:
+                    lit = self.literal(node, s, {})
+                    if lit is not None:
+                        positional.append(ast.Arg(None, lit, 0, 0))
         closure = self.closure_of(node) if kind == EVALUATE_CLOSURE else None
         args = []
         settings = self.item_settings(node, SIGNATURE_ITEMS[(kind, "items")], list(given), sockets[fixed:]) \
             if inputs_at else []
         for sock, item, options in zip(sockets[fixed:], given, settings):
             args.extend(self.item_arg(spec.name, node, sock, item, options, closure is not None))
-        if node.define_signature:
+        if getattr(node, "define_signature", False):
             args.append(ast.Arg("define_signature", ast.Bool(True, 0, 0), 0, 0))
         if closure is not None:
             target = positional[0].value

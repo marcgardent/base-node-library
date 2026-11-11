@@ -1,0 +1,2403 @@
+{
+  "graphs": [
+    {
+      "kind": "geometry",
+      "name": "inputs",
+      "params": [
+        {
+          "name": "geometry",
+          "type": "Geometry",
+          "line": 6,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "strength",
+          "type": "Float",
+          "line": 7,
+          "col": 5,
+          "default": {
+            "value": 0.25,
+            "is_int": false,
+            "line": 7,
+            "col": 75
+          },
+          "range": [
+            {
+              "value": 0.0,
+              "is_int": false,
+              "line": 7,
+              "col": 83
+            },
+            {
+              "value": 1.0,
+              "is_int": false,
+              "line": 7,
+              "col": 88
+            }
+          ],
+          "options": [
+            {
+              "name": "subtype",
+              "value": {
+                "name": "FACTOR",
+                "line": 7,
+                "col": 30
+              },
+              "line": 7,
+              "col": 21,
+              "options": [],
+              "type": null,
+              "alias": null
+            },
+            {
+              "name": "description",
+              "value": {
+                "value": "The retained share",
+                "line": 7,
+                "col": 51
+              },
+              "line": 7,
+              "col": 38,
+              "options": [],
+              "type": null,
+              "alias": null
+            }
+          ],
+          "alias": null
+        },
+        {
+          "name": "Turn Count",
+          "type": "Int",
+          "line": 8,
+          "col": 5,
+          "default": {
+            "value": 3,
+            "is_int": true,
+            "line": 8,
+            "col": 25
+          },
+          "range": [
+            {
+              "value": 1,
+              "is_int": true,
+              "line": 8,
+              "col": 30
+            },
+            null
+          ],
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "p",
+          "type": "Vector",
+          "line": 9,
+          "col": 5,
+          "default": {
+            "name": "Position",
+            "args": [],
+            "line": 9,
+            "col": 17,
+            "outputs": null,
+            "single_output": false
+          },
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "id",
+          "type": "Int",
+          "line": 10,
+          "col": 5,
+          "default": {
+            "name": "ID",
+            "args": [],
+            "line": 10,
+            "col": 15,
+            "outputs": null,
+            "single_output": false
+          },
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "uv",
+          "type": "Vector",
+          "line": 11,
+          "col": 5,
+          "default": {
+            "items": [
+              {
+                "value": 0.5,
+                "is_int": false,
+                "line": 11,
+                "col": 19
+              },
+              {
+                "value": 0.5,
+                "is_int": false,
+                "line": 11,
+                "col": 24
+              }
+            ],
+            "line": 11,
+            "col": 18
+          },
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "tint",
+          "type": "Color",
+          "line": 12,
+          "col": 5,
+          "default": {
+            "items": [
+              {
+                "value": 1.0,
+                "is_int": false,
+                "line": 12,
+                "col": 20
+              },
+              {
+                "value": 0.5,
+                "is_int": false,
+                "line": 12,
+                "col": 25
+              },
+              {
+                "value": 0.0,
+                "is_int": false,
+                "line": 12,
+                "col": 30
+              }
+            ],
+            "line": 12,
+            "col": 19
+          },
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "active",
+          "type": "Bool",
+          "line": 13,
+          "col": 5,
+          "default": {
+            "value": true,
+            "line": 13,
+            "col": 20
+          },
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "line": 14,
+          "col": 5,
+          "default": {
+            "value": "height",
+            "line": 14,
+            "col": 20
+          },
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "material",
+          "type": "Material",
+          "line": 15,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "mode",
+          "type": "Menu",
+          "line": 16,
+          "col": 5,
+          "default": {
+            "name": "Smooth",
+            "line": 16,
+            "col": 18
+          },
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "size",
+          "type": "Float",
+          "line": 17,
+          "col": 5,
+          "default": {
+            "value": 1.0,
+            "is_int": false,
+            "line": 17,
+            "col": 62
+          },
+          "range": null,
+          "options": [
+            {
+              "name": "subtype",
+              "value": {
+                "name": "DISTANCE",
+                "line": 17,
+                "col": 26
+              },
+              "line": 17,
+              "col": 17,
+              "options": [],
+              "type": null,
+              "alias": null
+            },
+            {
+              "name": "structure_type",
+              "value": {
+                "name": "SINGLE",
+                "line": 17,
+                "col": 52
+              },
+              "line": 17,
+              "col": 36,
+              "options": [],
+              "type": null,
+              "alias": null
+            }
+          ],
+          "alias": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Geometry",
+          "type": "Geometry",
+          "line": 18,
+          "col": 7,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "Height",
+          "type": "Float",
+          "line": 18,
+          "col": 27,
+          "default": null,
+          "range": null,
+          "options": [
+            {
+              "name": "description",
+              "value": {
+                "value": "The height of each point",
+                "line": 18,
+                "col": 54
+              },
+              "line": 18,
+              "col": 41,
+              "options": [],
+              "type": null,
+              "alias": null
+            }
+          ],
+          "alias": null
+        },
+        {
+          "name": "Selected",
+          "type": "Bool",
+          "line": 18,
+          "col": 83,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        }
+      ],
+      "single_output": false,
+      "body": [
+        {
+          "name": "height",
+          "value": {
+            "op": "+",
+            "left": {
+              "op": "+",
+              "left": {
+                "op": "+",
+                "left": {
+                  "op": "*",
+                  "left": {
+                    "target": {
+                      "name": "p",
+                      "line": 20,
+                      "col": 12
+                    },
+                    "socket": "z",
+                    "line": 20,
+                    "col": 13
+                  },
+                  "right": {
+                    "name": "strength",
+                    "line": 20,
+                    "col": 18
+                  },
+                  "line": 20,
+                  "col": 16
+                },
+                "right": {
+                  "name": "turn_count",
+                  "line": 20,
+                  "col": 29
+                },
+                "line": 20,
+                "col": 27
+              },
+              "right": {
+                "op": "*",
+                "left": {
+                  "name": "id",
+                  "line": 20,
+                  "col": 42
+                },
+                "right": {
+                  "value": 0.01,
+                  "is_int": false,
+                  "line": 20,
+                  "col": 47
+                },
+                "line": 20,
+                "col": 45
+              },
+              "line": 20,
+              "col": 40
+            },
+            "right": {
+              "target": {
+                "name": "uv",
+                "line": 20,
+                "col": 54
+              },
+              "socket": "x",
+              "line": 20,
+              "col": 56
+            },
+            "line": 20,
+            "col": 52
+          },
+          "line": 20,
+          "col": 3,
+          "look": null
+        },
+        {
+          "name": "m",
+          "value": {
+            "name": "MenuSwitch",
+            "args": [
+              {
+                "name": null,
+                "value": {
+                  "name": "mode",
+                  "line": 21,
+                  "col": 18
+                },
+                "line": 21,
+                "col": 18,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "Smooth",
+                "value": {
+                  "name": "geometry",
+                  "line": 21,
+                  "col": 32
+                },
+                "line": 21,
+                "col": 24,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "Rough",
+                "value": {
+                  "name": "offset_mesh",
+                  "args": [
+                    {
+                      "name": null,
+                      "value": {
+                        "name": "geometry",
+                        "line": 21,
+                        "col": 61
+                      },
+                      "line": 21,
+                      "col": 61,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    },
+                    {
+                      "name": null,
+                      "value": {
+                        "name": "size",
+                        "line": 21,
+                        "col": 71
+                      },
+                      "line": 21,
+                      "col": 71,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    }
+                  ],
+                  "line": 21,
+                  "col": 49,
+                  "outputs": null,
+                  "single_output": false
+                },
+                "line": 21,
+                "col": 42,
+                "options": [],
+                "type": null,
+                "alias": null
+              }
+            ],
+            "line": 21,
+            "col": 7,
+            "outputs": null,
+            "single_output": false
+          },
+          "line": 21,
+          "col": 3,
+          "look": null
+        },
+        {
+          "value": {
+            "fields": [
+              {
+                "name": "Geometry",
+                "value": {
+                  "left": {
+                    "left": {
+                      "target": {
+                        "name": "m",
+                        "line": 23,
+                        "col": 15
+                      },
+                      "socket": "output",
+                      "line": 23,
+                      "col": 16
+                    },
+                    "call": {
+                      "name": "SetMaterial",
+                      "args": [
+                        {
+                          "name": "material",
+                          "value": {
+                            "name": "material",
+                            "line": 23,
+                            "col": 49
+                          },
+                          "line": 23,
+                          "col": 39,
+                          "options": [],
+                          "type": null,
+                          "alias": null
+                        }
+                      ],
+                      "line": 23,
+                      "col": 27,
+                      "outputs": null,
+                      "single_output": false
+                    },
+                    "line": 23,
+                    "col": 24
+                  },
+                  "call": {
+                    "name": "StoreNamedAttribute",
+                    "args": [
+                      {
+                        "name": "name",
+                        "value": {
+                          "name": "name",
+                          "line": 23,
+                          "col": 88
+                        },
+                        "line": 23,
+                        "col": 82,
+                        "options": [],
+                        "type": null,
+                        "alias": null
+                      },
+                      {
+                        "name": "value",
+                        "value": {
+                          "name": "height",
+                          "line": 23,
+                          "col": 101
+                        },
+                        "line": 23,
+                        "col": 94,
+                        "options": [],
+                        "type": null,
+                        "alias": null
+                      }
+                    ],
+                    "line": 23,
+                    "col": 62,
+                    "outputs": null,
+                    "single_output": false
+                  },
+                  "line": 23,
+                  "col": 59
+                },
+                "line": 23,
+                "col": 5,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "Height",
+                "value": {
+                  "name": "height",
+                  "line": 24,
+                  "col": 13
+                },
+                "line": 24,
+                "col": 5,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "Selected",
+                "value": {
+                  "op": "and",
+                  "left": {
+                    "name": "active",
+                    "line": 25,
+                    "col": 15
+                  },
+                  "right": {
+                    "target": {
+                      "name": "m",
+                      "line": 25,
+                      "col": 26
+                    },
+                    "socket": "smooth",
+                    "line": 25,
+                    "col": 27
+                  },
+                  "line": 25,
+                  "col": 22
+                },
+                "line": 25,
+                "col": 5,
+                "options": [],
+                "type": null,
+                "alias": null
+              }
+            ],
+            "line": 22,
+            "col": 3
+          },
+          "line": 22,
+          "col": 3,
+          "look": null
+        }
+      ],
+      "line": 5,
+      "col": 1,
+      "end": 26,
+      "description": "All kinds of inputs",
+      "description_line": 19,
+      "settings": [],
+      "param_tree": null,
+      "output_tree": null
+    },
+    {
+      "kind": "geometry",
+      "name": "formulas",
+      "params": [
+        {
+          "name": "a",
+          "type": "Float",
+          "line": 30,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "b",
+          "type": "Float",
+          "line": 31,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "u",
+          "type": "Vector",
+          "line": 32,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "v",
+          "type": "Vector",
+          "line": 33,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "i",
+          "type": "Int",
+          "line": 34,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "j",
+          "type": "Int",
+          "line": 35,
+          "col": 5,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "number",
+          "type": "Float",
+          "line": 36,
+          "col": 7,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "vector",
+          "type": "Vector",
+          "line": 36,
+          "col": 22,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "valid",
+          "type": "Bool",
+          "line": 36,
+          "col": 38,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        }
+      ],
+      "single_output": false,
+      "body": [
+        {
+          "name": "n",
+          "value": {
+            "op": "+",
+            "left": {
+              "op": "+",
+              "left": {
+                "op": "+",
+                "left": {
+                  "op": "+",
+                  "left": {
+                    "op": "+",
+                    "left": {
+                      "op": "-",
+                      "left": {
+                        "op": "+",
+                        "left": {
+                          "value": {
+                            "name": "a",
+                            "line": 37,
+                            "col": 8
+                          },
+                          "line": 37,
+                          "col": 7
+                        },
+                        "right": {
+                          "op": "*",
+                          "left": {
+                            "name": "b",
+                            "line": 37,
+                            "col": 12
+                          },
+                          "right": {
+                            "value": 2.0,
+                            "is_int": false,
+                            "line": 37,
+                            "col": 16
+                          },
+                          "line": 37,
+                          "col": 14
+                        },
+                        "line": 37,
+                        "col": 10
+                      },
+                      "right": {
+                        "op": "/",
+                        "left": {
+                          "name": "a",
+                          "line": 37,
+                          "col": 22
+                        },
+                        "right": {
+                          "name": "b",
+                          "line": 37,
+                          "col": 26
+                        },
+                        "line": 37,
+                        "col": 24
+                      },
+                      "line": 37,
+                      "col": 20
+                    },
+                    "right": {
+                      "name": "sin",
+                      "args": [
+                        {
+                          "name": null,
+                          "value": {
+                            "name": "a",
+                            "line": 37,
+                            "col": 34
+                          },
+                          "line": 37,
+                          "col": 34,
+                          "options": [],
+                          "type": null,
+                          "alias": null
+                        }
+                      ],
+                      "line": 37,
+                      "col": 30,
+                      "outputs": null,
+                      "single_output": false
+                    },
+                    "line": 37,
+                    "col": 28
+                  },
+                  "right": {
+                    "name": "atan2",
+                    "args": [
+                      {
+                        "name": null,
+                        "value": {
+                          "name": "a",
+                          "line": 37,
+                          "col": 45
+                        },
+                        "line": 37,
+                        "col": 45,
+                        "options": [],
+                        "type": null,
+                        "alias": null
+                      },
+                      {
+                        "name": null,
+                        "value": {
+                          "name": "b",
+                          "line": 37,
+                          "col": 48
+                        },
+                        "line": 37,
+                        "col": 48,
+                        "options": [],
+                        "type": null,
+                        "alias": null
+                      }
+                    ],
+                    "line": 37,
+                    "col": 39,
+                    "outputs": null,
+                    "single_output": false
+                  },
+                  "line": 37,
+                  "col": 37
+                },
+                "right": {
+                  "name": "pow",
+                  "args": [
+                    {
+                      "name": null,
+                      "value": {
+                        "name": "a",
+                        "line": 37,
+                        "col": 57
+                      },
+                      "line": 37,
+                      "col": 57,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    },
+                    {
+                      "name": null,
+                      "value": {
+                        "value": 2.0,
+                        "is_int": false,
+                        "line": 37,
+                        "col": 60
+                      },
+                      "line": 37,
+                      "col": 60,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    }
+                  ],
+                  "line": 37,
+                  "col": 53,
+                  "outputs": null,
+                  "single_output": false
+                },
+                "line": 37,
+                "col": 51
+              },
+              "right": {
+                "name": "mod",
+                "args": [
+                  {
+                    "name": null,
+                    "value": {
+                      "name": "a",
+                      "line": 37,
+                      "col": 71
+                    },
+                    "line": 37,
+                    "col": 71,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  },
+                  {
+                    "name": null,
+                    "value": {
+                      "value": 3.0,
+                      "is_int": false,
+                      "line": 37,
+                      "col": 74
+                    },
+                    "line": 37,
+                    "col": 74,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  }
+                ],
+                "line": 37,
+                "col": 67,
+                "outputs": null,
+                "single_output": false
+              },
+              "line": 37,
+              "col": 65
+            },
+            "right": {
+              "name": "min",
+              "args": [
+                {
+                  "name": null,
+                  "value": {
+                    "name": "a",
+                    "line": 37,
+                    "col": 85
+                  },
+                  "line": 37,
+                  "col": 85,
+                  "options": [],
+                  "type": null,
+                  "alias": null
+                },
+                {
+                  "name": null,
+                  "value": {
+                    "name": "b",
+                    "line": 37,
+                    "col": 88
+                  },
+                  "line": 37,
+                  "col": 88,
+                  "options": [],
+                  "type": null,
+                  "alias": null
+                }
+              ],
+              "line": 37,
+              "col": 81,
+              "outputs": null,
+              "single_output": false
+            },
+            "line": 37,
+            "col": 79
+          },
+          "line": 37,
+          "col": 3,
+          "look": null
+        },
+        {
+          "name": "w",
+          "value": {
+            "op": "+",
+            "left": {
+              "op": "-",
+              "left": {
+                "op": "+",
+                "left": {
+                  "op": "*",
+                  "left": {
+                    "name": "normalize",
+                    "args": [
+                      {
+                        "name": null,
+                        "value": {
+                          "op": "×",
+                          "left": {
+                            "name": "u",
+                            "line": 38,
+                            "col": 17
+                          },
+                          "right": {
+                            "name": "v",
+                            "line": 38,
+                            "col": 21
+                          },
+                          "line": 38,
+                          "col": 19
+                        },
+                        "line": 38,
+                        "col": 17,
+                        "options": [],
+                        "type": null,
+                        "alias": null
+                      }
+                    ],
+                    "line": 38,
+                    "col": 7,
+                    "outputs": null,
+                    "single_output": false
+                  },
+                  "right": {
+                    "value": 2.0,
+                    "is_int": false,
+                    "line": 38,
+                    "col": 26
+                  },
+                  "line": 38,
+                  "col": 24
+                },
+                "right": {
+                  "name": "u",
+                  "line": 38,
+                  "col": 32
+                },
+                "line": 38,
+                "col": 30
+              },
+              "right": {
+                "op": "/",
+                "left": {
+                  "name": "v",
+                  "line": 38,
+                  "col": 36
+                },
+                "right": {
+                  "value": 2.0,
+                  "is_int": false,
+                  "line": 38,
+                  "col": 40
+                },
+                "line": 38,
+                "col": 38
+              },
+              "line": 38,
+              "col": 34
+            },
+            "right": {
+              "name": "abs",
+              "args": [
+                {
+                  "name": null,
+                  "value": {
+                    "value": {
+                      "name": "u",
+                      "line": 38,
+                      "col": 51
+                    },
+                    "line": 38,
+                    "col": 50
+                  },
+                  "line": 38,
+                  "col": 50,
+                  "options": [],
+                  "type": null,
+                  "alias": null
+                }
+              ],
+              "line": 38,
+              "col": 46,
+              "outputs": null,
+              "single_output": false
+            },
+            "line": 38,
+            "col": 44
+          },
+          "line": 38,
+          "col": 3,
+          "look": null
+        },
+        {
+          "name": "d",
+          "value": {
+            "op": "+",
+            "left": {
+              "op": "+",
+              "left": {
+                "op": "⋅",
+                "left": {
+                  "name": "u",
+                  "line": 39,
+                  "col": 7
+                },
+                "right": {
+                  "name": "v",
+                  "line": 39,
+                  "col": 11
+                },
+                "line": 39,
+                "col": 9
+              },
+              "right": {
+                "name": "length",
+                "args": [
+                  {
+                    "name": null,
+                    "value": {
+                      "name": "w",
+                      "line": 39,
+                      "col": 22
+                    },
+                    "line": 39,
+                    "col": 22,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  }
+                ],
+                "line": 39,
+                "col": 15,
+                "outputs": null,
+                "single_output": false
+              },
+              "line": 39,
+              "col": 13
+            },
+            "right": {
+              "name": "distance",
+              "args": [
+                {
+                  "name": null,
+                  "value": {
+                    "name": "u",
+                    "line": 39,
+                    "col": 36
+                  },
+                  "line": 39,
+                  "col": 36,
+                  "options": [],
+                  "type": null,
+                  "alias": null
+                },
+                {
+                  "name": null,
+                  "value": {
+                    "name": "v",
+                    "line": 39,
+                    "col": 39
+                  },
+                  "line": 39,
+                  "col": 39,
+                  "options": [],
+                  "type": null,
+                  "alias": null
+                }
+              ],
+              "line": 39,
+              "col": 27,
+              "outputs": null,
+              "single_output": false
+            },
+            "line": 39,
+            "col": 25
+          },
+          "line": 39,
+          "col": 3,
+          "look": null
+        },
+        {
+          "name": "valid",
+          "value": {
+            "op": "xor",
+            "left": {
+              "op": "or",
+              "left": {
+                "op": "and",
+                "left": {
+                  "op": "<",
+                  "left": {
+                    "name": "a",
+                    "line": 40,
+                    "col": 12
+                  },
+                  "right": {
+                    "name": "b",
+                    "line": 40,
+                    "col": 16
+                  },
+                  "line": 40,
+                  "col": 14
+                },
+                "right": {
+                  "value": {
+                    "op": "==",
+                    "left": {
+                      "name": "i",
+                      "line": 40,
+                      "col": 26
+                    },
+                    "right": {
+                      "name": "j",
+                      "line": 40,
+                      "col": 31
+                    },
+                    "line": 40,
+                    "col": 28
+                  },
+                  "line": 40,
+                  "col": 22
+                },
+                "line": 40,
+                "col": 18
+              },
+              "right": {
+                "op": ">=",
+                "left": {
+                  "name": "a",
+                  "line": 40,
+                  "col": 36
+                },
+                "right": {
+                  "name": "d",
+                  "line": 40,
+                  "col": 41
+                },
+                "line": 40,
+                "col": 38
+              },
+              "line": 40,
+              "col": 33
+            },
+            "right": {
+              "op": "and",
+              "left": {
+                "name": "nand",
+                "args": [
+                  {
+                    "name": null,
+                    "value": {
+                      "op": ">",
+                      "left": {
+                        "name": "i",
+                        "line": 40,
+                        "col": 53
+                      },
+                      "right": {
+                        "value": 0,
+                        "is_int": true,
+                        "line": 40,
+                        "col": 57
+                      },
+                      "line": 40,
+                      "col": 55
+                    },
+                    "line": 40,
+                    "col": 53,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  },
+                  {
+                    "name": null,
+                    "value": {
+                      "op": "!=",
+                      "left": {
+                        "name": "j",
+                        "line": 40,
+                        "col": 60
+                      },
+                      "right": {
+                        "value": 1,
+                        "is_int": true,
+                        "line": 40,
+                        "col": 65
+                      },
+                      "line": 40,
+                      "col": 62
+                    },
+                    "line": 40,
+                    "col": 60,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  }
+                ],
+                "line": 40,
+                "col": 48,
+                "outputs": null,
+                "single_output": false
+              },
+              "right": {
+                "op": "==",
+                "left": {
+                  "name": "u",
+                  "line": 40,
+                  "col": 72
+                },
+                "right": {
+                  "name": "v",
+                  "line": 40,
+                  "col": 77
+                },
+                "line": 40,
+                "col": 74
+              },
+              "line": 40,
+              "col": 68
+            },
+            "line": 40,
+            "col": 44
+          },
+          "line": 40,
+          "col": 3,
+          "look": null
+        },
+        {
+          "value": {
+            "fields": [
+              {
+                "name": "number",
+                "value": {
+                  "op": "+",
+                  "left": {
+                    "name": "n",
+                    "line": 41,
+                    "col": 19
+                  },
+                  "right": {
+                    "name": "d",
+                    "line": 41,
+                    "col": 23
+                  },
+                  "line": 41,
+                  "col": 21
+                },
+                "line": 41,
+                "col": 11,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "vector",
+                "value": {
+                  "name": "w",
+                  "line": 41,
+                  "col": 34
+                },
+                "line": 41,
+                "col": 26,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "valid",
+                "value": {
+                  "name": "valid",
+                  "line": 41,
+                  "col": 44
+                },
+                "line": 41,
+                "col": 37,
+                "options": [],
+                "type": null,
+                "alias": null
+              }
+            ],
+            "line": 41,
+            "col": 3
+          },
+          "line": 41,
+          "col": 3,
+          "look": null
+        }
+      ],
+      "line": 29,
+      "col": 1,
+      "end": 42,
+      "description": null,
+      "description_line": 0,
+      "settings": [],
+      "param_tree": null,
+      "output_tree": null
+    },
+    {
+      "kind": "geometry",
+      "name": "nodes",
+      "params": [
+        {
+          "name": "geometry",
+          "type": "Geometry",
+          "line": 45,
+          "col": 22,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "density",
+          "type": "Float",
+          "line": 45,
+          "col": 42,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Geometry",
+          "type": "Geometry",
+          "line": 45,
+          "col": 61,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        }
+      ],
+      "single_output": true,
+      "body": [
+        {
+          "label": "Scatter",
+          "color": "#yellowgreen",
+          "body": [
+            {
+              "name": "points",
+              "value": {
+                "name": "DistributePointsOnFaces",
+                "args": [
+                  {
+                    "name": null,
+                    "value": {
+                      "name": "geometry",
+                      "line": 47,
+                      "col": 38
+                    },
+                    "line": 47,
+                    "col": 38,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  },
+                  {
+                    "name": "density",
+                    "value": {
+                      "name": "density",
+                      "line": 47,
+                      "col": 57
+                    },
+                    "line": 47,
+                    "col": 48,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  }
+                ],
+                "line": 47,
+                "col": 14,
+                "outputs": null,
+                "single_output": false
+              },
+              "line": 47,
+              "col": 5,
+              "look": null
+            },
+            {
+              "name": "pebbles",
+              "value": {
+                "name": "SetShadeSmooth",
+                "args": [
+                  {
+                    "name": null,
+                    "value": {
+                      "target": {
+                        "name": "MeshIcoSphere",
+                        "args": [
+                          {
+                            "name": null,
+                            "value": {
+                              "value": 0.1,
+                              "is_int": false,
+                              "line": 48,
+                              "col": 44
+                            },
+                            "line": 48,
+                            "col": 44,
+                            "options": [],
+                            "type": null,
+                            "alias": null
+                          },
+                          {
+                            "name": null,
+                            "value": {
+                              "value": 2,
+                              "is_int": true,
+                              "line": 48,
+                              "col": 49
+                            },
+                            "line": 48,
+                            "col": 49,
+                            "options": [],
+                            "type": null,
+                            "alias": null
+                          }
+                        ],
+                        "line": 48,
+                        "col": 30,
+                        "outputs": null,
+                        "single_output": false
+                      },
+                      "socket": "mesh",
+                      "line": 48,
+                      "col": 51
+                    },
+                    "line": 48,
+                    "col": 30,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  }
+                ],
+                "line": 48,
+                "col": 15,
+                "outputs": null,
+                "single_output": false
+              },
+              "line": 48,
+              "col": 5,
+              "look": null
+            }
+          ],
+          "line": 46,
+          "col": 3,
+          "end": 49,
+          "continued": false
+        },
+        {
+          "label": "Border",
+          "color": "#ee7733",
+          "body": [
+            {
+              "label": "Nested",
+              "color": null,
+              "body": [
+                {
+                  "name": "border",
+                  "value": {
+                    "left": {
+                      "left": {
+                        "name": "geometry",
+                        "line": 52,
+                        "col": 16
+                      },
+                      "call": {
+                        "name": "MeshToCurve",
+                        "args": [],
+                        "line": 52,
+                        "col": 28,
+                        "outputs": null,
+                        "single_output": false
+                      },
+                      "line": 52,
+                      "col": 25
+                    },
+                    "call": {
+                      "name": "CurveToMesh",
+                      "args": [
+                        {
+                          "name": null,
+                          "value": {
+                            "name": "CurvePrimitiveCircle",
+                            "args": [
+                              {
+                                "name": "radius",
+                                "value": {
+                                  "value": 0.02,
+                                  "is_int": false,
+                                  "line": 53,
+                                  "col": 53
+                                },
+                                "line": 53,
+                                "col": 45,
+                                "options": [],
+                                "type": null,
+                                "alias": null
+                              }
+                            ],
+                            "line": 53,
+                            "col": 24,
+                            "outputs": null,
+                            "single_output": false
+                          },
+                          "line": 53,
+                          "col": 24,
+                          "options": [],
+                          "type": null,
+                          "alias": null
+                        }
+                      ],
+                      "line": 53,
+                      "col": 12,
+                      "outputs": null,
+                      "single_output": false
+                    },
+                    "line": 53,
+                    "col": 9
+                  },
+                  "line": 52,
+                  "col": 7,
+                  "look": null
+                }
+              ],
+              "line": 51,
+              "col": 5,
+              "end": 54,
+              "continued": false
+            }
+          ],
+          "line": 50,
+          "col": 3,
+          "end": 55,
+          "continued": false
+        },
+        {
+          "label": null,
+          "color": null,
+          "body": [
+            {
+              "name": "scattered",
+              "value": {
+                "name": "InstanceOnPoints",
+                "args": [
+                  {
+                    "name": null,
+                    "value": {
+                      "target": {
+                        "name": "points",
+                        "line": 57,
+                        "col": 34
+                      },
+                      "socket": "points",
+                      "line": 57,
+                      "col": 40
+                    },
+                    "line": 57,
+                    "col": 34,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  },
+                  {
+                    "name": "instance",
+                    "value": {
+                      "name": "pebbles",
+                      "line": 57,
+                      "col": 59
+                    },
+                    "line": 57,
+                    "col": 49,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  },
+                  {
+                    "name": "rotation",
+                    "value": {
+                      "target": {
+                        "name": "points",
+                        "line": 57,
+                        "col": 78
+                      },
+                      "socket": "rotation",
+                      "line": 57,
+                      "col": 84
+                    },
+                    "line": 57,
+                    "col": 68,
+                    "options": [],
+                    "type": null,
+                    "alias": null
+                  }
+                ],
+                "line": 57,
+                "col": 17,
+                "outputs": null,
+                "single_output": false
+              },
+              "line": 57,
+              "col": 5,
+              "look": null
+            }
+          ],
+          "line": 56,
+          "col": 3,
+          "end": 58,
+          "continued": false
+        },
+        {
+          "label": "To Adjust",
+          "color": "#tomato",
+          "body": [],
+          "line": 59,
+          "col": 3,
+          "end": 59,
+          "continued": false
+        },
+        {
+          "value": {
+            "op": "+",
+            "left": {
+              "op": "+",
+              "left": {
+                "name": "geometry",
+                "line": 60,
+                "col": 10
+              },
+              "right": {
+                "name": "scattered",
+                "line": 60,
+                "col": 21
+              },
+              "line": 60,
+              "col": 19
+            },
+            "right": {
+              "name": "border",
+              "line": 60,
+              "col": 33
+            },
+            "line": 60,
+            "col": 31
+          },
+          "line": 60,
+          "col": 3,
+          "look": null
+        }
+      ],
+      "line": 45,
+      "col": 1,
+      "end": 61,
+      "description": null,
+      "description_line": 0,
+      "settings": [],
+      "param_tree": null,
+      "output_tree": null
+    },
+    {
+      "kind": "geometry",
+      "name": "zones",
+      "params": [
+        {
+          "name": "geometry",
+          "type": "Geometry",
+          "line": 64,
+          "col": 22,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "n",
+          "type": "Int",
+          "line": 64,
+          "col": 42,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "i",
+          "type": "Int",
+          "line": 64,
+          "col": 50,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Geometry",
+          "type": "Geometry",
+          "line": 64,
+          "col": 62,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        },
+        {
+          "name": "Sum",
+          "type": "Float",
+          "line": 64,
+          "col": 82,
+          "default": null,
+          "range": null,
+          "options": [],
+          "alias": null
+        }
+      ],
+      "single_output": false,
+      "body": [
+        {
+          "name": "r",
+          "value": {
+            "count": {
+              "name": "n",
+              "line": 65,
+              "col": 14
+            },
+            "states": [
+              {
+                "name": "mesh",
+                "value": {
+                  "name": "geometry",
+                  "line": 65,
+                  "col": 23
+                },
+                "line": 65,
+                "col": 17,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "sum",
+                "value": {
+                  "value": 0.0,
+                  "is_int": false,
+                  "line": 65,
+                  "col": 38
+                },
+                "line": 65,
+                "col": 33,
+                "options": [],
+                "type": null,
+                "alias": null
+              }
+            ],
+            "body": [
+              {
+                "name": "top",
+                "value": {
+                  "op": ">=",
+                  "left": {
+                    "target": {
+                      "name": "Position",
+                      "args": [],
+                      "line": 66,
+                      "col": 11,
+                      "outputs": null,
+                      "single_output": false
+                    },
+                    "socket": "z",
+                    "line": 66,
+                    "col": 21
+                  },
+                  "right": {
+                    "name": "sum",
+                    "line": 66,
+                    "col": 27
+                  },
+                  "line": 66,
+                  "col": 24
+                },
+                "line": 66,
+                "col": 5,
+                "look": null
+              },
+              {
+                "name": "extruded",
+                "value": {
+                  "name": "ExtrudeMesh",
+                  "args": [
+                    {
+                      "name": null,
+                      "value": {
+                        "name": "mesh",
+                        "line": 67,
+                        "col": 28
+                      },
+                      "line": 67,
+                      "col": 28,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    },
+                    {
+                      "name": null,
+                      "value": {
+                        "name": "top",
+                        "line": 67,
+                        "col": 34
+                      },
+                      "line": 67,
+                      "col": 34,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    },
+                    {
+                      "name": "offset_scale",
+                      "value": {
+                        "value": 0.1,
+                        "is_int": false,
+                        "line": 67,
+                        "col": 53
+                      },
+                      "line": 67,
+                      "col": 39,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    }
+                  ],
+                  "line": 67,
+                  "col": 16,
+                  "outputs": null,
+                  "single_output": false
+                },
+                "line": 67,
+                "col": 5,
+                "look": null
+              },
+              {
+                "value": {
+                  "fields": [
+                    {
+                      "name": "mesh",
+                      "value": {
+                        "target": {
+                          "name": "extruded",
+                          "line": 68,
+                          "col": 19
+                        },
+                        "socket": "mesh",
+                        "line": 68,
+                        "col": 27
+                      },
+                      "line": 68,
+                      "col": 13,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    },
+                    {
+                      "name": "sum",
+                      "value": {
+                        "op": "+",
+                        "left": {
+                          "name": "sum",
+                          "line": 68,
+                          "col": 39
+                        },
+                        "right": {
+                          "value": 0.1,
+                          "is_int": false,
+                          "line": 68,
+                          "col": 45
+                        },
+                        "line": 68,
+                        "col": 43
+                      },
+                      "line": 68,
+                      "col": 34,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    }
+                  ],
+                  "line": 68,
+                  "col": 5
+                },
+                "line": 68,
+                "col": 5,
+                "look": null
+              }
+            ],
+            "line": 65,
+            "col": 7,
+            "end": 69
+          },
+          "line": 65,
+          "col": 3,
+          "look": null
+        },
+        {
+          "name": "table",
+          "value": {
+            "count": {
+              "name": "n",
+              "line": 70,
+              "col": 18
+            },
+            "states": [
+              {
+                "name": "total",
+                "value": {
+                  "value": 0.0,
+                  "is_int": false,
+                  "line": 70,
+                  "col": 28
+                },
+                "line": 70,
+                "col": 21,
+                "options": [],
+                "type": null,
+                "alias": null
+              }
+            ],
+            "body": [
+              {
+                "name": "columns",
+                "value": {
+                  "count": {
+                    "name": "n",
+                    "line": 71,
+                    "col": 22
+                  },
+                  "states": [
+                    {
+                      "name": "s",
+                      "value": {
+                        "name": "total",
+                        "line": 71,
+                        "col": 28
+                      },
+                      "line": 71,
+                      "col": 25,
+                      "options": [],
+                      "type": null,
+                      "alias": null
+                    }
+                  ],
+                  "body": [
+                    {
+                      "value": {
+                        "op": "+",
+                        "left": {
+                          "name": "s",
+                          "line": 72,
+                          "col": 14
+                        },
+                        "right": {
+                          "name": "iteration",
+                          "line": 72,
+                          "col": 18
+                        },
+                        "line": 72,
+                        "col": 16
+                      },
+                      "line": 72,
+                      "col": 7,
+                      "look": null
+                    }
+                  ],
+                  "line": 71,
+                  "col": 15,
+                  "end": 73
+                },
+                "line": 71,
+                "col": 5,
+                "look": null
+              },
+              {
+                "value": {
+                  "name": "columns",
+                  "line": 74,
+                  "col": 12
+                },
+                "line": 74,
+                "col": 5,
+                "look": null
+              }
+            ],
+            "line": 70,
+            "col": 11,
+            "end": 75
+          },
+          "line": 70,
+          "col": 3,
+          "look": null
+        },
+        {
+          "name": "c",
+          "value": {
+            "name": "CaptureAttribute",
+            "args": [
+              {
+                "name": null,
+                "value": {
+                  "target": {
+                    "name": "r",
+                    "line": 76,
+                    "col": 24
+                  },
+                  "socket": "mesh",
+                  "line": 76,
+                  "col": 25
+                },
+                "line": 76,
+                "col": 24,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "height",
+                "value": {
+                  "target": {
+                    "name": "Position",
+                    "args": [],
+                    "line": 76,
+                    "col": 40,
+                    "outputs": null,
+                    "single_output": false
+                  },
+                  "socket": "z",
+                  "line": 76,
+                  "col": 50
+                },
+                "line": 76,
+                "col": 32,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "Rest Position",
+                "value": {
+                  "name": "Position",
+                  "args": [],
+                  "line": 76,
+                  "col": 71,
+                  "outputs": null,
+                  "single_output": false
+                },
+                "line": 76,
+                "col": 54,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "domain",
+                "value": {
+                  "name": "FACE",
+                  "line": 76,
+                  "col": 91
+                },
+                "line": 76,
+                "col": 83,
+                "options": [],
+                "type": null,
+                "alias": null
+              }
+            ],
+            "line": 76,
+            "col": 7,
+            "outputs": null,
+            "single_output": false
+          },
+          "line": 76,
+          "col": 3,
+          "look": null
+        },
+        {
+          "name": "choice",
+          "value": {
+            "name": "IndexSwitch",
+            "args": [
+              {
+                "name": null,
+                "value": {
+                  "name": "i",
+                  "line": 77,
+                  "col": 24
+                },
+                "line": 77,
+                "col": 24,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": null,
+                "value": {
+                  "target": {
+                    "name": "c",
+                    "line": 77,
+                    "col": 27
+                  },
+                  "socket": "geometry",
+                  "line": 77,
+                  "col": 28
+                },
+                "line": 77,
+                "col": 27,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": null,
+                "value": {
+                  "name": "_",
+                  "line": 77,
+                  "col": 39
+                },
+                "line": 77,
+                "col": 39,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": null,
+                "value": {
+                  "target": {
+                    "name": "MeshCube",
+                    "args": [],
+                    "line": 77,
+                    "col": 42,
+                    "outputs": null,
+                    "single_output": false
+                  },
+                  "socket": "mesh",
+                  "line": 77,
+                  "col": 52
+                },
+                "line": 77,
+                "col": 42,
+                "options": [],
+                "type": null,
+                "alias": null
+              }
+            ],
+            "line": 77,
+            "col": 12,
+            "outputs": null,
+            "single_output": false
+          },
+          "line": 77,
+          "col": 3,
+          "look": null
+        },
+        {
+          "value": {
+            "fields": [
+              {
+                "name": "Geometry",
+                "value": {
+                  "name": "choice",
+                  "line": 78,
+                  "col": 21
+                },
+                "line": 78,
+                "col": 11,
+                "options": [],
+                "type": null,
+                "alias": null
+              },
+              {
+                "name": "Sum",
+                "value": {
+                  "op": "+",
+                  "left": {
+                    "op": "+",
+                    "left": {
+                      "target": {
+                        "name": "c",
+                        "line": 78,
+                        "col": 34
+                      },
+                      "socket": "height",
+                      "line": 78,
+                      "col": 35
+                    },
+                    "right": {
+                      "name": "table",
+                      "line": 78,
+                      "col": 45
+                    },
+                    "line": 78,
+                    "col": 43
+                  },
+                  "right": {
+                    "name": "IndexSwitch",
+                    "args": [
+                      {
+                        "name": null,
+                        "value": {
+                          "name": "i",
+                          "line": 78,
+                          "col": 65
+                        },
+                        "line": 78,
+                        "col": 65,
+                        "options": [],
+                        "type": null,
+                        "alias": null
+                      },
+                      {
+                        "name": null,
+                        "value": {
+                          "name": "i",
+                          "line": 78,
+                          "col": 68
+                        },
+                        "line": 78,
+                        "col": 68,
+                        "options": [],
+                        "type": null,
+                        "alias": null
+                      },
+                      {
+                        "name": null,
+                        "value": {
+                          "value": 2.0,
+                          "is_int": false,
+                          "line": 78,
+                          "col": 71
+                        },
+                        "line": 78,
+                        "col": 71,
+                        "options": [],
+                        "type": null,
+                        "alias": null
+                      },
+                      {
+                        "name": "data_type",
+                        "value": {
+                          "name": "FLOAT",
+                          "line": 78,
+                          "col": 87
+                        },
+                        "line": 78,
+                        "col": 76,
+                        "options": [],
+                        "type": null,
+                        "alias": null
+                      }
+                    ],
+                    "line": 78,
+                    "col": 53,
+                    "outputs": null,
+                    "single_output": false
+                  },
+                  "line": 78,
+                  "col": 51
+                },
+                "line": 78,
+                "col": 29,
+                "options": [],
+                "type": null,
+                "alias": null
+              }
+            ],
+            "line": 78,
+            "col": 3
+          },
+          "line": 78,
+          "col": 3,
+          "look": null
+        }
+      ],
+      "line": 64,
+      "col": 1,
+      "end": 79,
+      "description": null,
+      "description_line": 0,
+      "settings": [],
+      "param_tree": null,
+      "output_tree": null
+    }
+  ],
+  "uses": [
+    {
+      "name": "tools",
+      "names": [
+        "offset_mesh"
+      ],
+      "source": null,
+      "line": 2,
+      "col": 1
+    }
+  ],
+  "__class__": "File"
+}

@@ -27,7 +27,7 @@ geometry graph relief(geometry: Geometry, height: Float = 0.4 in 0.0..2.0) -> Ge
 | Path | Description | License |
 |---|---|---|
 | [`spec/reference.md`](spec/reference.md) | `.bn` grammar and semantics | MIT OR Apache-2.0 |
-| [`profiles/`](profiles/) | Target profiles (`core`, `sdf2d`, `vector2d`, `raster2d`, `blender-geometry`) | MIT OR Apache-2.0 |
+| [`profiles/`](profiles/) | Target profiles (`core`, `sdf2d`, `vector2d`, `ink2d`, `raster2d`, `blender-geometry`) | MIT OR Apache-2.0 |
 | [`stdlib/`](stdlib/) | Standard `.bn` modules (`math`, `sdf2d`, `curves2d`, `patterns2d`, `gp_tools2d`) | MIT OR Apache-2.0 |
 | [`conformance/`](conformance/) | Shared `.bn` test corpus and expected ASTs | MIT OR Apache-2.0 |
 | [`python/`](python/) | Zero-dependency Python parser, formatter, and CLI (`base_node`) | MIT OR Apache-2.0 |
@@ -42,7 +42,8 @@ Each profile extends its parent and restricts allowed types, implicit inputs, zo
 core              Scalar/vector math, logic, noise, repeat (math.bn)
  └─ sdf2d         + 2D spatial context: Position, Normal, Index, ID (sdf2d.bn)
      ├─ vector2d  + Geometry, 2D curves/meshes/points/instances, foreach (curves2d.bn, patterns2d.bn)
-     │   └─ blender-geometry  + Full Blender 5.2+ Geometry Nodes (3D, volumes, closures, bundles)
+     │   └─ ink2d + Living ink, GP3 strokes, dynamics, tilt, draw_time (gp_tools2d.bn)
+     │       └─ blender-geometry  + Full Blender 5.2+ Geometry Nodes (3D, volumes, closures, bundles)
      └─ raster2d  + Image buffers, blend modes, filters, rasterize/vectorize
 ```
 
@@ -130,7 +131,7 @@ cargo check --target wasm32-unknown-unknown
 
 ## Blender Extension (`base-node-for-blender/`)
 
-Add-on for Blender 5.2+ (`id = "base_node"`, backwards-compatible with `import bnodes`).
+Add-on for Blender 5.2+ (`id = "base_node"`).
 Provides live two-way sync between the Node Editor and Text Editor (`Ctrl+Enter` to apply, `Ctrl+Space` to autocomplete).
 
 Run headless Blender tests:

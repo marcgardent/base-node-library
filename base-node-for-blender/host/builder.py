@@ -25,7 +25,7 @@ DATABLOCKS = {"OBJECT": "objects", "COLLECTION": "collections", "MATERIAL": "mat
 LATE_OPTIONS = {"auto_remove"}
 
 # Source line of each node, for the text and node editors to follow each other
-LINE = "bnodes_line"
+LINE = "base_node_line"
 
 # Set rather than left to Blender, which translates new names when asked to
 FIXED_NAMES = {ir.GROUP_INPUT: "Group Input", ir.GROUP_OUTPUT: "Group Output"}
@@ -49,7 +49,7 @@ def build_source(source, filename="<text>"):
     scratch = {}
     try:
         for g in graphs:
-            tree = bpy.data.node_groups.new(f".bnodes_check_{g.name}", TREE_TYPES[g.kind])
+            tree = bpy.data.node_groups.new(f".base_node_check_{g.name}", TREE_TYPES[g.kind])
             scratch[g.name] = tree
             builder.build(g, tree, scratch)
     finally:
@@ -72,11 +72,9 @@ def mark(tree, module):
     name, source = module
     tree[modules.MODULE] = name
     tree[modules.SOURCE] = source or ""
-    if hasattr(tree, "bnodes_text"):
-        # A text module goes along with the group when it is appended elsewhere
-        tree.bnodes_text = bpy.data.texts.get(name + ".bn") if source is None else None
     if hasattr(tree, "base_node_text"):
-        tree.base_node_text = getattr(tree, "bnodes_text", None)
+        # A text module goes along with the group when it is appended elsewhere
+        tree.base_node_text = bpy.data.texts.get(name + ".bn") if source is None else None
 
 
 def target(g):

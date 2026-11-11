@@ -122,6 +122,7 @@ SEPARATE_BUNDLE = "NodeSeparateBundle"
 EVALUATE_CLOSURE = "NodeEvaluateClosure"
 CLOSURE_INPUT = "NodeClosureInput"
 CLOSURE_OUTPUT = "NodeClosureOutput"
+CLOSURE_TO_LIST = "GeometryNodeClosureToList"
 
 # Nodes whose items the text declares with a type each, and where they stand:
 # side -> (fixed sockets before the items, the item list of ir.Node there or None).
@@ -132,6 +133,7 @@ SIGNATURE_NODES = {
     EVALUATE_CLOSURE: {"inputs": (1, "items"), "outputs": (0, "out_items")},
     CLOSURE_INPUT: {"inputs": (0, None), "outputs": (0, "items")},
     CLOSURE_OUTPUT: {"inputs": (0, "out_items"), "outputs": (1, None)},
+    CLOSURE_TO_LIST: {"inputs": (2, None), "outputs": (0, "out_items")},
 }
 
 # Their item collections, shaped as ITEM_NODES for the host's item helpers:
@@ -143,6 +145,7 @@ SIGNATURE_ITEMS = {
     (EVALUATE_CLOSURE, "out_items"): ItemNode("output_items", 1, 0, named=True, typed=True, out="value"),
     (CLOSURE_OUTPUT, "items"): ItemNode("input_items", 0, 1, named=True, typed=True),
     (CLOSURE_OUTPUT, "out_items"): ItemNode("output_items", 0, 1, named=True, typed=True),
+    (CLOSURE_TO_LIST, "out_items"): ItemNode("list_items", 2, 0, named=True, typed=True, out="value"),
 }
 
 

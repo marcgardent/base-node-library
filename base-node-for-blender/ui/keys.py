@@ -14,9 +14,9 @@ def bind():
         return  # no add-on keyconfig in background mode
     km = kc.keymaps.new("Text", space_type="TEXT_EDITOR")
     # Ctrl+Enter builds; Alt+P stays Python's
-    _items.append((km, km.keymap_items.new("bnodes.text_to_tree", "RET", "PRESS", ctrl=True)))
+    _items.append((km, km.keymap_items.new("base_node.text_to_tree", "RET", "PRESS", ctrl=True)))
     mod = prefs.get().complete_key
-    _items.append((km, km.keymap_items.new("bnodes.complete", "SPACE", "PRESS",
+    _items.append((km, km.keymap_items.new("base_node.complete", "SPACE", "PRESS",
                                            alt=mod == "ALT", shift=mod == "SHIFT", ctrl=mod == "CTRL")))
 
 

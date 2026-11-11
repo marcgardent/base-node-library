@@ -30,6 +30,8 @@ htmlcov/
 venv/
 ENV/
 env/
+uv.lock
+python/uv.lock
 
 # Rust
 target/

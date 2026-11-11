@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import bpy
 
-# The add-on's own package: "bnodes" from the sources, "bl_ext.<repo>.bnodes" once installed
+# The add-on's own package: "base_node" from the sources, "bl_ext.<repo>.base_node" once installed
 ROOT = __package__.rpartition(".")[0]
 
 KEYS = (
@@ -25,7 +25,7 @@ def update_keys(self, context):
     keys.bind()
 
 
-class BnodesPreferences(bpy.types.AddonPreferences):
+class BaseNodePreferences(bpy.types.AddonPreferences):
     bl_idname = ROOT
 
     complete_key: bpy.props.EnumProperty(
@@ -46,4 +46,4 @@ class BnodesPreferences(bpy.types.AddonPreferences):
         layout.label(text="Ctrl+Enter builds the tree from text.", icon="INFO")
 
 
-classes = (BnodesPreferences,)
+classes = (BaseNodePreferences,)

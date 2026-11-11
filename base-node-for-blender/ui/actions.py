@@ -20,7 +20,7 @@ def is_bn(text):
 
 
 def linked_trees(text):
-    return [g for g in bpy.data.node_groups if g.bnodes_text == text]
+    return [g for g in bpy.data.node_groups if g.base_node_text == text]
 
 
 def text_to_tree(text):
@@ -34,7 +34,7 @@ def text_to_tree(text):
         text.cursor_set(first.line - 1, character=max(0, first.col - 1))
         raise
     for tree in trees:
-        tree.bnodes_text = text
+        tree.base_node_text = text
     return trees
 
 
@@ -69,12 +69,12 @@ def format_text(text):
 def tree_to_text(tree):
     """Write the tree (and the groups it calls) into its text, created when needed."""
     source, warnings = export_tree(tree)
-    text = tree.bnodes_text or bpy.data.texts.get(tree.name + EXT)
+    text = tree.base_node_text or bpy.data.texts.get(tree.name + EXT)
     if text is None:
         text = bpy.data.texts.new(tree.name + EXT)
     text.from_string(source)
     text.cursor_set(0)
-    tree.bnodes_text = text
+    tree.base_node_text = text
     WARNINGS[text.name] = warnings
     DIAGNOSTICS.pop(text.name, None)
     return text, warnings

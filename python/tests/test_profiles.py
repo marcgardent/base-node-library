@@ -34,6 +34,15 @@ def test_load_all_profiles_and_hierarchy():
     assert "foreach" in vector2d["zones"]
     assert "repeat" in vector2d["zones"]
 
+    ink2d = load_profile("ink2d")
+    assert ink2d["name"] == "ink2d"
+    assert ink2d["extends"] == "vector2d"
+    assert "Geometry" in ink2d["types"]
+    assert "GreasePencilDrawTime" in ink2d["nodes"]
+    assert "CurveTilt" in ink2d["nodes"]
+    assert "foreach" in ink2d["zones"]
+    assert "repeat" in ink2d["zones"]
+
     raster2d = load_profile("raster2d")
     assert raster2d["name"] == "raster2d"
     assert raster2d["extends"] == "sdf2d"
@@ -42,7 +51,7 @@ def test_load_all_profiles_and_hierarchy():
 
     blender = load_profile("blender-geometry")
     assert blender["name"] == "blender-geometry"
-    assert blender["extends"] == "vector2d"
+    assert blender["extends"] == "ink2d"
     assert blender["allow_all_blender_nodes"] is True
     assert "closure" in blender["zones"]
     assert "Bundle" in blender["types"]

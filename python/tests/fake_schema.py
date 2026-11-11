@@ -95,6 +95,7 @@ NODES = {
     "EvaluateClosure": (NodeSpec("EvaluateClosure", "NodeEvaluateClosure", {
         "define_signature": Prop("define_signature", "BOOLEAN"),
     }), [S("Closure", "Closure")], []),
+    "ClosureToList": (NodeSpec("ClosureToList", "GeometryNodeClosureToList"), [S("Count", "Int"), S("Closure", "Closure")], []),
 }
 
 

@@ -61,9 +61,9 @@ def close():
     Popup.text, Popup.items, Popup.selected, Popup.seen = None, (), 0, None
 
 
-class BNODES_OT_complete(bpy.types.Operator):
+class BASE_NODE_OT_complete(bpy.types.Operator):
     """Suggest nodes, inputs, outputs and values at the cursor"""
-    bl_idname = "bnodes.complete"
+    bl_idname = "base_node.complete"
     bl_label = "Suggestions"
 
     auto: bpy.props.BoolProperty(options={"HIDDEN", "SKIP_SAVE"})
@@ -191,7 +191,7 @@ def watch():
         return WATCH
     if Popup.text is not None:
         # A popup left over by an operator that did not end itself (file loaded, area closed)
-        if not any(op.bl_idname == "BNODES_OT_complete" for w in wm.windows for op in w.modal_operators):
+        if not any(op.bl_idname == "BASE_NODE_OT_complete" for w in wm.windows for op in w.modal_operators):
             close()
         return WATCH
     for window in wm.windows:
@@ -215,7 +215,7 @@ def watch():
                 return WATCH
             if prefs.get().auto_complete and body[now[1] - 1:now[1]] in OPENERS:
                 with bpy.context.temp_override(window=window, area=area, region=region):
-                    bpy.ops.bnodes.complete("INVOKE_DEFAULT", auto=True)
+                    bpy.ops.base_node.complete("INVOKE_DEFAULT", auto=True)
                 return WATCH
     return WATCH
 
@@ -230,7 +230,7 @@ def swap_sign(text, window, area, region, start, end, sign):
     _typed[text.name] = (row, text.current_character, len(text.current_line.body))
 
 
-classes = (BNODES_OT_complete,)
+classes = (BASE_NODE_OT_complete,)
 _handler = None
 
 

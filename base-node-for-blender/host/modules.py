@@ -10,8 +10,8 @@ import os
 import bpy
 
 # Custom properties of a group built by a `use`, for Tree → Text to write the use back
-MODULE = "bnodes_module"
-SOURCE = "bnodes_source"
+MODULE = "base_node_module"
+SOURCE = "base_node_source"
 
 
 def load(name, source):

@@ -4,7 +4,7 @@ from . import actions, prefs
 from .operators import edit_tree
 
 
-class TEXT_PT_bnodes(bpy.types.Panel):
+class TEXT_PT_base_node(bpy.types.Panel):
     bl_space_type = "TEXT_EDITOR"
     bl_region_type = "UI"
     bl_category = "Nodes"
@@ -18,9 +18,9 @@ class TEXT_PT_bnodes(bpy.types.Panel):
         layout = self.layout
         text = context.space_data.text
         col = layout.column(align=True)
-        col.operator("bnodes.text_to_tree", icon="NODETREE")
-        col.operator("bnodes.format", text="Format", icon="ALIGN_LEFT")
-        layout.prop(context.window_manager, "bnodes_sync")
+        col.operator("base_node.text_to_tree", icon="NODETREE")
+        col.operator("base_node.format", text="Format", icon="ALIGN_LEFT")
+        layout.prop(context.window_manager, "base_node_sync")
         options = prefs.get()
         if isinstance(options, bpy.types.AddonPreferences):
             row = layout.row(align=True)
@@ -35,15 +35,15 @@ class TEXT_PT_bnodes(bpy.types.Panel):
                 row = box.row(align=True)
                 row.label(text=tree.name, icon="GEOMETRY_NODES")
                 if tree.is_modifier:
-                    row.operator("bnodes.add_modifier", text="", icon="MODIFIER").tree = tree.name
-                row.operator("bnodes.tree_to_text", text="", icon="TEXT").tree = tree.name
+                    row.operator("base_node.add_modifier", text="", icon="MODIFIER").tree = tree.name
+                row.operator("base_node.tree_to_text", text="", icon="TEXT").tree = tree.name
 
         diags = actions.DIAGNOSTICS.get(text.name)
         if diags:
             box = layout.box()
             box.label(text=f"{len(diags)} error(s)", icon="ERROR")
             for d in diags:
-                op = box.operator("bnodes.goto", text=f"{d.line}:{d.col}  {d.message}", emboss=False)
+                op = box.operator("base_node.goto", text=f"{d.line}:{d.col}  {d.message}", emboss=False)
                 op.line, op.col = d.line, d.col
 
         warnings = actions.WARNINGS.get(text.name)
@@ -54,7 +54,7 @@ class TEXT_PT_bnodes(bpy.types.Panel):
                 box.label(text=w)
 
 
-class NODE_PT_bnodes(bpy.types.Panel):
+class NODE_PT_base_node(bpy.types.Panel):
     bl_space_type = "NODE_EDITOR"
     bl_region_type = "UI"
     bl_category = "Text"
@@ -67,10 +67,10 @@ class NODE_PT_bnodes(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         tree = edit_tree(context)
-        layout.operator("bnodes.tree_to_text", text="Open as Text", icon="TEXT")
-        if tree.bnodes_text:
-            layout.label(text=f"Text: {tree.bnodes_text.name}", icon="LINKED")
-        layout.prop(context.window_manager, "bnodes_sync")
+        layout.operator("base_node.tree_to_text", text="Open as Text", icon="TEXT")
+        if tree.base_node_text:
+            layout.label(text=f"Text: {tree.base_node_text.name}", icon="LINKED")
+        layout.prop(context.window_manager, "base_node_sync")
 
 
-classes = (TEXT_PT_bnodes, NODE_PT_bnodes)
+classes = (TEXT_PT_base_node, NODE_PT_base_node)
