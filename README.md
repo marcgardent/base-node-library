@@ -28,7 +28,7 @@ geometry graph relief(geometry: Geometry, height: Float = 0.4 in 0.0..2.0) -> Ge
 |---|---|---|
 | [`spec/reference.md`](spec/reference.md) | `.bn` grammar and semantics | MIT OR Apache-2.0 |
 | [`profiles/`](profiles/) | Target profiles (`core`, `sdf2d`, `vector2d`, `ink2d`, `raster2d`, `blender-geometry`) | MIT OR Apache-2.0 |
-| [`stdlib/`](stdlib/) | Standard `.bn` modules (`math`, `sdf2d`, `curves2d`, `patterns2d`, `gp_tools2d`) | MIT OR Apache-2.0 |
+| [`stdlib/`](stdlib/) | Standard `.bn` modules (`math`, `sdf2d`, `curves2d`, `patterns2d`, `ink2d`) | MIT OR Apache-2.0 |
 | [`conformance/`](conformance/) | Shared `.bn` test corpus and expected ASTs | MIT OR Apache-2.0 |
 | [`python/`](python/) | Zero-dependency Python parser, formatter, and CLI (`base_node`) | MIT OR Apache-2.0 |
 | [`rust/`](rust/) | `wasm32`-compatible Rust parser, formatter, and profile checker (`base-node`) | MIT OR Apache-2.0 |
@@ -42,7 +42,7 @@ Each profile extends its parent and restricts allowed types, implicit inputs, zo
 core              Scalar/vector math, logic, noise, repeat (math.bn)
  └─ sdf2d         + 2D spatial context: Position, Normal, Index, ID (sdf2d.bn)
      ├─ vector2d  + Geometry, 2D curves/meshes/points/instances, foreach (curves2d.bn, patterns2d.bn)
-     │   └─ ink2d + Living ink, GP3 strokes, dynamics, tilt, draw_time (gp_tools2d.bn)
+     │   └─ ink2d + Living ink, GP3 strokes, dynamics, tilt, draw_time (ink2d.bn)
      │       └─ blender-geometry  + Full Blender 5.2+ Geometry Nodes (3D, volumes, closures, bundles)
      └─ raster2d  + Image buffers, blend modes, filters, rasterize/vectorize
 ```

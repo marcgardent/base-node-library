@@ -52,7 +52,6 @@ def test_check_profile_stdlib():
         "curves2d": ["curves2d.bn"],
         "patterns2d": ["patterns2d.bn"],
         "ink2d": ["ink2d.bn"],
-        "gp_tools2d": ["gp_tools2d.bn"],
     }
 
     target_specs = [
@@ -61,7 +60,6 @@ def test_check_profile_stdlib():
         (["curves2d.bn"], "vector2d"),
         (["patterns2d.bn"], "vector2d"),
         (["ink2d.bn"], "ink2d"),
-        (["gp_tools2d.bn"], "ink2d"),
     ]
 
     def loader(name: str, _caller: str):

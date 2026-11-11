@@ -158,7 +158,7 @@ def main():
     setup_world_and_lights()
 
     # Load stdlib modules into bpy.data.texts so `use ...` resolves them
-    for std in ["math.bn", "sdf2d.bn", "curves2d.bn", "patterns2d.bn", "gp_tools2d.bn"]:
+    for std in ["math.bn", "sdf2d.bn", "curves2d.bn", "patterns2d.bn", "ink2d.bn"]:
         with open(os.path.join(ROOT, "stdlib", std), encoding="utf-8") as f:
             bpy.data.texts.new(std).write(f.read())
 

@@ -309,7 +309,7 @@ geometry graph "chrono hud"(phase: Float = 0.0 in 0.0..1.0) -&gt; Geometry {
 
       <div id="ex-diorama" class="tab-panel">
         <pre><code>use curves2d (ribbon_2d, ring_2d, wave_curve_2d)
-use gp_tools2d (gp_living_ink, gp_taper_ends)
+use ink2d as gp
 use math (ridge_fbm, sine01, steps)
 use patterns2d (phyllotaxis_spiral_2d)
 use sdf2d (sdf_isolines)
@@ -473,7 +473,7 @@ geometry graph fbm(
           <td><code>ink2d</code></td>
           <td><code>vector2d</code></td>
           <td>Living ink, Grease Pencil strokes, dynamics, tilt, draw_time</td>
-          <td>Grease Pencil 3, 2D ink engines, <code>gp_tools2d.bn</code></td>
+          <td>Grease Pencil 3, 2D ink engines, <code>ink2d.bn</code></td>
         </tr>
         <tr>
           <td><code>raster2d</code></td>
@@ -574,10 +574,10 @@ let err = check_profile(&amp;f, ProfileKind::Vector2d);</code></pre>
           <td>Hexagonal honeycomb grid, equilateral triangular grid, Vogel phyllotaxis spiral, R2 stratified jitter points, 2D hatching</td>
         </tr>
         <tr>
-          <td><a href="https://github.com/marcgardent/base-node-library/blob/main/stdlib/gp_tools2d.bn"><code>gp_tools2d.bn</code></a></td>
-          <td><code>vector2d</code></td>
-          <td>4</td>
-          <td>Living ink stroke, 2D drop shadow, double stroke, stroke tip tapering</td>
+          <td><a href="https://github.com/marcgardent/base-node-library/blob/main/stdlib/ink2d.bn"><code>ink2d.bn</code></a></td>
+          <td><code>ink2d</code></td>
+          <td>7</td>
+          <td>Living ink stroke, write on reveal, ink bleed on paper, organic wobble, taper ends, double stroke, drop shadow</td>
         </tr>
       </tbody>
     </table>

@@ -32,7 +32,6 @@ fn test_stdlib_conformance() {
         (&["curves2d.bn"], 7),
         (&["patterns2d.bn"], 5),
         (&["ink2d.bn"], 7),
-        (&["gp_tools2d.bn"], 4),
     ];
 
     for (candidates, expected_graphs) in files {
@@ -164,10 +163,10 @@ geometry graph "test_spatial"(factor: Float = 0.5) -> Vector {
         spatial_sdf_errors
     );
 
-    // 3. curves2d.bn, patterns2d.bn, and gp_tools2d.bn pass Vector2d with 0 errors
+    // 3. curves2d.bn, patterns2d.bn, and ink2d.bn pass Vector2d / Ink2d
     let curves = load_stdlib(&["curves2d.bn"]);
     let patterns = load_stdlib(&["patterns2d.bn"]);
-    let gp_tools = load_stdlib(&["gp_tools2d.bn"]);
+    let ink2d = load_stdlib(&["ink2d.bn"]);
 
     let curves_errors = check_profile(&curves, ProfileKind::Vector2d);
     assert!(
@@ -183,7 +182,6 @@ geometry graph "test_spatial"(factor: Float = 0.5) -> Vector {
         patterns_errors
     );
 
-    let ink2d = load_stdlib(&["ink2d.bn"]);
     let ink2d_errors = check_profile(&ink2d, ProfileKind::Ink2d);
     assert!(
         ink2d_errors.is_empty(),
@@ -191,19 +189,10 @@ geometry graph "test_spatial"(factor: Float = 0.5) -> Vector {
         ink2d_errors
     );
 
-    let gp_errors = check_profile(&gp_tools, ProfileKind::Vector2d);
-    assert!(
-        gp_errors.is_empty(),
-        "gp_tools2d stdlib file should pass Vector2d with 0 errors, but got: {:?}",
-        gp_errors
-    );
-
-    let gp_ink_errors = check_profile(&gp_tools, ProfileKind::Ink2d);
-    assert!(
-        gp_ink_errors.is_empty(),
-        "gp_tools2d stdlib file should pass Ink2d with 0 errors, but got: {:?}",
-        gp_ink_errors
-    );
+    // They fail Core because they use Geometry or vector nodes
+    assert!(!check_profile(&curves, ProfileKind::Core).is_empty());
+    assert!(!check_profile(&patterns, ProfileKind::Core).is_empty());
+    assert!(!check_profile(&ink2d, ProfileKind::Core).is_empty());
 
     // 4. Test qualified namespace calls: use ink2d as gp -> gp::living_ink(...)
     let src_qualified = r#"use ink2d as gp
@@ -228,5 +217,5 @@ geometry graph test_qualified(strokes: Geometry) -> Geometry {
     // They fail Core because they use Geometry or vector nodes
     assert!(!check_profile(&curves, ProfileKind::Core).is_empty());
     assert!(!check_profile(&patterns, ProfileKind::Core).is_empty());
-    assert!(!check_profile(&gp_tools, ProfileKind::Core).is_empty());
+    assert!(!check_profile(&ink2d, ProfileKind::Core).is_empty());
 }

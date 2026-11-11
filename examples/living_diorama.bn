@@ -1,5 +1,5 @@
 use curves2d (ribbon_2d, ring_2d, wave_curve_2d)
-use gp_tools2d (gp_living_ink, gp_taper_ends)
+use ink2d as gp
 use math (ridge_fbm, sine01, steps)
 use patterns2d (phyllotaxis_spiral_2d)
 use sdf2d (sdf_isolines, sdf_rounded_box_2d)
@@ -58,7 +58,7 @@ geometry graph "living diorama"(phase: Float = 0.0 in 0.0..1.0) -> Geometry {
       periods: 5.0,
       phase: phase * 2.0,
       resolution: 140)
-    inked = gp_living_ink(waved, amplitude: 0.02, frequency: 2.0, radius_variation: 0.35, octaves: 3) |> gp_taper_ends(smoothness: 0.35)
+    inked = gp::living_ink(waved, amplitude: 0.02, frequency: 2.0, radius_variation: 0.35, octaves: 3) |> gp::taper_ends(smoothness: 0.35)
     stream = ribbon_2d(inked, width: 0.065, taper: 0.85) |> Transform(translation: (0.0, 0.0, 0.62), rotation: CombineXYZ(0.12, -0.1, phase * 6.283185))
       |> SetMaterial(material: "NeonAmber")
   }
