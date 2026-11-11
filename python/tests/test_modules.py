@@ -179,3 +179,32 @@ def test_two_groups_with_one_key_are_ambiguous(schema):
     schema.existing = {"ab": [GroupSpec("ab", *spec), GroupSpec("AB ", *spec)]}
     src = "geometry graph g() -> Float {\n  return ab(1.0)\n}\n"
     assert errors(src, schema) == ["'ab' refers to multiple groups in the file: ab, AB "]
+
+
+def test_use_as_alias_and_namespaced_call(schema):
+    lib = """\
+geometry graph double(x: Float) -> Float {
+  return x * 2.0
+}
+"""
+    src = """\
+use maths as m
+
+geometry graph g(val: Float) -> Float {
+  return m::double(val)
+}
+"""
+    graphs = compile_source(src, schema, load=loader({("maths", None): lib}))
+    assert len(graphs) == 2
+    assert graphs[0].name == "double"
+    assert graphs[1].name == "g"
+    (node,) = [n for n in graphs[1].nodes if n.group]
+    assert node.group == "double"
+
+    # Test round-trip formatting
+    file = parse(src)
+    assert file.uses[0].alias == "m"
+    printed = to_source(file)
+    assert "use maths as m" in printed
+    assert "m::double(val)" in printed
+

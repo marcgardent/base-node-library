@@ -21,6 +21,9 @@ COLORS = {
     "function": (0.20, 0.80, 0.80),
     "literal": (1.00, 0.60, 0.20),
     "comment": (0.50, 0.50, 0.50),
+    "namespace": (0.00, 0.78, 0.65),
+    "stdlib_func": (0.20, 0.85, 0.85),
+    "warning": (0.95, 0.30, 0.25),
 }
 
 # Blender's default socket colors
@@ -48,12 +51,17 @@ def classify(tokens):
             out.append((t, "comment"))
         elif t.kind == "COLOR" and rgb(t.text[1:]):
             out.append((t, rgb(t.text[1:])))
+        elif t.kind == "::":
+            out.append((t, "namespace"))
         elif t.kind == "IDENT":
-            # `use` and `from` are keywords only on a use line: `use math from "…"`
-            if t.text == "use" and i == 0 and nxt is not None and nxt.kind == "IDENT" \
-                    or t.text == "from" and nxt is not None and nxt.kind in ("STRING", "OPEN_STRING") \
-                    and tokens[0].text in ("use", ")"):
+            # `use`, `as`, and `from` are keywords on a use line: `use ink2d as gp from "…"`
+            is_use_line = tokens[0].text == "use"
+            if is_use_line and t.text in ("use", "as", "from"):
                 out.append((t, "keyword"))
+            elif nxt is not None and nxt.kind == "::":
+                out.append((t, "namespace"))
+            elif prev == "::":
+                out.append((t, "stdlib_func"))
             elif t.text in TREE_KINDS and nxt is not None and nxt.text == "graph":
                 out.append((t, "keyword"))
             elif t.text in TYPES and prev in (":", "->"):
@@ -103,11 +111,19 @@ def draw_highlight():
         tokens = tokenize(text.lines[row].body, strict=False)[:-1]
         for color, rects in boxes(space, row, tokens).items():
             found.setdefault(color, []).extend(rects)
+    p = prefs.get()
+    active_colors = dict(COLORS)
+    if hasattr(p, "color_stdlib"):
+        active_colors["namespace"] = tuple(p.color_stdlib)
+        active_colors["stdlib_func"] = tuple(p.color_stdlib)
+    if hasattr(p, "color_warning"):
+        active_colors["warning"] = tuple(p.color_warning)
+
     for color, rects in found.items():
         if isinstance(color, tuple):
             draw.rects(rects, (*color, SWATCH))
         else:
-            draw.rects(rects, (*(COLORS.get(color) or SOCKETS.get(color, COLORS["comment"])), ALPHA))
+            draw.rects(rects, (*(active_colors.get(color) or SOCKETS.get(color, active_colors["comment"])), ALPHA))
 
 
 _handler = None

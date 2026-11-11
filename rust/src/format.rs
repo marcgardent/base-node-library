@@ -279,16 +279,21 @@ fn format_use(u: &Use) -> Vec<(usize, String)> {
     } else {
         String::new()
     };
+    let alias_str = if let Some(ref alias) = u.alias {
+        format!(" as {}", alias)
+    } else {
+        String::new()
+    };
     let names_str = if let Some(ref names) = u.names {
         format!(" ({})", names.join(", "))
     } else {
         String::new()
     };
-    let line = format!("use {}{}{}", u.name, names_str, tail);
+    let line = format!("use {}{}{}{}", u.name, alias_str, names_str, tail);
     if char_len(&line) <= WIDTH || u.names.is_none() {
         return vec![(u.line, line)];
     }
-    let mut lines = vec![(u.line, format!("use {} (", u.name))];
+    let mut lines = vec![(u.line, format!("use {}{} (", u.name, alias_str))];
     if let Some(ref names) = u.names {
         for n in names {
             lines.push((u.line, format!("{}{},", INDENT, n)));

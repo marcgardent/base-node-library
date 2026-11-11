@@ -6,18 +6,24 @@ Version 1.0.
 
 A `.bn` file is UTF-8 text containing:
 
-1. Optional `use` imports at the top of the file.
+1. Optional `use` imports at the top of the file:
+   - `use ink2d` imports the module into the `ink2d::` namespace.
+   - `use ink2d as gp` imports with an alias namespace (`gp::living_ink(...)`).
+   - `use ink2d (living_ink)` imports selected symbols into local scope (`living_ink(...)`).
+   - `use math from "//lib/math.bn"` imports from an external or relative file.
 2. One or more `graph` declarations.
 
 `//` starts a line comment. Whitespace and newlines are not significant outside literals; a statement ends when the next token cannot continue the current expression.
 
 ```bn
+use ink2d as gp
 use math (bump)
 
 geometry graph relief(geometry: Geometry, height: Float = 0.4) -> Geometry {
-  "Lifts the center of a mesh"
+  "Lifts the center of a mesh with living ink contour"
   h = bump(length(Position()) / 3.0, 0.5, 0.2) * height
-  return SetPosition(geometry, offset: CombineXYZ(z: h))
+  return geometry |> SetPosition(offset: CombineXYZ(z: h))
+                  |> gp::taper_ends()
 }
 ```
 

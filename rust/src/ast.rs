@@ -404,6 +404,7 @@ impl Graph {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Use {
     pub name: String,
+    pub alias: Option<String>,
     pub names: Option<Vec<String>>,
     pub source: Option<String>,
     pub line: usize,

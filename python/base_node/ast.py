@@ -294,7 +294,7 @@ class Graph:
 
 @dataclass
 class Use:
-    """`use math (fbm, bump) from "//lib/math.bn"`: the list and the source are optional.
+    """`use math as m (fbm, bump) from "//lib/math.bn"`: alias, list and source are optional.
 
     With no source, the module is the text `math.bn` of the same .blend.
     """
@@ -303,6 +303,7 @@ class Use:
     source: str | None
     line: int
     col: int
+    alias: str | None = None
 
 
 @dataclass

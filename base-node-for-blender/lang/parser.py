@@ -81,6 +81,9 @@ class Parser:
     def use(self):
         t = self.advance()
         name = self.advance()
+        alias = None
+        if self.accept("IDENT", "as"):
+            alias = self.expect("IDENT", what="module alias").text
         names = None
         if self.accept("("):
             names = []
@@ -94,7 +97,7 @@ class Parser:
         source = None
         if self.accept("IDENT", "from"):
             source = self.expect("STRING", what="quoted source").text
-        return ast.Use(name.text, names, source, t.line, t.col)
+        return ast.Use(name.text, names, source, t.line, t.col, alias=alias)
 
     def graph(self):
         kind = self.expect("IDENT", what="tree kind (geometry, shader, compositor)")
@@ -456,9 +459,13 @@ class Parser:
             self.advance()
             return ast.Call("xor", self.args(), t.line, t.col)
         if self.accept("IDENT"):
+            name = t.text
+            while self.accept("::"):
+                part = self.expect("IDENT", what="identifier after '::'")
+                name = f"{name}::{part.text}"
             if self.accept("("):
-                return ast.Call(t.text, self.args(), t.line, t.col)
-            return ast.Ref(t.text, t.line, t.col)
+                return ast.Call(name, self.args(), t.line, t.col)
+            return ast.Ref(name, t.line, t.col)
         if self.accept("("):
             items = [self.expr()]
             while self.accept(","):

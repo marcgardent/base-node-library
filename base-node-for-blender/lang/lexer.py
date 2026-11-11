@@ -5,7 +5,7 @@ from .errors import BnError, Diagnostic
 KEYWORDS = {"graph", "return", "true", "false", "and", "or", "xor", "not", "repeat"}
 
 # Longest first, so "->" wins over "-", "==" over "=" and ".." over "."
-PUNCT = ("|>", "->", "<=", ">=", "==", "!=", "<", ">", "(", ")", "{", "}", ",", ":", "..", ".", "=", "+", "-", "*", "/",
+PUNCT = ("::", "|>", "->", "<=", ">=", "==", "!=", "<", ">", "(", ")", "{", "}", ",", ":", "..", ".", "=", "+", "-", "*", "/",
          "⋅", "·", "×", "@")
 
 

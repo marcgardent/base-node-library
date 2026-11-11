@@ -25,12 +25,13 @@ def sorted_uses(uses):
 
 
 def use(u):
-    """`use name (a, b) from "source"`, one name per line when too long."""
+    """`use name as alias (a, b) from "source"`, one name per line when too long."""
     tail = f' from {quote(u.source)}' if u.source is not None else ""
-    line = f"use {u.name}" + (f" ({', '.join(u.names)})" if u.names else "") + tail
+    alias = f" as {u.alias}" if getattr(u, "alias", None) else ""
+    line = f"use {u.name}{alias}" + (f" ({', '.join(u.names)})" if u.names else "") + tail
     if len(line) <= WIDTH or not u.names:
         return [(u.line, line)]
-    return [(u.line, f"use {u.name} (")] + [(u.line, f"{INDENT}{n},") for n in u.names] + [(u.line, ")" + tail)]
+    return [(u.line, f"use {u.name}{alias} (")] + [(u.line, f"{INDENT}{n},") for n in u.names] + [(u.line, ")" + tail)]
 
 
 def render(lines):

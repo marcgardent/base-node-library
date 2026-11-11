@@ -31,6 +31,7 @@ fn test_stdlib_conformance() {
         (&["sdf2d.bn"], 17),
         (&["curves2d.bn"], 7),
         (&["patterns2d.bn"], 5),
+        (&["ink2d.bn"], 7),
         (&["gp_tools2d.bn"], 4),
     ];
 
@@ -182,6 +183,14 @@ geometry graph "test_spatial"(factor: Float = 0.5) -> Vector {
         patterns_errors
     );
 
+    let ink2d = load_stdlib(&["ink2d.bn"]);
+    let ink2d_errors = check_profile(&ink2d, ProfileKind::Ink2d);
+    assert!(
+        ink2d_errors.is_empty(),
+        "ink2d stdlib file should pass Ink2d with 0 errors, but got: {:?}",
+        ink2d_errors
+    );
+
     let gp_errors = check_profile(&gp_tools, ProfileKind::Vector2d);
     assert!(
         gp_errors.is_empty(),
@@ -195,6 +204,26 @@ geometry graph "test_spatial"(factor: Float = 0.5) -> Vector {
         "gp_tools2d stdlib file should pass Ink2d with 0 errors, but got: {:?}",
         gp_ink_errors
     );
+
+    // 4. Test qualified namespace calls: use ink2d as gp -> gp::living_ink(...)
+    let src_qualified = r#"use ink2d as gp
+
+geometry graph test_qualified(strokes: Geometry) -> Geometry {
+  return gp::living_ink(strokes)
+}
+"#;
+    let file_qualified = parse(src_qualified, "test_qualified.bn").unwrap();
+    assert_eq!(file_qualified.uses.len(), 1);
+    assert_eq!(file_qualified.uses[0].name, "ink2d");
+    assert_eq!(file_qualified.uses[0].alias.as_deref(), Some("gp"));
+    let qualified_errors = check_profile(&file_qualified, ProfileKind::Ink2d);
+    assert!(
+        qualified_errors.is_empty(),
+        "Qualified module call gp::living_ink should pass Ink2d profile, but got: {:?}",
+        qualified_errors
+    );
+    let formatted = format_source(src_qualified, "test_qualified.bn").unwrap();
+    assert_eq!(formatted, src_qualified);
 
     // They fail Core because they use Geometry or vector nodes
     assert!(!check_profile(&curves, ProfileKind::Core).is_empty());

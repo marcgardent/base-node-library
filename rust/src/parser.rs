@@ -119,6 +119,11 @@ impl<'a> Parser<'a> {
     fn parse_use(&mut self) -> Result<Use, BnError> {
         let t = self.advance();
         let name_tok = self.advance();
+        let mut alias = None;
+        if self.accept_text("IDENT", "as").is_some() {
+            let a = self.expect("IDENT", Some("module alias"))?;
+            alias = Some(a.text);
+        }
         let mut names = None;
         if self.accept("(").is_some() {
             let mut list = Vec::new();
@@ -145,6 +150,7 @@ impl<'a> Parser<'a> {
         }
         Ok(Use {
             name: name_tok.text,
+            alias,
             names,
             source,
             line: t.line,
@@ -936,10 +942,15 @@ impl<'a> Parser<'a> {
             }));
         }
         if self.accept("IDENT").is_some() {
+            let mut name = t.text;
+            while self.accept("::").is_some() {
+                let part = self.expect("IDENT", Some("identifier after '::'"))?;
+                name = format!("{}::{}", name, part.text);
+            }
             if self.accept("(").is_some() {
                 let args = self.args(false)?;
                 return Ok(Expr::Call(Call {
-                    name: t.text,
+                    name,
                     args,
                     line: t.line,
                     col: t.col,
@@ -948,7 +959,7 @@ impl<'a> Parser<'a> {
                 }));
             }
             return Ok(Expr::Ref(Ref {
-                name: t.text,
+                name,
                 line: t.line,
                 col: t.col,
             }));

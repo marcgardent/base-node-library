@@ -142,6 +142,13 @@ class Modules:
                           f"disambiguate with use {u.name} (…)")
                 else:
                     imported[k] = (unit.graphs[k], u)
+
+            # Register namespaced calls: <alias>::<func> and <name>::<func>
+            prefix = getattr(u, "alias", None) or u.name
+            for k, g in unit.graphs.items():
+                imported[f"{prefix}::{k}"] = (g, u)
+                if getattr(u, "alias", None):
+                    imported[f"{u.name}::{k}"] = (g, u)
         return imported
 
     def unit(self, u, stack, error):

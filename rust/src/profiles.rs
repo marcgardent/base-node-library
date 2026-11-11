@@ -169,7 +169,7 @@ pub fn load_profile(kind: ProfileKind) -> Profile {
 
 const BUILTIN_MATH_FUNCS: &[&str] = &[
     "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh", "sqrt", "abs",
-    "exp", "log", "pow", "min", "max", "floor", "ceil", "fract", "round", "trunc", "sign", "mod",
+    "exp", "log", "pow", "min", "max", "clamp", "floor", "ceil", "fract", "round", "trunc", "sign", "mod",
     "radians", "degrees", "length", "normalize", "distance", "dot", "cross", "xor", "xnor",
     "nand", "nor", "imply", "nimply",
 ];
@@ -180,7 +180,8 @@ struct CheckCtx<'a> {
     allowed_zones: &'a HashSet<&'a str>,
     allowed_nodes: &'a HashSet<&'a str>,
     declared_graphs: &'a HashSet<String>,
-    imported_names: &'a HashSet<&'a str>,
+    imported_names: &'a HashSet<String>,
+    imported_modules: &'a HashSet<String>,
     wildcard_import: bool,
     allow_all: bool,
     errors: &'a mut Vec<String>,
@@ -193,7 +194,14 @@ fn check_expr(e: &Expr, ctx: &mut CheckCtx<'_>) {
                 let is_builtin = BUILTIN_MATH_FUNCS.contains(&c.name.as_str());
                 let is_allowed_node = ctx.allowed_nodes.contains(c.name.as_str());
                 let is_declared = ctx.declared_graphs.contains(c.name.as_str());
-                let is_imported = ctx.wildcard_import || ctx.imported_names.contains(c.name.as_str());
+                let is_module_call = if let Some((mod_name, _)) = c.name.split_once("::") {
+                    ctx.imported_modules.contains(mod_name)
+                } else {
+                    false
+                };
+                let is_imported = is_module_call
+                    || ctx.wildcard_import
+                    || ctx.imported_names.contains(c.name.as_str());
 
                 if !is_builtin && !is_allowed_node && !is_declared && !is_imported {
                     ctx.errors.push(format!(
@@ -342,12 +350,21 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
         declared_graphs.insert(g.name.clone());
         declared_graphs.insert(crate::ast::key(&g.name));
     }
-    let mut imported_names: HashSet<&str> = HashSet::new();
+    let mut imported_names: HashSet<String> = HashSet::new();
+    let mut imported_modules: HashSet<String> = HashSet::new();
     let mut wildcard_import = false;
     for u in &file.uses {
+        imported_modules.insert(u.name.clone());
+        if let Some(ref alias) = u.alias {
+            imported_modules.insert(alias.clone());
+        }
         if let Some(ref names) = u.names {
             for n in names {
-                imported_names.insert(n.as_str());
+                imported_names.insert(n.clone());
+                imported_names.insert(format!("{}::{}", u.name, n));
+                if let Some(ref alias) = u.alias {
+                    imported_names.insert(format!("{}::{}", alias, n));
+                }
             }
         } else {
             wildcard_import = true;
@@ -401,6 +418,7 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
             allowed_nodes: &allowed_nodes,
             declared_graphs: &declared_graphs,
             imported_names: &imported_names,
+            imported_modules: &imported_modules,
             wildcard_import,
             allow_all: profile.allow_all_blender_nodes,
             errors: &mut errors,
