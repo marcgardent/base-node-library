@@ -328,7 +328,9 @@ def check_profile(graphs: Any, profile: str | dict[str, Any] = "vector2d") -> li
             prof = load_profile(prof.get("name", "core"))
 
     errors: list[str] = []
-    if not isinstance(graphs, (list, tuple)):
+    if hasattr(graphs, "graphs"):
+        graphs = graphs.graphs
+    elif not isinstance(graphs, (list, tuple)):
         graphs = [graphs]
 
     allowed_kinds = set(prof.get("kinds", ["geometry", "vector", "pixel"]))

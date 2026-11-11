@@ -1,3 +1,9 @@
+// Base Node Standard Library — Module math
+// @module math
+// @version 0.7.0
+// @profile core
+// @edition 2026
+
 // Mathematical toolkit for Geometry Nodes: shaping curves, waves, angles,
 // vectors, signed distance fields (SDF), and random distributions.
 // Shaping curves and SDFs follow formulas published by Inigo Quilez (iquilezles.org).

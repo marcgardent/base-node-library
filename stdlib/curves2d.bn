@@ -1,3 +1,9 @@
+// Base Node Standard Library — Module curves2d
+// @module curves2d
+// @version 0.7.0
+// @profile vector2d
+// @edition 2026
+
 use math (bump, fbm)
 
 // ---- 2D Curves and Contours ----

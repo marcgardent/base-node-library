@@ -1,3 +1,9 @@
+// Base Node Standard Library — Module patterns2d
+// @module patterns2d
+// @version 0.7.0
+// @profile vector2d
+// @edition 2026
+
 use math (r2_sequence)
 
 geometry graph "hexagonal grid 2d"(

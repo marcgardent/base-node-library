@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import sys
 
+__version__ = "0.7.0"
+EDITION = "2026"
+STDLIB_VERSION = "0.7.0"
+
 from .errors import BnError, Diagnostic
 from .format import format_source
 from .lexer import tokenize
@@ -26,6 +30,9 @@ if __name__ + ".lang" not in sys.modules:
     sys.modules[__name__ + ".lang"] = sys.modules[__name__]
 
 __all__ = [
+    "__version__",
+    "EDITION",
+    "STDLIB_VERSION",
     "BnError",
     "Diagnostic",
     "parse",

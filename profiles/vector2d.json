@@ -1,6 +1,8 @@
 {
   "name": "vector2d",
   "version": 1,
+  "profile_version": "0.7.0",
+  "edition": "2026",
   "description": "2D curves, meshes, point distributions, and attributes (extends sdf2d)",
   "extends": "sdf2d",
   "types": [

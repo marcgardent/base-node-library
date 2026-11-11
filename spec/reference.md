@@ -1,6 +1,7 @@
 # Base Node (`.bn`) Language Reference
 
-Version 1.0.
+Language Edition 2026 · Specification Version 0.7.0 (Pre-LTS).  
+See [Versioning Specification](versioning.md) for stability policies and release lifecycles.
 
 ## 1. File Structure
 

@@ -1,3 +1,9 @@
+// Base Node Standard Library — Module sdf2d
+// @module sdf2d
+// @version 0.7.0
+// @profile sdf2d
+// @edition 2026
+
 // 2D Signed Distance Field (SDF) toolkit for Geometry Nodes:
 // elementary 2D primitives, chamfered booleans, repetitions, and isolines.
 // Formulas follow definitions published by Inigo Quilez (iquilezles.org).

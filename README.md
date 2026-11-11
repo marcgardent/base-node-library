@@ -27,8 +27,9 @@ geometry graph relief(geometry: Geometry, height: Float = 0.4 in 0.0..2.0) -> Ge
 | Path | Description | License |
 |---|---|---|
 | [`spec/reference.md`](spec/reference.md) | `.bn` grammar and semantics | MIT OR Apache-2.0 |
+| [`spec/versioning.md`](spec/versioning.md) | Language editions, stdlib, profiles, and SemVer lifecycle | MIT OR Apache-2.0 |
 | [`profiles/`](profiles/) | Target profiles (`core`, `sdf2d`, `vector2d`, `ink2d`, `raster2d`, `blender-geometry`) | MIT OR Apache-2.0 |
-| [`stdlib/`](stdlib/) | Standard `.bn` modules (`math`, `sdf2d`, `curves2d`, `patterns2d`, `ink2d`) | MIT OR Apache-2.0 |
+| [`stdlib/`](stdlib/) | Standard `.bn` modules and manifest (`math`, `sdf2d`, `curves2d`, `patterns2d`, `ink2d`) | MIT OR Apache-2.0 |
 | [`conformance/`](conformance/) | Shared `.bn` test corpus and expected ASTs | MIT OR Apache-2.0 |
 | [`python/`](python/) | Zero-dependency Python parser, formatter, and CLI (`base_node`) | MIT OR Apache-2.0 |
 | [`rust/`](rust/) | `wasm32`-compatible Rust parser, formatter, and profile checker (`base-node`) | MIT OR Apache-2.0 |

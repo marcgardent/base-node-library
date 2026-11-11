@@ -1,6 +1,8 @@
 {
   "name": "core",
   "version": 1,
+  "profile_version": "0.7.0",
+  "edition": "2026",
   "description": "Scalar/vector math, logic, noise, and repeat zone",
   "extends": null,
   "kinds": [

@@ -16,6 +16,7 @@ from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any
 
+from . import EDITION, STDLIB_VERSION, __version__
 from .errors import BnError
 from .format import format_source
 from .parser import parse
@@ -150,6 +151,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="base-node",
         description="Base Node (.bn) — CLI tool for node graph manipulation",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__} (Language Edition {EDITION}, Stdlib {STDLIB_VERSION})",
     )
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 

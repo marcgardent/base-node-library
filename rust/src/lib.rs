@@ -1,3 +1,7 @@
+pub const VERSION: &str = "0.7.0";
+pub const EDITION: &str = "2026";
+pub const STDLIB_VERSION: &str = "0.7.0";
+
 pub mod ast;
 pub mod errors;
 pub mod format;
