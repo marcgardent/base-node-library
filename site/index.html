@@ -435,27 +435,6 @@ geometry graph fbm(
 }</code></pre>
         <img class="preview-img" src="images/math-noise.png" alt="Fractal terrain displaced with fbm from stdlib/math.bn" width="1200" height="600" loading="lazy">
       </div>
-
-      <div id="ex-panels" class="tab-panel">
-        <pre><code>// Interface panels, item keys (as), frames, and node presentation (@)
-geometry graph scatter(
-    geometry: Geometry,
-    "Density" {
-      density: Float = 10.0 in 0.0..,
-      "Jitter"(default_closed: true) {
-        enable: Bool(is_panel_toggle: true),
-        amount as jitter_amount: Float = 0.2 in 0.0..1.0
-      }
-    }
-) -> Geometry {
-  "Deformation" #teal {
-    p = Position() @ hide
-    out = SetPosition(geometry, offset: p * jitter_amount) @ "ApplyOffset" #orange
-  }
-  return out
-}</code></pre>
-        <img class="preview-img" src="images/rocks.png" alt="Procedural rock scatter built from .bn graph" width="1200" height="1000" loading="lazy">
-      </div>
     </section>
 
     <h2 id="profiles">Compatibility Profiles</h2>
@@ -613,14 +592,6 @@ let err = check_profile(&amp;f, ProfileKind::Vector2d);</code></pre>
       <figure>
         <img src="images/math-sdf.png" alt="stdlib/math.bn 3D SDF preview" loading="lazy">
         <figcaption>stdlib/math.bn — Analytic SDFs &amp; smooth booleans</figcaption>
-      </figure>
-      <figure>
-        <img src="images/grass.png" alt="Grass scatter example" loading="lazy">
-        <figcaption>Slope-filtered procedural grass scatter</figcaption>
-      </figure>
-      <figure>
-        <img src="images/wave-curve.png" alt="Sine wave curve example" loading="lazy">
-        <figcaption>Parametric curve deformation along normal</figcaption>
       </figure>
     </div>
 
