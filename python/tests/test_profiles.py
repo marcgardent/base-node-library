@@ -2,9 +2,14 @@
 
 import pytest
 
-from base_node import compile_source
+from base_node import compile_source, parse
 from base_node.ir import Graph, Node
-from base_node.profiles import check_profile, load_profile
+from base_node.profiles import (
+    analyze_profile_ascent,
+    check_profile,
+    load_profile,
+    solve_minimal_profile,
+)
 
 
 def test_load_all_profiles_and_hierarchy():
@@ -120,3 +125,90 @@ def test_check_profile_blender_geometry_allows_all():
     )
     errors = check_profile([g], profile="blender-geometry")
     assert errors == []
+
+
+def test_solve_minimal_profile_ascent_hierarchy(schema):
+    """Verify automatic profile ascent solving across all tiers."""
+    # Tier 1: core
+    src_core = """
+geometry graph f_core(x: Float, y: Float) -> Float {
+  return sin(x) * 2.0 + cos(y)
+}
+"""
+    graphs_core = compile_source(src_core, schema, "test_core.bn")
+    assert solve_minimal_profile(graphs_core) == "core"
+    ast_core = parse(src_core, "test_core.bn")
+    assert solve_minimal_profile(ast_core) == "core"
+
+    # Tier 2: sdf2d (needs Position / spatial inputs)
+    src_sdf = """
+geometry graph f_sdf(center: Vector, radius: Float) -> Float {
+  p = Position()
+  return length(p - center) - radius
+}
+"""
+    graphs_sdf = compile_source(src_sdf, schema, "test_sdf.bn")
+    assert solve_minimal_profile(graphs_sdf) == "sdf2d"
+    ast_sdf = parse(src_sdf, "test_sdf.bn")
+    assert solve_minimal_profile(ast_sdf) == "sdf2d"
+
+    # Tier 3: vector2d (needs Geometry / MeshGrid / Curves)
+    src_vec = """
+geometry graph f_vec(size: Float = 1.0) -> Geometry {
+  g = MeshGrid(size_x: size, size_y: size)
+  return SetPosition(g.mesh, position: Position())
+}
+"""
+    graphs_vec = compile_source(src_vec, schema, "test_vec.bn")
+    assert solve_minimal_profile(graphs_vec) == "vector2d"
+    ast_vec = parse(src_vec, "test_vec.bn")
+    assert solve_minimal_profile(ast_vec) == "vector2d"
+
+    # Tier 4: ink2d (needs Grease Pencil dynamics)
+    src_ink = """
+use ink2d as gp
+
+geometry graph f_ink(strokes: Geometry, progress: Float) -> Geometry {
+  return gp::living_ink(strokes, speed: 1.0)
+}
+"""
+    ast_ink = parse(src_ink, "test_ink.bn")
+    assert solve_minimal_profile(ast_ink) == "ink2d"
+
+    # Tier 5: blender-geometry (needs host-specific nodes / Bundle)
+    g_host = Graph(
+        kind="geometry",
+        name="f_host",
+        inputs=[("b", "Bundle")],
+        outputs=[],
+        nodes=[Node(id="n1", bl_idname="GeometryNodeExtrudeMesh")],
+    )
+    assert solve_minimal_profile([g_host]) == "blender-geometry"
+
+
+def test_analyze_profile_ascent_barriers(schema):
+    """Verify detailed profile ascent analysis with barrier identification."""
+    src = """
+geometry graph wavy_mesh(size: Float = 2.0) -> Geometry {
+  m = MeshGrid(size_x: size, size_y: size)
+  return SetPosition(m.mesh, position: Position())
+}
+"""
+    ast = parse(src, "wavy_mesh.bn")
+    analysis = analyze_profile_ascent(ast)
+
+    assert analysis["minimal_profile"] == "vector2d"
+    assert "core" in analysis["barriers"]
+    assert "sdf2d" in analysis["barriers"]
+    assert "vector2d" not in analysis["barriers"]
+
+    # Barrier reasons for core contain Geometry and MeshGrid
+    core_barriers = " ".join(analysis["barriers"]["core"])
+    assert "Geometry" in core_barriers or "MeshGrid" in core_barriers
+
+    # Tested contains entries for all 5 profiles in chain
+    assert set(analysis["tested"].keys()) == {"core", "sdf2d", "vector2d", "ink2d", "blender-geometry"}
+    assert analysis["tested"]["vector2d"] == []
+    assert analysis["tested"]["ink2d"] == []
+    assert analysis["tested"]["blender-geometry"] == []
+

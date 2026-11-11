@@ -242,3 +242,36 @@ fn test_versioning_and_manifest() {
     assert!(modules.contains_key("patterns2d"));
     assert!(modules.contains_key("ink2d"));
 }
+
+#[test]
+fn test_profile_ascent_solving() {
+    use base_node::{analyze_profile_ascent, parse, solve_minimal_profile, ProfileKind};
+
+    // 1. Math -> Core
+    let src_core = "geometry graph calc(a: Float, b: Float) -> Float {\n  return sin(a) + cos(b)\n}\n";
+    let file_core = parse(src_core, "core.bn").unwrap();
+    assert_eq!(solve_minimal_profile(&file_core), ProfileKind::Core);
+
+    // 2. SDF with Position() -> Sdf2d
+    let src_sdf = "geometry graph dist(c: Vector, r: Float) -> Float {\n  p = Position()\n  return length(p - c) - r\n}\n";
+    let file_sdf = parse(src_sdf, "sdf.bn").unwrap();
+    assert_eq!(solve_minimal_profile(&file_sdf), ProfileKind::Sdf2d);
+
+    // 3. Curves -> Vector2d
+    let src_vec = "geometry graph circ(r: Float = 1.0) -> Geometry {\n  c = CurveCircle(radius: r)\n  return c.curve\n}\n";
+    let file_vec = parse(src_vec, "vec.bn").unwrap();
+    assert_eq!(solve_minimal_profile(&file_vec), ProfileKind::Vector2d);
+
+    // 4. Ink2d with Grease Pencil
+    let src_ink = "use ink2d as gp\n\ngeometry graph ink(s: Geometry) -> Geometry {\n  return gp::living_ink(s, speed: 1.0)\n}\n";
+    let file_ink = parse(src_ink, "ink.bn").unwrap();
+    assert_eq!(solve_minimal_profile(&file_ink), ProfileKind::Ink2d);
+
+    // 5. Ascent analysis with barriers
+    let analysis = analyze_profile_ascent(&file_vec);
+    assert_eq!(analysis.minimal_profile, ProfileKind::Vector2d);
+    assert!(analysis.barriers.contains_key("core"));
+    assert!(analysis.barriers.contains_key("sdf2d"));
+    assert!(!analysis.barriers.contains_key("vector2d"));
+}
+

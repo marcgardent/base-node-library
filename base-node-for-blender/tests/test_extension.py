@@ -129,12 +129,49 @@ geometry graph wave(geometry: Geometry, frequency: Float = 2.0, amplitude: Float
     print("   ✓ Tree -> Text -> Tree round-trip verified")
 
 
+def test_profile_ascent_and_linter():
+    """4. Verify profile ascent detection on exported tree and highlighter linter."""
+    print("-> Test 4: Verifying profile ascent solver & highlighter linter...")
+    from base_node.host import build_source, export_tree
+    from base_node.lang.lexer import tokenize
+    from base_node.ui.highlight import classify
+
+    # Test decompiled tree has // @profile "vector2d"
+    src = """
+geometry graph spiral(r: Float = 1.0) -> Geometry {
+  c = CurvePrimitiveCircle(radius: r)
+  return c.curve
+}
+"""
+    trees = build_source(src, filename="spiral.bn")
+    exported, _ = export_tree(trees[0])
+    assert exported.startswith('// @profile "vector2d"'), f"Expected vector2d profile header, got:\n{exported}"
+
+    # Test highlighter classify in origin & portability mode
+    toks = tokenize("use ink2d as gp\n", strict=False)
+    classes = dict((t.text, c) for t, c in classify(toks))
+    assert classes.get("ink2d") == "namespace"
+
+    toks_call = tokenize("gp::living_ink(strokes)\n", strict=False)
+    classes_call = dict((t.text, c) for t, c in classify(toks_call))
+    assert classes_call.get("living_ink") == "stdlib_func"
+
+    # In portability mode with core profile, CurvePrimitiveCircle is flagged as warning
+    toks_node = tokenize("c = CurvePrimitiveCircle(radius: 1.0)\n", strict=False)
+    ctx_core = {"mode": "portability", "allowed_nodes": {"Math", "VectorMath"}, "declared": set()}
+    classes_node = dict((t.text, c) for t, c in classify(toks_node, ctx_core))
+    assert classes_node.get("CurvePrimitiveCircle") == "warning"
+
+    print("   ✓ Profile ascent and highlighter linter verified")
+
+
 def main():
     print("=== Starting Base Node Blender extension tests ===")
     tests = [
         test_import_and_registration,
         test_check_profile_stdlib,
         test_build_and_round_trip,
+        test_profile_ascent_and_linter,
     ]
     failed = 0
     for fn in tests:

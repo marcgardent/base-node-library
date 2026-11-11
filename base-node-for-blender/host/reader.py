@@ -58,7 +58,10 @@ def export_tree(tree):
     """(text, warnings) for a node group and every group it calls, callees first."""
     with BlenderSchema() as schema:
         file, warnings = read_tree(tree, schema)
-    return to_source(file), warnings
+    from ..lang.profiles import solve_minimal_profile
+    min_profile = solve_minimal_profile(file)
+    header = f'// @profile "{min_profile}"\n\n'
+    return header + to_source(file), warnings
 
 
 def read_tree(tree, schema):

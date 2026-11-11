@@ -353,6 +353,14 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
     let mut imported_names: HashSet<String> = HashSet::new();
     let mut imported_modules: HashSet<String> = HashSet::new();
     let mut wildcard_import = false;
+    let profile_rank = match profile.name.as_str() {
+        "core" => 0,
+        "sdf2d" => 1,
+        "vector2d" | "raster2d" => 2,
+        "ink2d" => 3,
+        _ => 4,
+    };
+
     for u in &file.uses {
         imported_modules.insert(u.name.clone());
         if let Some(ref alias) = u.alias {
@@ -368,6 +376,22 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
             }
         } else {
             wildcard_import = true;
+        }
+
+        if !profile.allow_all_blender_nodes {
+            let req_rank = match u.name.as_str() {
+                "math" => 0,
+                "sdf2d" => 1,
+                "curves2d" | "patterns2d" => 2,
+                "ink2d" => 3,
+                _ => 0,
+            };
+            if req_rank > profile_rank {
+                errors.push(format!(
+                    "Imported module '{}' exceeds profile '{}'",
+                    u.name, profile.name
+                ));
+            }
         }
     }
 
@@ -431,3 +455,60 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
 
     errors
 }
+
+pub const PROFILE_ASCENT_CHAIN: &[ProfileKind] = &[
+    ProfileKind::Core,
+    ProfileKind::Sdf2d,
+    ProfileKind::Vector2d,
+    ProfileKind::Ink2d,
+    ProfileKind::BlenderGeometry,
+];
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AscentAnalysis {
+    pub minimal_profile: ProfileKind,
+    pub tested: std::collections::HashMap<String, Vec<String>>,
+    pub barriers: std::collections::HashMap<String, Vec<String>>,
+}
+
+pub fn solve_minimal_profile(file: &File) -> ProfileKind {
+    for &k in PROFILE_ASCENT_CHAIN {
+        let errors = check_profile(file, k);
+        if errors.is_empty() {
+            return k;
+        }
+    }
+    ProfileKind::BlenderGeometry
+}
+
+pub fn analyze_profile_ascent(file: &File) -> AscentAnalysis {
+    let mut tested = std::collections::HashMap::new();
+    let mut minimal = ProfileKind::BlenderGeometry;
+    let mut found = false;
+
+    for &k in PROFILE_ASCENT_CHAIN {
+        let errors = check_profile(file, k);
+        tested.insert(k.name().to_string(), errors.clone());
+        if errors.is_empty() && !found {
+            minimal = k;
+            found = true;
+        }
+    }
+
+    let mut barriers = std::collections::HashMap::new();
+    for &k in PROFILE_ASCENT_CHAIN {
+        if k == minimal {
+            break;
+        }
+        if let Some(errs) = tested.get(k.name()) {
+            barriers.insert(k.name().to_string(), errs.clone());
+        }
+    }
+
+    AscentAnalysis {
+        minimal_profile: minimal,
+        tested,
+        barriers,
+    }
+}
+

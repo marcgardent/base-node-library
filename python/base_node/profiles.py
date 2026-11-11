@@ -10,6 +10,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .schema import key
+
 # Internal implicit input identifiers in Blender Geometry Nodes
 IMPLICIT_MAP = {
     "Position": {"Position", "POSITION"},
@@ -315,6 +317,39 @@ def load_profile(name: str) -> dict[str, Any]:
     return resolved
 
 
+BUILTIN_MATH_FUNCS: set[str] = {
+    "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
+    "pow", "exp", "log", "sqrt", "inv_sqrt", "abs", "min", "max", "clamp", "sign",
+    "floor", "ceil", "round", "trunc", "fract", "mod", "fmod", "radians", "degrees",
+    "dot", "cross", "length", "distance", "normalize", "reflect", "refract", "project", "scale",
+}
+
+PROFILE_ASCENT_CHAIN: list[str] = [
+    "core",
+    "sdf2d",
+    "vector2d",
+    "ink2d",
+    "blender-geometry",
+]
+
+PROFILE_RANKS: dict[str, int] = {
+    "core": 0,
+    "sdf2d": 1,
+    "vector2d": 2,
+    "raster2d": 2,
+    "ink2d": 3,
+    "blender-geometry": 4,
+}
+
+STDLIB_MODULE_PROFILES: dict[str, str] = {
+    "math": "core",
+    "sdf2d": "sdf2d",
+    "curves2d": "vector2d",
+    "patterns2d": "vector2d",
+    "ink2d": "ink2d",
+}
+
+
 def check_profile(graphs: Any, profile: str | dict[str, Any] = "vector2d") -> list[str]:
     """Check that a list of graphs (IR or AST) conforms to profile constraints.
 
@@ -328,6 +363,9 @@ def check_profile(graphs: Any, profile: str | dict[str, Any] = "vector2d") -> li
             prof = load_profile(prof.get("name", "core"))
 
     errors: list[str] = []
+    file_uses: list[Any] = []
+    if hasattr(graphs, "uses"):
+        file_uses = getattr(graphs, "uses", [])
     if hasattr(graphs, "graphs"):
         graphs = graphs.graphs
     elif not isinstance(graphs, (list, tuple)):
@@ -337,7 +375,45 @@ def check_profile(graphs: Any, profile: str | dict[str, Any] = "vector2d") -> li
     allowed_types = set(prof.get("types", []))
     allowed_implicits = prof.get("_allowed_implicits", set())
     allowed_bl_idnames = prof.get("_allowed_bl_idnames", set())
+    allowed_zones = set(prof.get("zones", []))
+    prof_nodes = set(prof.get("nodes", []))
+    aliases = dict(prof.get("aliases", {}))
+    for a, target in list(aliases.items()):
+        if target in prof_nodes:
+            prof_nodes.add(a)
+        if a in prof_nodes:
+            prof_nodes.add(target)
+
     allow_all = prof.get("allow_all_blender_nodes", False)
+
+    imported_modules: set[str] = set()
+    imported_names: set[str] = set()
+    wildcard_import = False
+    for u in file_uses:
+        imported_modules.add(u.name)
+        if getattr(u, "alias", None):
+            imported_modules.add(u.alias)
+        if getattr(u, "names", None):
+            for n in u.names:
+                imported_names.add(n)
+                imported_names.add(f"{u.name}::{n}")
+                if getattr(u, "alias", None):
+                    imported_names.add(f"{u.alias}::{n}")
+        else:
+            wildcard_import = True
+
+        if u.name in STDLIB_MODULE_PROFILES and not allow_all:
+            req_prof = STDLIB_MODULE_PROFILES[u.name]
+            if PROFILE_RANKS.get(req_prof, 0) > PROFILE_RANKS.get(prof["name"], 0):
+                errors.append(
+                    f"Imported module '{u.name}' requires profile '{req_prof}' (exceeds profile '{prof['name']}')"
+                )
+
+    declared_graphs: set[str] = set()
+    for g in graphs:
+        if hasattr(g, "name"):
+            declared_graphs.add(g.name)
+            declared_graphs.add(key(g.name))
 
     for g in graphs:
         # Check tree kind
@@ -383,6 +459,15 @@ def check_profile(graphs: Any, profile: str | dict[str, Any] = "vector2d") -> li
                         f"Graph '{g.name}': implicit input '{impl}' for '{param}' not allowed by profile '{prof['name']}'"
                     )
 
+        if hasattr(g, "params"):
+            for p in g.params:
+                d = getattr(p, "default", None)
+                if d is not None and hasattr(d, "name") and d.name in ("Position", "Normal", "Index", "ID"):
+                    if d.name not in allowed_implicits:
+                        errors.append(
+                            f"Graph '{g.name}': implicit input '{d.name}' for '{p.name}' not allowed by profile '{prof['name']}'"
+                        )
+
         # Check nodes (IR)
         if hasattr(g, "nodes") and not allow_all:
             for node in g.nodes:
@@ -405,4 +490,122 @@ def check_profile(graphs: Any, profile: str | dict[str, Any] = "vector2d") -> li
                             f"Graph '{g.name}': item output '{item_name}' of node '{bl_id}' has non-allowed type '{item_type}'"
                         )
 
+        # Check statements and calls (AST)
+        if hasattr(g, "body") and not allow_all:
+            def check_expr(expr: Any) -> None:
+                if expr is None:
+                    return
+                if hasattr(expr, "name") and hasattr(expr, "args"):  # Call
+                    call_name = expr.name
+                    if call_name in BUILTIN_MATH_FUNCS:
+                        pass
+                    elif "::" in call_name:
+                        mod_part = call_name.split("::", 1)[0]
+                        if mod_part in imported_modules or wildcard_import:
+                            pass
+                        elif call_name not in allowed_bl_idnames and call_name not in prof_nodes:
+                            errors.append(
+                                f"Graph '{g.name}': call '{call_name}' outside profile '{prof['name']}'"
+                            )
+                    elif call_name in declared_graphs or call_name in imported_names or wildcard_import:
+                        pass
+                    elif (
+                        call_name not in allowed_bl_idnames
+                        and call_name not in prof_nodes
+                        and call_name not in aliases
+                    ):
+                        errors.append(
+                            f"Graph '{g.name}': node or function '{call_name}' not allowed by profile '{prof['name']}'"
+                        )
+                    for a in getattr(expr, "args", ()):
+                        check_expr(getattr(a, "value", None))
+                elif hasattr(expr, "left") and hasattr(expr, "call"):  # Pipe
+                    check_expr(expr.left)
+                    check_expr(expr.call)
+                elif hasattr(expr, "left") and hasattr(expr, "right"):  # BinOp
+                    check_expr(expr.left)
+                    check_expr(expr.right)
+                elif hasattr(expr, "value"):  # Neg, Not, etc.
+                    check_expr(expr.value)
+                elif hasattr(expr, "target"):  # Member
+                    check_expr(expr.target)
+                elif hasattr(expr, "items"):  # Tuple
+                    for it in expr.items:
+                        check_expr(it)
+
+            def check_stmt(s: Any) -> None:
+                if hasattr(s, "value"):  # Assign or Return
+                    val = s.value
+                    if hasattr(val, "body") and hasattr(val, "name"):  # Zone
+                        zname = val.name.lower()
+                        if zname not in allowed_zones:
+                            errors.append(
+                                f"Graph '{g.name}': zone '{zname}' not allowed by profile '{prof['name']}'"
+                            )
+                        for inner in val.body:
+                            check_stmt(inner)
+                    elif hasattr(val, "fields"):  # Record return
+                        for f in val.fields:
+                            check_expr(getattr(f, "value", None))
+                    else:
+                        check_expr(val)
+                elif hasattr(s, "body"):  # Frame
+                    for inner in s.body:
+                        check_stmt(inner)
+
+            for s in g.body:
+                check_stmt(s)
+
     return errors
+
+
+def solve_minimal_profile(graphs: Any, candidate_chain: list[str] | None = None) -> str:
+    """Infer the minimal generic compatibility profile for a graph or list of graphs.
+
+    Tests profiles in ascending order (core -> sdf2d -> vector2d -> ink2d -> blender-geometry)
+    and returns the earliest profile for which all constraints pass with 0 errors.
+    """
+    chain = candidate_chain or PROFILE_ASCENT_CHAIN
+    for prof_name in chain:
+        errs = check_profile(graphs, profile=prof_name)
+        if not errs:
+            return prof_name
+    return "blender-geometry"
+
+
+def analyze_profile_ascent(
+    graphs: Any, candidate_chain: list[str] | None = None
+) -> dict[str, Any]:
+    """Detailed analysis of profile ascent compatibility.
+
+    Returns:
+        minimal_profile: the minimal conforming profile
+        tested: dict of {profile_name: list_of_errors}
+        barriers: dict of {profile_name: list_of_errors} for profiles lower than minimal
+        chain: list of evaluated profile names in order
+    """
+    chain = candidate_chain or PROFILE_ASCENT_CHAIN
+    tested: dict[str, list[str]] = {}
+    minimal = "blender-geometry"
+    found = False
+
+    for prof_name in chain:
+        errs = check_profile(graphs, profile=prof_name)
+        tested[prof_name] = errs
+        if not errs and not found:
+            minimal = prof_name
+            found = True
+
+    barriers: dict[str, list[str]] = {}
+    for prof_name in chain:
+        if prof_name == minimal:
+            break
+        barriers[prof_name] = tested.get(prof_name, [])
+
+    return {
+        "minimal_profile": minimal,
+        "tested": tested,
+        "barriers": barriers,
+        "chain": chain,
+    }
+

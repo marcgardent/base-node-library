@@ -27,6 +27,29 @@ class TEXT_PT_base_node(bpy.types.Panel):
             row.prop(options, "highlight", toggle=True)
             row.prop(options, "auto_complete", text="Auto Suggestions", toggle=True)
 
+            box_prof = layout.box()
+            box_prof.label(text="Target Profile & Linter", icon="PREFERENCES")
+            box_prof.prop(options, "target_profile", text="Profile")
+            box_prof.prop(options, "highlight_mode", text="Highlight")
+
+            from ..lang.parser import parse
+            from ..lang.profiles import check_profile, solve_minimal_profile
+            try:
+                ast_file = parse(text.as_string(), text.name)
+                min_prof = solve_minimal_profile(ast_file)
+                box_prof.label(text=f"Detected: {min_prof}", icon="INFO")
+                if options.target_profile != "auto":
+                    errs = check_profile(ast_file, profile=options.target_profile)
+                    if not errs:
+                        box_prof.label(text=f"✓ Compatible with '{options.target_profile}'", icon="CHECKMARK")
+                    else:
+                        box_prof.label(text=f"⚠ {len(errs)} barrier(s) for '{options.target_profile}':", icon="ERROR")
+                        col_e = box_prof.column(align=True)
+                        for e in errs[:3]:
+                            col_e.label(text=f"• {e}")
+            except Exception:
+                pass
+
         trees = actions.linked_trees(text)
         if trees:
             box = layout.box()
