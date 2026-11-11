@@ -382,7 +382,7 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
             let req_rank = match u.name.as_str() {
                 "math" => 0,
                 "sdf2d" => 1,
-                "curves2d" | "patterns2d" => 2,
+                "curves2d" | "patterns2d" | "planar2d" | "fillet2d" | "hachures2d" | "deform2d" => 2,
                 "ink2d" => 3,
                 _ => 0,
             };

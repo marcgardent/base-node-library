@@ -461,7 +461,7 @@ class Parser:
         if self.accept("IDENT"):
             name = t.text
             while self.accept("::"):
-                part = self.expect("IDENT", what="identifier after '::'")
+                part = self.accept("STRING") or self.expect("IDENT", what="identifier or name after '::'")
                 name = f"{name}::{part.text}"
             if self.accept("("):
                 return ast.Call(name, self.args(), t.line, t.col)

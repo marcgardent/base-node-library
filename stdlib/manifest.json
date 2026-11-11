@@ -57,6 +57,50 @@
         "math"
       ],
       "description": "Living ink, organic stroke dynamics, taper, wobble, bleed, and artistic drawing"
+    },
+    "planar2d": {
+      "name": "planar2d",
+      "version": "0.7.0",
+      "edition": "2026",
+      "profile": "vector2d",
+      "file": "planar2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "Planar map partitioning, intersection splitting, face extraction, and region boundaries"
+    },
+    "fillet2d": {
+      "name": "fillet2d",
+      "version": "0.7.0",
+      "edition": "2026",
+      "profile": "vector2d",
+      "file": "fillet2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "Fillets, chamfers, and bevels for 2D polygonal curves and corners"
+    },
+    "hachures2d": {
+      "name": "hachures2d",
+      "version": "0.7.0",
+      "edition": "2026",
+      "profile": "vector2d",
+      "file": "hachures2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "Engraving cross-hatching, guilloché security patterns, screentone halftone dots, and Lehmann slope hachures"
+    },
+    "deform2d": {
+      "name": "deform2d",
+      "version": "0.7.0",
+      "edition": "2026",
+      "profile": "vector2d",
+      "file": "deform2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "Frenet-Serret 2D moving frames, flow along curve deformation, ribbon outlines, and parametric arrowheads"
     }
   }
 }

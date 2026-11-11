@@ -346,6 +346,10 @@ STDLIB_MODULE_PROFILES: dict[str, str] = {
     "sdf2d": "sdf2d",
     "curves2d": "vector2d",
     "patterns2d": "vector2d",
+    "planar2d": "vector2d",
+    "fillet2d": "vector2d",
+    "hachures2d": "vector2d",
+    "deform2d": "vector2d",
     "ink2d": "ink2d",
 }
 

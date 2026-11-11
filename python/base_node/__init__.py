@@ -13,7 +13,7 @@ from .format import format_source
 from .lexer import tokenize
 from .parser import parse
 from .printer import to_source
-from .profiles import check_profile, load_profile
+from .profiles import analyze_profile_ascent, check_profile, load_profile, solve_minimal_profile
 from .typecheck import check
 
 
@@ -43,4 +43,6 @@ __all__ = [
     "format_source",
     "load_profile",
     "check_profile",
+    "solve_minimal_profile",
+    "analyze_profile_ascent",
 ]

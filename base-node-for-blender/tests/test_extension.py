@@ -51,6 +51,10 @@ def test_check_profile_stdlib():
         "sdf2d": ["sdf2d.bn"],
         "curves2d": ["curves2d.bn"],
         "patterns2d": ["patterns2d.bn"],
+        "planar2d": ["planar2d.bn"],
+        "fillet2d": ["fillet2d.bn"],
+        "hachures2d": ["hachures2d.bn"],
+        "deform2d": ["deform2d.bn"],
         "ink2d": ["ink2d.bn"],
     }
 
@@ -59,6 +63,10 @@ def test_check_profile_stdlib():
         (["sdf2d.bn"], "sdf2d"),
         (["curves2d.bn"], "vector2d"),
         (["patterns2d.bn"], "vector2d"),
+        (["planar2d.bn"], "vector2d"),
+        (["fillet2d.bn"], "vector2d"),
+        (["hachures2d.bn"], "vector2d"),
+        (["deform2d.bn"], "vector2d"),
         (["ink2d.bn"], "ink2d"),
     ]
 

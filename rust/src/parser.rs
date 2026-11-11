@@ -944,7 +944,11 @@ impl<'a> Parser<'a> {
         if self.accept("IDENT").is_some() {
             let mut name = t.text;
             while self.accept("::").is_some() {
-                let part = self.expect("IDENT", Some("identifier after '::'"))?;
+                let part = if let Some(s) = self.accept("STRING") {
+                    s
+                } else {
+                    self.expect("IDENT", Some("identifier or name after '::'"))?
+                };
                 name = format!("{}::{}", name, part.text);
             }
             if self.accept("(").is_some() {

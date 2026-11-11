@@ -1,0 +1,87 @@
+// Base Node Standard Library — Module deform2d
+// @module deform2d
+// @version 0.7.0
+// @profile vector2d
+// @edition 2026
+
+use math
+
+// ---- Curve Deformations & Moving Frames ----
+
+geometry graph "frenet frame 2d"(
+    curve: Geometry,
+    factor: Float = 0.5 in 0.0..1.0,
+    samples: Int = 128 in 4..1024
+) -> (pos: Vector, tangent: Vector, normal: Vector) {
+  "Evaluates continuous 2D moving frame (position, tangent, normal) along a curve at parametric factor"
+  c = ResampleCurve(curve, count: samples)
+  idx = round(factor * (samples - 1))
+  p = SampleIndex(c, Position(), idx, data_type: FLOAT_VECTOR)
+  t = normalize(SampleIndex(c, Tangent(), idx, data_type: FLOAT_VECTOR))
+  n = CombineXYZ(-t.y, t.x, 0.0)
+  return (pos: p, tangent: t, normal: n)
+}
+
+geometry graph "flow along curve"(
+    pattern: Geometry,
+    spine: Geometry,
+    width_scale: Float = 1.0,
+    resolution: Int = 128 in 8..1024
+) -> Geometry {
+  "Flows and deforms a 2D pattern geometry along a guide spine curve"
+  resampled = ResampleCurve(spine, count: resolution)
+  bbox = BoundBox(pattern)
+  p_min = bbox.min
+  p_max = bbox.max
+  len_x = max(p_max.x - p_min.x, 0.001)
+  u = Clamp((Position().x - p_min.x) / len_x, 0.0, 1.0)
+  idx = round(u * (resolution - 1))
+  spine_p = SampleIndex(resampled, Position(), idx, data_type: FLOAT_VECTOR)
+  spine_t = normalize(SampleIndex(resampled, Tangent(), idx, data_type: FLOAT_VECTOR))
+  spine_n = CombineXYZ(-spine_t.y, spine_t.x, 0.0)
+  y_disp = Position().y * width_scale
+  deformed = spine_p + spine_n * y_disp
+  return SetPosition(pattern, position: deformed)
+}
+
+geometry graph "ribbon outline"(
+    spine: Geometry,
+    width: Float = 0.2 in 0.0..,
+    taper_start: Float = 0.0 in 0.0..1.0,
+    taper_end: Float = 0.0 in 0.0..1.0,
+    resolution: Int = 128 in 8..1024
+) -> Geometry {
+  "Generates a 2D ribbon contour along a spine with independent start and end tapering"
+  c = ResampleCurve(spine, count: resolution)
+  f = SplineParameter().factor
+  t_start = Clamp(f / max(taper_start, 0.001), 0.0, 1.0)
+  t_end = Clamp((1.0 - f) / max(taper_end, 0.001), 0.0, 1.0)
+  w = width * min(t_start, t_end)
+  profile = CurvePrimitiveLine((-0.5, 0.0, 0.0), (0.5, 0.0, 0.0))
+  c_rad = SetCurveRadius(c, radius: w)
+  return CurveToMesh(c_rad, profile, Radius())
+}
+
+geometry graph "arrow head"(
+    spine: Geometry,
+    size: Float = 0.25 in 0.01..2.0,
+    angle: Float = 30.0 in 5.0..85.0,
+    fill: Bool = true
+) -> Geometry {
+  "Constructs a parametric oriented vector arrowhead attached to the tip of a spine curve"
+  resampled = ResampleCurve(spine, count: 64)
+  tip_p = SampleIndex(resampled, Position(), 63, data_type: FLOAT_VECTOR)
+  tip_t = normalize(SampleIndex(resampled, Tangent(), 63, data_type: FLOAT_VECTOR))
+  tip_n = CombineXYZ(-tip_t.y, tip_t.x, 0.0)
+  rad = angle * 0.01745329
+  cos_a = cos(rad)
+  sin_a = sin(rad)
+  barb_l = tip_p - tip_t * (size * cos_a) + tip_n * (size * sin_a)
+  barb_r = tip_p - tip_t * (size * cos_a) - tip_n * (size * sin_a)
+  edge1 = CurvePrimitiveLine(tip_p, barb_l)
+  edge2 = CurvePrimitiveLine(barb_l, barb_r)
+  edge3 = CurvePrimitiveLine(barb_r, tip_p)
+  arrow = edge1 + edge2 + edge3
+  filled = FillCurve(arrow)
+  return Switch(fill, arrow, filled, input_type: GEOMETRY)
+}

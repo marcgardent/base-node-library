@@ -32,6 +32,10 @@ fn test_stdlib_conformance() {
         (&["curves2d.bn"], 7),
         (&["patterns2d.bn"], 5),
         (&["ink2d.bn"], 7),
+        (&["planar2d.bn"], 4),
+        (&["fillet2d.bn"], 4),
+        (&["hachures2d.bn"], 4),
+        (&["deform2d.bn"], 4),
     ];
 
     for (candidates, expected_graphs) in files {
