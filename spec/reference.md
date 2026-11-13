@@ -146,6 +146,15 @@ fn = closure(x: Float) -> (y: Float) {
 b = CombineBundle(factor: 0.5, fn: fn)
 ```
 
+The body of `repeat` sees `iteration`, the body of `simulate` sees `delta_time` and returns `skip`; a state cannot go by these names. A state named like them in Blender takes a key of its own with `as`, used by the body, the return and the users of the zone:
+
+```bn
+s = simulate(mesh: geometry, "Delta Time" as dt: 0.0) {
+  return (mesh: mesh, dt: dt + delta_time)
+}
+t = s.dt
+```
+
 ## 7. Compatibility Profiles
 
 | Profile | Extends | Scope |

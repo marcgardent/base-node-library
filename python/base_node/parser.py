@@ -260,7 +260,6 @@ class Parser:
         t = self.advance()
         self.expect("(", what="'(' after repeat")
         args = self.args()
-        self.no_alias(args)
         if not args or args[0].name is not None:
             self.fail("repeat expects iteration count first: repeat(10, state: start, …)", t)
         if len(args) < 2:
@@ -288,7 +287,9 @@ class Parser:
         t = self.advance()
         self.advance()
         args = self.args()
-        self.no_alias(args)
+        if t.text != "simulate":
+            # A state of repeat or simulate may take a key of its own; a foreach item not yet
+            self.no_alias(args)
         if t.text == "simulate":
             if any(a.name is None for a in args):
                 self.fail("simulate expects named states: simulate(state: start, …)", t)

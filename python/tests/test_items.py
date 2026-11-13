@@ -179,4 +179,4 @@ def test_a_key_must_be_free_and_only_names_an_item(schema):
     plain = graph("  return SetPosition(geometry, offset as o: (0.0, 0.0, 1.0)).geometry", "Geometry")
     assert errors(plain, schema)[0].startswith("'offset as o': only item node items")
     with pytest.raises(BnError, match="'as' only aliases an item"):
-        parse(graph("  r = repeat(3, a as b: 0.0) {\n    return a\n  }\n  return r"))
+        parse(graph("  e = foreach(geometry, a as b: 0.0) {\n    return ()\n  }\n  return e"))

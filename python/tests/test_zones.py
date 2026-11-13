@@ -83,6 +83,29 @@ def test_the_zone_alone_is_the_geometry_it_went_through(schema):
     assert g.node(ir.GROUP_OUTPUT).links == [("Geometry", ir.Link(zout.id, "geometry"))]
 
 
+def test_a_state_named_like_the_zone_goes_by_a_key_of_its_own(schema):
+    # A Simulation zone whose state is called "Delta Time", as Blender lets one name it
+    src = graph('  s = simulate(mesh: geometry, "Delta Time" as delta_time_2: 0.0) {\n'
+                "    return (mesh: mesh, delta_time_2: delta_time_2 + delta_time)\n  }\n"
+                "  return s.mesh |> SetPosition(offset: CombineXYZ(z: s.delta_time_2))")
+    assert to_source(parse(src)) == src
+    g = compile_one(src, schema)
+    zin, zout = zone(g, ir.SIMULATION_INPUT)
+    # Blender keeps the name; the text the key
+    assert zin.items == zout.items == [("mesh", "Geometry"), ("Delta Time", "Float")]
+    add = next(n for n in g.nodes if n.bl_idname == "ShaderNodeMath" and zout.id not in [l.node for _i, l in n.links])
+    assert sorted(link.output for _i, link in add.links) == ["Delta Time", "Delta Time"]
+    assert ("Delta Time", ir.Link(add.id, "Value")) in zout.links
+
+
+def test_a_state_key_is_checked_like_a_name(schema):
+    src = graph("  s = simulate(v as delta_time: 0.0) {\n    return ()\n  }\n  return geometry")
+    assert errors(src, schema) == ["t.bn:2:16  'delta_time' is the elapsed time since previous step: "
+                                   "choose another state name"]
+    src = graph("  r = repeat(2, a: 0.0, b as a: 1.0) {\n    return (a: a)\n  }\n  return geometry")
+    assert errors(src, schema) == ["t.bn:2:25  state 'b' declared twice"]
+
+
 @pytest.mark.parametrize("body, message", [
     ("  s = simulate(v: 0.0) {\n    x = v\n  }\n  return geometry",
      "t.bn:2:7  missing return in simulate of 's'"),

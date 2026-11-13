@@ -193,3 +193,10 @@ def test_a_gizmo_value_takes_a_number_a_join_does_not(schema):
     assert next(n for n in g.nodes if n.bl_idname == "GeometryNodeGizmoLinear").values == {"Value": 2.0}
     assert "only accepts links" in errors(graph("  return JoinGeometry(1.0)"), schema)[0]
     assert "only accepts links" in errors(graph("  return GizmoTransform((1.0, 0.0, 0.0))"), schema)[0]
+
+
+def test_a_failed_argument_keeps_its_place(schema):
+    # The second value still goes to the second input: one error, not a cascade
+    src = graph("  x = Position() * nope.y\n"
+                "  return SetPosition(geometry, offset: TransformDirection(x, CombineTransform()))")
+    assert errors(src, schema) == ["t.bn:2:20  unknown name 'nope'"]

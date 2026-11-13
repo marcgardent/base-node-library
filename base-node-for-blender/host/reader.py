@@ -16,7 +16,7 @@ import bpy
 from ..lang import ast, sugar
 from ..lang.printer import to_source
 from ..lang.ir import (CLOSURE_INPUT, CLOSURE_OUTPUT, FOREACH_INPUT, FOREACH_OUTPUT, REPEAT_INPUT, REPEAT_OUTPUT,
-                       SIMULATION_INPUT, ZONE_INPUTS, ZONE_OUTPUTS)
+                       SIMULATION_INPUT, SIMULATION_OUTPUT, ZONE_INPUTS, ZONE_OUTPUTS)
 from ..lang.schema import (CLOSURE_TO_LIST, COMBINE_BUNDLE, EVALUATE_CLOSURE, FIELD_TYPES, IMPLICIT, ITEM_NODES, ITEM_TYPES, NO_VALUE,
                            RESERVED, SEPARATE_BUNDLE, SIGNATURE_ITEMS, SIGNATURE_NODES, TYPES, key, snake)
 from .modules import module_of
@@ -31,6 +31,12 @@ GROUP_NODES = {"GeometryNodeGroup", "ShaderNodeGroup", "CompositorNodeGroup"}
 SKIP = {"NodeFrame", "NodeReroute"}
 
 FIRST_OPTIONS = {"is_panel_toggle": 0, "subtype": 1, "description": 2}
+
+# Zone inputs whose states may go by a key of their own, see states
+STATE_INPUTS = {REPEAT_INPUT, SIMULATION_INPUT}
+
+# Values of an assignment that hold a body of statements
+ZONE_VALUES = (ast.Repeat, ast.Simulate, ast.Foreach, ast.Closure)
 
 # Kept for statements even when they hold their default
 ALWAYS = {"operation"}
@@ -107,7 +113,8 @@ class GraphReader:
         self.aliases = {}  # node name -> the key of each of its items, see item_aliases
         self.called = False  # another graph of the text calls it
         self.shown = set()  # nodes whose look the text holds
-        self.last_block = {}  # (enclosing frame name, title) -> the frame its last block was
+        self.block_frame = {}  # id of a block written for a frame -> that frame's name
+        self.state_keys = {}  # repeat or simulate output name -> {state name: the key it goes by}
 
     def warn(self, message):
         self.warnings.append(f"{self.tree.name}: {message}")
@@ -204,7 +211,9 @@ class GraphReader:
         else:
             value = ast.Record([ast.Arg(n, v, 0, 0) for n, v in fields], 0, 0)
         body.append((out, ast.Return(value, 0, 0, self.looked(out))))
-        graph = ast.Graph(self.kind, tree.name, params, outputs, single, self.framed(body), 0, 0)
+        body = self.framed(body)
+        self.continuations(body)
+        graph = ast.Graph(self.kind, tree.name, params, outputs, single, body, 0, 0)
         if any(isinstance(i, ast.Panel) for i in param_tree):
             graph.param_tree = param_tree
         if paneled:
@@ -504,7 +513,10 @@ class GraphReader:
     def use(self, node, sock):
         """The expression for one output of a node, at the place it is used."""
         if node.bl_idname in BODY_NAMES:
-            return ast.Ref(BODY_NAMES[node.bl_idname].get(sock.identifier, key(sock.name)), 0, 0)
+            own = BODY_NAMES[node.bl_idname].get(sock.identifier)
+            if own is None and node.bl_idname in STATE_INPUTS and node.paired_output is not None:
+                own = self.states(node.paired_output).get(sock.name)
+            return ast.Ref(own or key(sock.name), 0, 0)
         if node.bl_idname == "NodeGroupInput":
             i = [s for s in node.outputs if s.type != "CUSTOM"].index(sock)
             return ast.Ref(self.param_keys[i], 0, 0)
@@ -518,8 +530,13 @@ class GraphReader:
         # With one output there is nothing to pick; with several, say which
         if len(outputs) == 1 and sock == outputs[0] or node.bl_idname == FOREACH_OUTPUT and sock == outputs[0]:
             return target
+        if node.bl_idname in (REPEAT_OUTPUT, SIMULATION_OUTPUT) and sock.name in self.states(node):
+            return member(target, self.states(node)[sock.name])
         if node.bl_idname in ZONE_OUTPUTS:
-            return member(target, snake(sock.name))
+            # A key two outputs share (a generation item `Geometry` beside the main geometry)
+            # is no name: the checker knows a zone item by its own name too
+            shared = [snake(s.name) for s in outputs].count(snake(sock.name)) > 1
+            return member(target, sock.name if shared else snake(sock.name))
         # Group sockets and items are named in text, not numbered: Item_1 means nothing there
         named = node.bl_idname in GROUP_NODES or node.bl_idname in ITEM_NODES or node.bl_idname in SIGNATURE_NODES
         shape = ITEM_NODES.get(node.bl_idname)
@@ -554,6 +571,9 @@ class GraphReader:
         sockets = self.items(zin.inputs)
         heads = sockets[1:] if repeat else sockets
         values = [self.zone_item(word, zout, zin, s, incoming, outside=True) for s in sockets]
+        keys = self.states(zout)
+        for v in values:
+            v.alias = keys.get(v.name)
         for sock, v in zip(sockets, values):
             if v.value is None:
                 self.warn(f"{word} '{zout.name}': '{sock.name}' ({sock.type}) has no value, "
@@ -565,7 +585,7 @@ class GraphReader:
             for item, domain in lost:
                 self.warn(f"simulate '{zout.name}': domain {domain} of state '{item}', "
                           "not yet supported in text")
-        self.zone_names(word, zout, zin, [s.name for s in heads])
+        self.zone_names(word, zout, zin, [keys.get(s.name, s.name) for s in heads])
 
         statements = [(self.tree.nodes[n], self.assign(self.tree.nodes[n])) for n in self.statement_order(zout.name)]
         fields = []
@@ -581,6 +601,10 @@ class GraphReader:
             if links and links[0][0] == zin and links[0][1].identifier == sock.identifier:
                 continue  # unchanged: the text leaves it out
             field = self.zone_item(word, zout, zout, sock, outgoing)
+            if sock.name in keys:
+                field.name = keys[sock.name]
+                if field.type is not None:
+                    field.type.name = field.name
             if field.value is not None:
                 fields.append(field)
         if skip is not None:
@@ -663,6 +687,24 @@ class GraphReader:
         if type in self.taken - own or type in self.param_keys:
             return ast.Arg(name, ast.Ref(NO_VALUE, 0, 0), 0, 0, type=ast.Param(name, type, 0, 0))
         return ast.Arg(name, ast.Ref(type, 0, 0), 0, 0)
+
+    def states(self, zout):
+        """{state name: key} of the states of a repeat or simulate whose key is taken: by a name
+        of the zone (`"Delta Time"` beside the elapsed time) or by an earlier state. They are
+        written `"Delta Time" as delta_time_2: …` and go by that key."""
+        if zout.name not in self.state_keys:
+            zin = self.pairs.get(zout.name)
+            items = zout.repeat_items if zout.bl_idname == REPEAT_OUTPUT else zout.state_items
+            own = set(BODY_NAMES[zin.bl_idname].values()) | set(HEAD_NAMES[zin.bl_idname]) if zin else set()
+            taken = own | {key(i.name) for i in items}
+            seen, keys = set(), {}
+            for i in items:
+                k = key(i.name)
+                if k in own or k in seen:
+                    keys[i.name] = unique(k, taken)
+                seen.add(k)
+            self.state_keys[zout.name] = keys
+        return self.state_keys[zout.name]
 
     def zone_names(self, word, zout, zin, items):
         """Warn of the item names the text cannot hold: twice the same key, a name of the zone
@@ -1151,7 +1193,6 @@ class GraphReader:
         stack = [(None, body)]
         # Shared with the repeat bodies, framed first: a frame opened there is no note
         opened = self.opened
-        outer = base[-1].name if base else None
         blocks = {}
         for node, stmt in statements:
             path = frame_path(node) if node is not None else []
@@ -1161,15 +1202,9 @@ class GraphReader:
                 stack.pop()
             for f in path[len(stack) - 1:]:
                 block = self.frame(f)
-                # As the checker finds the frame a `"Title" .. {` goes on with
-                where = (stack[-1][0].name if len(stack) > 1 else outer, block.label)
-                if f.name in opened and self.last_block.get(where) == f.name:
-                    block = ast.Frame(block.label, None, [], 0, 0, continued=True)
-                elif f.name in opened:
-                    self.warn(f"frame '{f.label or f.name}' is split: its nodes depend on "
-                              "nodes of another frame that depend on them")
+                # Which blocks go on with an earlier one is decided in text order, see continuations
+                self.block_frame[id(block)] = f.name
                 opened.add(f.name)
-                self.last_block[where] = f.name
                 blocks.setdefault(f.name, block)
                 stack[-1][1].append(block)
                 stack.append((f, block.body))
@@ -1196,6 +1231,41 @@ class GraphReader:
                 at = len(where) - 1 if where and holds_return(where[-1]) else len(where)
                 where.insert(at, note(f))
         return body
+
+    def continuations(self, body):
+        """Write `"Title" .. {` for each block that goes on with a frame already written.
+
+        The bodies of zones are framed before the statements around them, so this is decided
+        once the graph's body is whole, in the order the checker reads it: a block goes on
+        with the last frame of its title under the same parent frame, zone bodies included.
+        """
+        last = {}  # (parent instance, title) -> (frame name, instance)
+        seen, split = set(), set()
+
+        def walk(statements, parent):
+            for s in statements:
+                if isinstance(s, ast.Assign) and isinstance(s.value, ZONE_VALUES):
+                    walk(s.value.body, parent)
+                    continue
+                name = self.block_frame.get(id(s)) if isinstance(s, ast.Frame) else None
+                if name is None:
+                    continue  # a statement, or a note: no node of the text lands in it
+                instance = id(s)
+                known = last.get((parent, s.label))
+                if known is not None and known[0] == name:
+                    s.continued, s.color = True, None
+                    instance = known[1]
+                elif name in seen and name not in split:
+                    split.add(name)
+                    f = self.tree.nodes[name]
+                    self.warn(f"frame '{f.label or f.name}' is split: its nodes depend on "
+                              "nodes of another frame that depend on them")
+                seen.add(name)
+                if s.body:
+                    last[(parent, s.label)] = (name, instance)
+                walk(s.body, instance)
+
+        walk(body, None)
 
     def frame(self, f):
         label = f.label.replace('"', "'") or None

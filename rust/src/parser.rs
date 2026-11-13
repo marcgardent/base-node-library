@@ -513,7 +513,6 @@ impl<'a> Parser<'a> {
         let t = self.advance();
         self.expect("(", Some("'(' after repeat"))?;
         let args = self.args(false)?;
-        self.no_alias(&args)?;
         if args.is_empty() || args[0].name.is_some() {
             return Err(self.fail(
                 "repeat expects iteration count first: repeat(10, state: init, ...)",
@@ -568,7 +567,10 @@ impl<'a> Parser<'a> {
         let t = self.advance();
         self.advance(); // "("
         let args = self.args(false)?;
-        self.no_alias(&args)?;
+        if t.text != "simulate" {
+            // A state of repeat or simulate may take a key of its own; a foreach item not yet
+            self.no_alias(&args)?;
+        }
         if t.text == "simulate" {
             if args.iter().any(|a| a.name.is_none()) {
                 return Err(self.fail(

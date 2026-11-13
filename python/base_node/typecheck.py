@@ -635,14 +635,16 @@ class GraphChecker:
         self.nodes += [zin, zout]
         count = self.eval(e.count) if repeat else None
         allowed = REPEAT_ITEMS if repeat else SIMULATION_ITEMS
-        starts, items = [], []
+        starts, items, keys = [], [], []
         for a in e.states:
             v = self.zone_value(a)
-            if key(a.name) in {key(n) for n, _t in items}:
+            # `"Delta Time" as dt: …`: the body, the return and the users name the state dt
+            k = a.alias or key(a.name)
+            if k in keys or key(a.name) in {key(n) for n, _t in items} and not a.alias:
                 self.error(a, f"state '{a.name}' declared twice")
                 continue
-            if key(a.name) in STATE_NAMES[word]:
-                self.error(a, STATE_NAMES[word][key(a.name)])
+            if k in STATE_NAMES[word]:
+                self.error(a, STATE_NAMES[word][k])
                 continue
             if v is None:
                 continue
@@ -654,9 +656,11 @@ class GraphChecker:
                 self.error(a, f"a {word} state cannot have type {t}")
                 continue
             items.append((a.name, t))
+            keys.append(k)
             starts.append((a, v))
         zin.items = zout.items = items
-        states = [Socket(n, n, t) for n, t in items]
+        # Linked by the item's name, known in text by its key
+        states = [Socket(n if k == key(n) else k, n, t) for (n, t), k in zip(items, keys)]
         if repeat:
             zin_inputs = [Socket("Iterations", "Iterations", "Int")] + states
             zin_outputs = [Socket("Iteration", "Iteration", "Int")] + states
@@ -1350,7 +1354,6 @@ class GraphChecker:
         node.n_inputs, node.n_outputs = len(inputs), len(outputs)
         self.nodes.append(node)
         if failed:
-            positional = [(v, a) for v, a in positional if v is not None]
             named = [(n, v, a) for n, v, a in named if v is not None]
 
         given = set()
@@ -1360,7 +1363,9 @@ class GraphChecker:
                 self.error(a, f"{c.name} takes {len(inputs)} input(s): {socket_keys(inputs)}")
                 break
             sock = inputs[i]
-            self.connect(node, sock, v, a, c.name)
+            # A value that failed still takes its place: the next ones go to their own inputs
+            if v is not None:
+                self.connect(node, sock, v, a, c.name)
             given.add(sock.identifier)
             if not sock.multi_input:
                 i += 1

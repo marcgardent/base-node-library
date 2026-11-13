@@ -288,6 +288,69 @@ def test_import_files():
     print("   ✓ Import verified")
 
 
+def test_zones_read_back():
+    """7. Trees as Blender lets one make them, around zones, read back into text that builds."""
+    print("-> Test 7: Zones read back...")
+    from base_node.host import build_source, export_tree
+
+    def round_trip(tree):
+        text, warnings = export_tree(tree)
+        rebuilt = build_source(text, filename=f"{tree.name}.bn")[-1]
+        again, _ = export_tree(rebuilt)
+        assert again == text, f"not stable:\n{text}\n---\n{again}"
+        return text, warnings
+
+    # A frame around nodes inside a zone and outside it: one frame, continued in the zone
+    framed, = build_source("""
+geometry graph framed(geometry: Geometry) -> Geometry {
+  "F" {
+    up = CombineXYZ(z: 0.1) @ hide
+  }
+  s = simulate(mesh: geometry) {
+    "F" .. {
+      moved = SetPosition(mesh, offset: up) @ hide
+    }
+    return moved
+  }
+  return s
+}
+""", filename="framed.bn")
+    text, warnings = round_trip(framed)
+    assert not warnings, warnings
+    assert len([n for n in framed.nodes if n.bl_idname == "NodeFrame"]) == 1
+    assert '"F" .. {' in text, text
+
+    # A state Blender calls "Delta Time", beside the zone's own elapsed time
+    timed, = build_source("""
+geometry graph timed(geometry: Geometry) -> (Geometry: Geometry, Time: Float) {
+  s = simulate(mesh: geometry, "Delta Time" as delta_time_2: 0.0) {
+    return (mesh: mesh, delta_time_2: delta_time_2 + delta_time)
+  }
+  return (Geometry: s.mesh, Time: s.delta_time_2)
+}
+""", filename="timed.bn")
+    zout = next(n for n in timed.nodes if n.bl_idname == "GeometryNodeSimulationOutput")
+    assert [i.name for i in zout.state_items] == ["mesh", "Delta Time"]
+    text, warnings = round_trip(timed)
+    assert not warnings, warnings
+    assert '"Delta Time" as delta_time_2' in text, text
+
+    # A generation item of a foreach named like its main geometry
+    each, = build_source("""
+geometry graph each(geometry: Geometry) -> (Geometry: Geometry, Points: Geometry) {
+  e = foreach(geometry, domain: FACE) {
+    return (points: Points(1))
+  }
+  return (Geometry: e, Points: e.points)
+}
+""", filename="each.bn")
+    zout = next(n for n in each.nodes if n.bl_idname == "GeometryNodeForeachGeometryElementOutput")
+    zout.generation_items[0].name = "Geometry"
+    text, _warnings = round_trip(each)
+    assert "e.Geometry" in text, text
+    print("   ✓ Zones read back")
+
+
 def main():
     print("=== Starting Base Node Blender extension tests ===")
     tests = [
@@ -297,6 +360,7 @@ def main():
         test_profile_ascent_and_linter,
         test_text_view,
         test_import_files,
+        test_zones_read_back,
     ]
     failed = 0
     for fn in tests:

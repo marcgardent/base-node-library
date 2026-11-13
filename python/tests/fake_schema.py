@@ -82,6 +82,8 @@ NODES = {
     "CombineTransform": (NodeSpec("CombineTransform", "FunctionNodeCombineTransform"),
                          [S("Translation", "Vector"), S("Rotation", "Rotation"), S("Scale", "Vector")],
                          [S("Transform", "Matrix")]),
+    "TransformDirection": (NodeSpec("TransformDirection", "FunctionNodeTransformDirection"),
+                           [S("Direction", "Vector"), S("Transform", "Matrix")], [S("Direction", "Vector")]),
     "MenuSwitch": (NodeSpec("MenuSwitch", "GeometryNodeMenuSwitch", {
         "data_type": Prop("data_type", "ENUM", tuple(DATA_TYPES)),
     }), None, None),
