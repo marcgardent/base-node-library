@@ -351,6 +351,132 @@ geometry graph each(geometry: Geometry) -> (Geometry: Geometry, Points: Geometry
     print("   ✓ Zones read back")
 
 
+# Socket type -> Store Named Attribute data type, for the field outputs of a group
+STORED = {"VALUE": "FLOAT", "VECTOR": "FLOAT_VECTOR", "INT": "INT", "BOOLEAN": "BOOLEAN",
+          "RGBA": "FLOAT_COLOR", "ROTATION": "QUATERNION", "MATRIX": "FLOAT4X4"}
+
+
+def caller(group, fed):
+    """A modifier tree calling `group`: the object's geometry into its geometry inputs, Position
+    into its float and vector inputs when `fed`, and each of its field outputs stored as an attribute."""
+    t = bpy.data.node_groups.new(f".calls {group.name}", "GeometryNodeTree")
+    t.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+    t.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    gin, gout = t.nodes.new("NodeGroupInput"), t.nodes.new("NodeGroupOutput")
+    call = t.nodes.new("GeometryNodeGroup")
+    call.node_tree = group
+    position = t.nodes.new("GeometryNodeInputPosition")
+    xyz = t.nodes.new("ShaderNodeSeparateXYZ")
+    t.links.new(position.outputs[0], xyz.inputs[0])
+    for s in call.inputs:
+        if s.type == "GEOMETRY":
+            t.links.new(gin.outputs[0], s)
+        elif fed and s.type == "VECTOR":
+            t.links.new(position.outputs[0], s)
+        elif fed and s.type in ("VALUE", "INT"):
+            t.links.new(xyz.outputs[0], s)
+    out = next((s for s in call.outputs if s.type == "GEOMETRY"), gin.outputs[0])
+    for i, s in enumerate(call.outputs):
+        if s.type in STORED:
+            store = t.nodes.new("GeometryNodeStoreNamedAttribute")
+            store.data_type = STORED[s.type]
+            store.inputs["Name"].default_value = f"out_{i}"
+            t.links.new(out, store.inputs["Geometry"])
+            t.links.new(s, store.inputs["Value"])
+            out = store.outputs[0]
+    t.links.new(out, gout.inputs[0])
+    return t
+
+
+def fingerprint(obj):
+    """Sizes and rounded values of every attribute of the evaluated geometry of `obj`."""
+    geometry = obj.evaluated_get(bpy.context.evaluated_depsgraph_get()).evaluated_geometry()
+    found = {}
+    for component in ("mesh", "curves", "pointcloud"):
+        data = getattr(geometry, component, None)
+        if data is None:
+            continue
+        for a in data.attributes:
+            if a.name.startswith("."):
+                continue
+            values = []
+            for item in a.data:
+                v = next((getattr(item, k) for k in ("vector", "value", "color") if hasattr(item, k)), None)
+                if isinstance(v, float):
+                    values.append(round(v, 4) + 0.0)
+                elif hasattr(v, "__len__"):
+                    values.extend(round(x, 4) + 0.0 for x in v)
+                elif v is not None:
+                    values.append(v)
+            found[f"{component}:{a.domain}:{a.name}:{a.data_type}"] = (len(a.data), hash(tuple(values)))
+    instances = geometry.instances_pointcloud()
+    found["instances"] = len(instances.points) if instances is not None else 0
+    return found
+
+
+def evaluate(group, kind):
+    """Fingerprints of `group` as a modifier on a fresh mesh or curves object, over a few frames."""
+    for o in list(bpy.data.objects):
+        bpy.data.objects.remove(o)
+    scene = bpy.context.scene
+    scene.frame_set(1)
+    if kind.startswith("mesh"):
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3)
+    else:
+        bpy.ops.curve.primitive_bezier_circle_add()
+        bpy.ops.object.convert(target="CURVES")
+    obj = bpy.context.object
+    modifier = obj.modifiers.new("GN", "NODES")
+    modifier.node_group = caller(group, kind.endswith("fed")) if "caller" in kind else group
+    # The simulations step from frame to frame
+    prints = []
+    for frame in (1, 2, 3, 10):
+        scene.frame_set(frame)
+        prints.append(fingerprint(obj))
+    return prints
+
+
+def test_real_world_assets():
+    """8. Third-party assets (tests/fixtures, CC0) read as text, built back, evaluate the same."""
+    print("-> Test 8: Real-world assets...")
+    from base_node.host import build_source, export_tree
+
+    fixture = EXT_DIR / "tests" / "fixtures" / "everyday_geometry_nodes.blend"
+    with bpy.data.libraries.load(str(fixture), link=False) as (src, dst):
+        dst.node_groups = list(src.node_groups)
+    loaded = list(dst.node_groups)
+    assets = sorted((g for g in loaded if g.asset_data is not None), key=lambda g: g.name)
+    assert len(assets) == 17, [g.name for g in assets]
+
+    texts = {}
+    for g in assets:
+        text, warnings = export_tree(g)
+        # Only frames interleaved with others are lost: they come back as two frames each
+        lost = [w for w in warnings if "is split" not in w]
+        assert not lost, f"{g.name}: {lost}"
+        texts[g.name] = text
+    # The originals step aside: the texts build groups of the same names
+    originals = {}
+    for g in loaded:
+        name = g.name
+        g.name = f"original {name}"
+        originals[name] = g
+
+    for name, text in texts.items():
+        tree = build_source(text, filename=f"{name}.bn")[-1]
+        assert tree.name == name, tree.name
+        again, _ = export_tree(tree)
+        assert again == text, f"{name}: Tree -> Text is not stable"
+    for name in texts:
+        for kind in ("mesh", "curves", "mesh caller", "mesh caller fed"):
+            want = evaluate(originals[name], kind)
+            got = evaluate(bpy.data.node_groups[name], kind)
+            assert got == want, f"{name}: evaluates otherwise once rebuilt ({kind})"
+    for o in list(bpy.data.objects):
+        bpy.data.objects.remove(o)
+    print(f"   ✓ {len(texts)} real-world assets rebuilt from text, same results")
+
+
 def main():
     print("=== Starting Base Node Blender extension tests ===")
     tests = [
@@ -361,6 +487,7 @@ def main():
         test_text_view,
         test_import_files,
         test_zones_read_back,
+        test_real_world_assets,
     ]
     failed = 0
     for fn in tests:

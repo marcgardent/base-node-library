@@ -167,3 +167,4 @@ blender --background --factory-startup --python-exit-code 1 \
 
 - `spec/`, `profiles/`, `stdlib/`, `conformance/`, `python/`, `rust/`: [MIT](LICENSE-MIT) OR [Apache-2.0](LICENSE-APACHE).
 - `base-node-for-blender/`: GPL-3.0-or-later.
+- `base-node-for-blender/tests/fixtures/everyday_geometry_nodes.blend`: [CC0-1.0](https://creativecommons.org/publicdomain/zero/1.0/), node groups by Cartesian Caramel, from [blender-remote-asset-library-test-v1](https://github.com/cartesiancaramel/blender-remote-asset-library-test-v1) (see [its README](base-node-for-blender/tests/fixtures/README.md)).
