@@ -1,7 +1,7 @@
 {
   "name": "sdf2d",
   "version": 1,
-  "profile_version": "0.8.1",
+  "profile_version": "0.8.2",
   "edition": "2026",
   "description": "2D signed distance fields (extends core with spatial inputs)",
   "extends": "core",

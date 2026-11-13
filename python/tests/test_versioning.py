@@ -22,9 +22,9 @@ MANIFEST_PATH = STDLIB_DIR / "manifest.json"
 
 def test_package_version_constants():
     """Verify package version constants are defined and follow expected formats."""
-    assert __version__ == "0.8.1"
+    assert __version__ == "0.8.2"
     assert EDITION == "2026"
-    assert STDLIB_VERSION == "0.8.1"
+    assert STDLIB_VERSION == "0.8.2"
 
 
 def test_cli_version_flag(capsys):
@@ -45,7 +45,7 @@ def test_profiles_versioning():
     for pf in profile_files:
         data = json.loads(pf.read_text(encoding="utf-8"))
         assert data.get("version") == 1, f"{pf.name} version must be integer schema 1"
-        assert data.get("profile_version") == "0.8.1", f"{pf.name} profile_version mismatch"
+        assert data.get("profile_version") == "0.8.2", f"{pf.name} profile_version mismatch"
         assert data.get("edition") == "2026", f"{pf.name} edition mismatch"
 
 

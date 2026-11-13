@@ -21,15 +21,15 @@ The `.bn` ecosystem separates concerns across four distinct tiers:
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │ Tier 3: Standard Library Modules (stdlib/)             │
-│         e.g., math@0.8.1, ink2d@0.8.1                  │
+│         e.g., math@0.8.2, ink2d@0.8.2                  │
 │         Manifest: stdlib/manifest.json                 │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │ Tier 4: Toolchain & Reference Packages                 │
-│         Python: base-node 0.8.1                        │
-│         Rust:   base-node 0.8.1                        │
-│         Blender Extension: 0.8.1                       │
+│         Python: base-node 0.8.2                        │
+│         Rust:   base-node 0.8.2                        │
+│         Blender Extension: 0.8.2                       │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -65,7 +65,7 @@ Each profile file in `profiles/<name>.json` contains:
 {
   "name": "ink2d",
   "version": 1,
-  "profile_version": "0.8.1",
+  "profile_version": "0.8.2",
   "edition": "2026",
   "description": "2D living ink, Grease Pencil strokes, dynamics, and attributes",
   "extends": "vector2d",
@@ -94,17 +94,17 @@ The standard library is cataloged in [`stdlib/manifest.json`](file:///home/marcg
 ```json
 {
   "$schema": "./manifest.schema.json",
-  "stdlib_version": "0.8.1",
+  "stdlib_version": "0.8.2",
   "edition": "2026",
   "modules": {
     "math": {
-      "version": "0.8.1",
+      "version": "0.8.2",
       "profile": "core",
       "file": "math.bn",
       "description": "Scalar, vector math, shaping curves, wave functions, and noise"
     },
     "ink2d": {
-      "version": "0.8.1",
+      "version": "0.8.2",
       "profile": "ink2d",
       "file": "ink2d.bn",
       "dependencies": ["math"],
@@ -121,7 +121,7 @@ Every official `.bn` standard library file must include standardized metadata co
 ```bn
 // Base Node Standard Library — Module ink2d
 // @module ink2d
-// @version 0.8.1
+// @version 0.8.2
 // @profile ink2d
 // @edition 2026
 
@@ -139,7 +139,7 @@ use math (bump, fbm)
 ## 5. Lifecycle & Stability Policy (Pre-LTS vs LTS)
 
 ### Phase 1: Pre-LTS (`0.x.y`) — Active Rapid Iteration
-- **Current status**: Version `0.8.1`.
+- **Current status**: Version `0.8.2`.
 - **Policy**: **No backwards compatibility guarantee prior to LTS 1.0**.
   - Breaking changes to node names, signatures, or module structure may occur between minor versions (`0.7` $\to$ `0.8`).
   - No deprecated alias shims or legacy wrappers are retained in the repository (`stdlib/gp_tools2d.bn` was purged).
@@ -161,14 +161,14 @@ All tools and packages maintained within the repository share a synchronized ver
 
 | Component | Path | Version Scheme |
 |---|---|---|
-| Python reference package | [`python/pyproject.toml`](file:///home/marcgardent/base-node-library/python/pyproject.toml) | SemVer (`0.8.1`) |
-| Rust WASM crate | [`rust/Cargo.toml`](file:///home/marcgardent/base-node-library/rust/Cargo.toml) | SemVer (`0.8.1`) |
-| Blender Extension | [`base-node-for-blender/blender_manifest.toml`](file:///home/marcgardent/base-node-library/base-node-for-blender/blender_manifest.toml) | SemVer (`0.8.1`) |
-| Extension Repository Index | [`site/extensions/index.json`](file:///home/marcgardent/base-node-library/site/extensions/index.json) | SemVer (`0.8.1`) |
+| Python reference package | [`python/pyproject.toml`](file:///home/marcgardent/base-node-library/python/pyproject.toml) | SemVer (`0.8.2`) |
+| Rust WASM crate | [`rust/Cargo.toml`](file:///home/marcgardent/base-node-library/rust/Cargo.toml) | SemVer (`0.8.2`) |
+| Blender Extension | [`base-node-for-blender/blender_manifest.toml`](file:///home/marcgardent/base-node-library/base-node-for-blender/blender_manifest.toml) | SemVer (`0.8.2`) |
+| Extension Repository Index | [`site/extensions/index.json`](file:///home/marcgardent/base-node-library/site/extensions/index.json) | SemVer (`0.8.2`) |
 
 ### CLI Version Reporting
 
 Running `base-node --version` reports:
 ```text
-base-node 0.8.1 (Language Edition 2026, Stdlib 0.8.1)
+base-node 0.8.2 (Language Edition 2026, Stdlib 0.8.2)
 ```

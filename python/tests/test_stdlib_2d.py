@@ -31,7 +31,7 @@ def test_2d_modules_manifest_registration():
         entry = modules[mod_name]
         assert entry["name"] == mod_name
         assert entry["profile"] == "vector2d"
-        assert entry["version"] == "0.8.1"
+        assert entry["version"] == "0.8.2"
         assert entry["edition"] == "2026"
         assert (STDLIB_DIR / entry["file"]).exists()
 
@@ -137,7 +137,7 @@ def test_deform2d_graphs_signatures():
 def test_cross_module_2d_pipeline():
     """Verify an end-to-end composite pipeline importing and calling all 4 2D modules."""
     src = """// @module pipeline2d
-// @version 0.8.1
+// @version 0.8.2
 // @profile vector2d
 // @edition 2026
 
