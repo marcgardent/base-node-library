@@ -640,15 +640,15 @@ impl<'a> Parser<'a> {
 
     fn matching(&self, i: usize) -> Option<usize> {
         let mut depth = 0;
-        for j in i..self.tokens.len() {
-            if self.tokens[j].is("(") {
+        for (j, token) in self.tokens.iter().enumerate().skip(i) {
+            if token.is("(") {
                 depth += 1;
-            } else if self.tokens[j].is(")") {
+            } else if token.is(")") {
                 depth -= 1;
                 if depth == 0 {
                     return Some(j);
                 }
-            } else if self.tokens[j].is("EOF") {
+            } else if token.is("EOF") {
                 return None;
             }
         }
