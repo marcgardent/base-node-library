@@ -28,7 +28,7 @@ HIGHLIGHT_MODES = (
 
 # When the add-on runs from the sources (tests), it has no preferences entry
 DEFAULTS = SimpleNamespace(
-    complete_key="ALT", auto_complete=True, highlight=True,
+    complete_key="ALT", auto_complete=True, highlight=True, module_folder="",
     target_profile="auto", highlight_mode="standard",
     color_stdlib=(0.0, 0.78, 0.65), color_local=(0.95, 0.75, 0.20), color_warning=(0.95, 0.30, 0.25)
 )
@@ -37,6 +37,13 @@ DEFAULTS = SimpleNamespace(
 def get():
     addon = bpy.context.preferences.addons.get(ROOT)
     return addon.preferences if addon else DEFAULTS
+
+
+def apply_folders(self=None, context=None):
+    """Give the host the folder where `use name` looks for name.bn."""
+    from ..host import modules
+    folder = get().module_folder
+    modules.FOLDERS[:] = [folder] if folder else []
 
 
 def update_keys(self, context):
@@ -50,6 +57,10 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
     complete_key: bpy.props.EnumProperty(
         name="Suggestions", items=KEYS, default="ALT", update=update_keys,
         description="Shortcut that opens suggestions in a .bn text editor")
+    module_folder: bpy.props.StringProperty(
+        name="Module Folder", subtype="DIR_PATH", update=apply_folders,
+        description="Where `use name` finds name.bn when the .blend has no text of that name, "
+                    "for example the stdlib folder")
     auto_complete: bpy.props.BoolProperty(
         name="Open after ( . :", default=True,
         description="Suggestions open automatically after a parenthesis, period, or colon")
@@ -76,6 +87,7 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+        layout.prop(self, "module_folder")
 
         box_edit = layout.box()
         box_edit.label(text="Editor & Suggestions", icon="TEXT")
@@ -93,7 +105,8 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
             col.prop(self, "color_local")
             col.prop(self, "color_warning")
 
-        layout.label(text="Ctrl+Enter builds the tree from text.", icon="INFO")
+        layout.label(text="Ctrl+` switches an area between a tree and its text; Ctrl+Enter applies the text.",
+                     icon="INFO")
 
 
 classes = (BaseNodePreferences,)

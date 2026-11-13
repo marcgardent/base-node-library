@@ -18,9 +18,14 @@ class TEXT_PT_base_node(bpy.types.Panel):
         layout = self.layout
         text = context.space_data.text
         col = layout.column(align=True)
-        col.operator("base_node.text_to_tree", icon="NODETREE")
+        tree = actions.view_tree(text)
+        if actions.is_view(text):
+            row = col.row(align=True)
+            row.operator("base_node.apply_view", icon="FILE_REFRESH")
+            if tree is not None and tree.is_modifier:
+                row.operator("base_node.add_modifier", text="", icon="MODIFIER").tree = tree.name
+            col.operator("base_node.toggle_view", text="Back to Nodes", icon="NODETREE")
         col.operator("base_node.format", text="Format", icon="ALIGN_LEFT")
-        layout.prop(context.window_manager, "base_node_sync")
         options = prefs.get()
         if isinstance(options, bpy.types.AddonPreferences):
             row = layout.row(align=True)
@@ -50,17 +55,6 @@ class TEXT_PT_base_node(bpy.types.Panel):
             except Exception:
                 pass
 
-        trees = actions.linked_trees(text)
-        if trees:
-            box = layout.box()
-            box.label(text="Linked Trees")
-            for tree in trees:
-                row = box.row(align=True)
-                row.label(text=tree.name, icon="GEOMETRY_NODES")
-                if tree.is_modifier:
-                    row.operator("base_node.add_modifier", text="", icon="MODIFIER").tree = tree.name
-                row.operator("base_node.tree_to_text", text="", icon="TEXT").tree = tree.name
-
         diags = actions.DIAGNOSTICS.get(text.name)
         if diags:
             box = layout.box()
@@ -89,11 +83,7 @@ class NODE_PT_base_node(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        tree = edit_tree(context)
-        layout.operator("base_node.tree_to_text", text="Open as Text", icon="TEXT")
-        if tree.base_node_text:
-            layout.label(text=f"Text: {tree.base_node_text.name}", icon="LINKED")
-        layout.prop(context.window_manager, "base_node_sync")
+        layout.operator("base_node.toggle_view", text="Edit as Text", icon="TEXT")
 
 
 classes = (TEXT_PT_base_node, NODE_PT_base_node)

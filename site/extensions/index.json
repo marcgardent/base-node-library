@@ -8,7 +8,7 @@
       "id": "base_node",
       "name": "Base Node for Blender",
       "tagline": "Nodes as Text (.bn) \u2014 Read and write node trees as functions",
-      "version": "0.7.0",
+      "version": "0.8.0",
       "type": "add-on",
       "maintainer": "Marc Gardent",
       "license": [
@@ -20,9 +20,9 @@
         "Node",
         "Geometry Nodes"
       ],
-      "archive_url": "./base_node-0.7.0.zip",
-      "archive_size": 109384,
-      "archive_hash": "sha256:9909de4d9579c34fae18ac19ea0f479c4ce3e3e3c691fd6c3f3d23809693426a"
+      "archive_url": "./base_node-0.8.0.zip",
+      "archive_size": 107946,
+      "archive_hash": "sha256:95b5fe41786e17dd49801940ef65000344d20f9d239232575de5c661d8f04d74"
     }
   ]
 }

@@ -1,8 +1,8 @@
 """Where a `use` finds its module: a text datablock of the .blend, or a .bn file.
 
-`use math` reads the text datablock math.bn; `use math from "//lib/math.bn"` a file
-relative to the .blend, as elsewhere in Blender. Libraries, URLs and
-{project_root} come later.
+`use math` reads the text datablock math.bn, else math.bn in a module folder;
+`use math from "//lib/math.bn"` a file relative to the .blend, as elsewhere in
+Blender. Libraries, URLs and {project_root} come later.
 """
 
 import os
@@ -14,14 +14,34 @@ MODULE = "base_node_module"
 SOURCE = "base_node_source"
 
 
-def load(name, source):
-    """(text, filename) of a module. Raises LookupError with the reason."""
+# Folders where `use name` looks for name.bn after the texts of the .blend: the preferences set it
+FOLDERS = []
+
+
+def find(name, folders):
+    """Path of name.bn in the first folder that has it, or None."""
+    for folder in folders:
+        path = os.path.join(bpy.path.abspath(folder), name + ".bn")
+        if folder and os.path.isfile(path):
+            return os.path.normpath(path)
+    return None
+
+
+def load(name, source, folders=None):
+    """(text, filename) of a module. Raises LookupError with the reason.
+
+    A `use` with no source looks in `folders` after the texts, the module folders when not given.
+    """
     if source is None:
         text = bpy.data.texts.get(name + ".bn")
-        if text is None:
-            raise LookupError(f"no text '{name}.bn' in this file; "
+        if text is not None:
+            return text.as_string(), text.name
+        path = find(name, FOLDERS if folders is None else folders)
+        if path is None:
+            raise LookupError(f"no text '{name}.bn' in this file, nor {name}.bn in a module folder; "
                               f"for an external file: use {name} from \"//path/{name}.bn\"")
-        return text.as_string(), text.name
+        with open(path, encoding="utf-8") as f:
+            return f.read(), path
     if source.startswith(("http://", "https://")):
         raise LookupError("online modules are not yet supported")
     if "{project_root}" in source:

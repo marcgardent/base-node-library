@@ -34,13 +34,14 @@ FIXED_NAMES = {ir.GROUP_INPUT: "Group Input", ir.GROUP_OUTPUT: "Group Output"}
 ZONE_ITEMS = {ir.REPEAT_OUTPUT: "repeat_items", ir.SIMULATION_OUTPUT: "state_items"}
 
 
-def build_source(source, filename="<text>"):
+def build_source(source, filename="<text>", load=None):
     """Compile a .bn source and build its graphs, and those its `use` lines bring.
 
+    `load(name, source)` finds the modules, `modules.load` by default.
     Returns the node groups of the source's own graphs, raises BnError.
     """
     with BlenderSchema() as schema:
-        graphs = lang.compile_source(source, schema, filename, modules.load)
+        graphs = lang.compile_source(source, schema, filename, load or modules.load)
     builder = Builder(filename, graphs)
     for g in graphs:
         if g.kind != "geometry":
@@ -68,6 +69,8 @@ def mark(tree, module):
     if module is None:
         tree.pop(modules.MODULE, None)
         tree.pop(modules.SOURCE, None)
+        if hasattr(tree, "base_node_text"):
+            tree.base_node_text = None  # the tree is the data; no text stands behind it
         return
     name, source = module
     tree[modules.MODULE] = name

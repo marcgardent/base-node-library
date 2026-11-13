@@ -226,9 +226,9 @@ geometry graph test_qualified(strokes: Geometry) -> Geometry {
 
 #[test]
 fn test_versioning_and_manifest() {
-    assert_eq!(base_node::VERSION, "0.7.0");
+    assert_eq!(base_node::VERSION, "0.8.0");
     assert_eq!(base_node::EDITION, "2026");
-    assert_eq!(base_node::STDLIB_VERSION, "0.7.0");
+    assert_eq!(base_node::STDLIB_VERSION, "0.8.0");
 
     let manifest_path = Path::new("../stdlib/manifest.json");
     let manifest_content = fs::read_to_string(manifest_path)
@@ -236,7 +236,7 @@ fn test_versioning_and_manifest() {
         .expect("Failed to read stdlib/manifest.json");
 
     let v: serde_json::Value = serde_json::from_str(&manifest_content).expect("Invalid JSON in manifest.json");
-    assert_eq!(v["stdlib_version"], "0.7.0");
+    assert_eq!(v["stdlib_version"], "0.8.0");
     assert_eq!(v["edition"], "2026");
 
     let modules = v["modules"].as_object().expect("Expected modules object");

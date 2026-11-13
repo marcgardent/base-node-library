@@ -1,4 +1,7 @@
+import os
+
 import bpy
+from bpy_extras.io_utils import ImportHelper
 
 from ..lang import BnError
 from . import actions
@@ -10,39 +13,32 @@ def edit_tree(context):
     return tree if tree is not None and tree.bl_idname == "GeometryNodeTree" else None
 
 
-def show_text(context, text):
-    """Open the text in a Text Editor of the screen, if there is one."""
-    for area in context.screen.areas if context.screen else ():
-        if area.type == "TEXT_EDITOR":
-            area.spaces.active.text = text
-            area.tag_redraw()
-            return True
-    return False
+def report_error(op, e):
+    n = len(e.diagnostics)
+    op.report({"ERROR"}, f"{e.diagnostics[0]}" + (f" (+{n - 1} error(s))" if n > 1 else ""))
 
 
-class BASE_NODE_OT_text_to_tree(bpy.types.Operator):
-    """Build the node trees written in this text"""
-    bl_idname = "base_node.text_to_tree"
-    bl_label = "Text → Tree"
+class BASE_NODE_OT_apply_view(bpy.types.Operator):
+    """Write this text into its node tree, and keep editing it"""
+    bl_idname = "base_node.apply_view"
+    bl_label = "Apply to Tree"
     bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
     def poll(cls, context):
-        return context.space_data and context.space_data.type == "TEXT_EDITOR" \
-            and actions.is_bn(context.space_data.text)
+        space = context.space_data
+        return space and space.type == "TEXT_EDITOR" and actions.is_view(space.text)
 
     def execute(self, context):
-        text = context.space_data.text
         try:
-            trees = actions.text_to_tree(text)
+            tree = actions.apply_view(context.space_data.text)
         except BnError as e:
-            n = len(e.diagnostics)
-            self.report({"ERROR"}, f"{e.diagnostics[0]}" + (f" (+{n - 1} error(s))" if n > 1 else ""))
+            report_error(self, e)
             return {"CANCELLED"}
         for area in context.screen.areas:
-            if area.type == "NODE_EDITOR":
+            if area.type in {"NODE_EDITOR", "VIEW_3D"}:
                 area.tag_redraw()
-        self.report({"INFO"}, f"{len(trees)} tree(s) built: {', '.join(t.name for t in trees)}")
+        self.report({"INFO"}, f"'{tree.name}' built" if tree else "nothing built")
         return {"FINISHED"}
 
 
@@ -67,31 +63,49 @@ class BASE_NODE_OT_format(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class BASE_NODE_OT_tree_to_text(bpy.types.Operator):
-    """Write this node tree, and the groups it calls, as text"""
-    bl_idname = "base_node.tree_to_text"
-    bl_label = "Tree → Text"
+class BASE_NODE_OT_toggle_view(bpy.types.Operator):
+    """Show this area's node tree as text, or the text back as its node tree.
+    The tree stays the only data: the text is written back into it, then removed"""
+    bl_idname = "base_node.toggle_view"
+    bl_label = "Nodes ↔ Text"
     bl_options = {"REGISTER", "UNDO"}
-
-    tree: bpy.props.StringProperty(description="Node group to write; the edited one when empty")
 
     @classmethod
     def poll(cls, context):
-        return edit_tree(context) is not None or (context.space_data and context.space_data.type == "TEXT_EDITOR")
+        space = context.space_data
+        if space and space.type == "TEXT_EDITOR":
+            return actions.is_view(space.text)
+        return edit_tree(context) is not None
 
     def execute(self, context):
-        tree = bpy.data.node_groups.get(self.tree) if self.tree else edit_tree(context)
-        if tree is None:
-            self.report({"ERROR"}, "no Geometry Nodes tree to write")
-            return {"CANCELLED"}
-        text, warnings = actions.tree_to_text(tree)
-        shown = show_text(context, text)
-        message = f"'{tree.name}' written to {text.name}"
-        if not shown:
-            message += "; open it in a Text Editor"
+        area = context.area
+        if area.type == "TEXT_EDITOR":
+            return self.to_nodes(area)
+        return self.to_text(context, area)
+
+    def to_text(self, context, area):
+        tree = edit_tree(context)
+        text, warnings = actions.open_view(tree)
+        area.type = "TEXT_EDITOR"
+        space = area.spaces.active
+        space.text = text
+        space.top = 0
         if warnings:
-            message += f" ({len(warnings)} warning(s), see Nodes panel)"
-        self.report({"WARNING"} if warnings else {"INFO"}, message)
+            self.report({"WARNING"}, f"{len(warnings)} export warning(s), see Nodes panel")
+        return {"FINISHED"}
+
+    def to_nodes(self, area):
+        text = area.spaces.active.text
+        try:
+            tree = actions.close_view(text)
+        except BnError as e:
+            report_error(self, e)
+            return {"CANCELLED"}
+        area.type = "NODE_EDITOR"
+        space = area.spaces.active
+        if tree is not None and space.edit_tree != tree:
+            space.tree_type = tree.bl_idname
+            space.node_tree = tree
         return {"FINISHED"}
 
 
@@ -139,5 +153,44 @@ class BASE_NODE_OT_add_modifier(bpy.types.Operator):
         return {"FINISHED"}
 
 
-classes = (BASE_NODE_OT_text_to_tree, BASE_NODE_OT_format, BASE_NODE_OT_tree_to_text, BASE_NODE_OT_goto,
+class BASE_NODE_OT_import(bpy.types.Operator, ImportHelper):
+    """Build the node trees of .bn files; their `use` lines also find modules next to them"""
+    bl_idname = "base_node.import_bn"
+    bl_label = "Import Base Node (.bn)"
+    bl_options = {"REGISTER", "UNDO", "PRESET"}
+
+    filename_ext = ".bn"
+    filter_glob: bpy.props.StringProperty(default="*.bn", options={"HIDDEN"})
+    files: bpy.props.CollectionProperty(type=bpy.types.OperatorFileListElement, options={"HIDDEN", "SKIP_SAVE"})
+    directory: bpy.props.StringProperty(subtype="DIR_PATH", options={"HIDDEN", "SKIP_SAVE"})
+
+    def execute(self, context):
+        names = [f.name for f in self.files if f.name] or [os.path.basename(self.filepath)]
+        folder = self.directory or os.path.dirname(self.filepath)
+        built, failed = [], []
+        for name in names:
+            path = os.path.join(folder, name)
+            try:
+                built += actions.import_file(path)
+            except BnError as e:
+                failed.append(name)
+                n = len(e.diagnostics)
+                self.report({"ERROR"}, f"{e.diagnostics[0]}" + (f" (+{n - 1} error(s))" if n > 1 else ""))
+            except OSError as e:
+                failed.append(name)
+                self.report({"ERROR"}, f"{name}: {e.strerror}")
+        if not built:
+            return {"CANCELLED"}
+        message = f"{len(built)} tree(s) imported from {len(names) - len(failed)} file(s)"
+        if failed:
+            message += f"; failed: {', '.join(failed)}"
+        self.report({"WARNING"} if failed else {"INFO"}, message)
+        return {"FINISHED"}
+
+
+def menu_import(self, context):
+    self.layout.operator(BASE_NODE_OT_import.bl_idname, text="Base Node (.bn)")
+
+
+classes = (BASE_NODE_OT_import, BASE_NODE_OT_apply_view, BASE_NODE_OT_format, BASE_NODE_OT_toggle_view, BASE_NODE_OT_goto,
            BASE_NODE_OT_add_modifier)

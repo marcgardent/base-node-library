@@ -1,7 +1,7 @@
 {
   "name": "ink2d",
   "version": 1,
-  "profile_version": "0.7.0",
+  "profile_version": "0.8.0",
   "edition": "2026",
   "description": "2D living ink, Grease Pencil strokes, dynamics, and attributes (extends vector2d)",
   "extends": "vector2d",

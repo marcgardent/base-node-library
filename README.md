@@ -132,8 +132,29 @@ cargo check --target wasm32-unknown-unknown
 
 ## Blender Extension (`base-node-for-blender/`)
 
-Add-on for Blender 5.2+ (`id = "base_node"`).
-Provides live two-way sync between the Node Editor and Text Editor (`Ctrl+Enter` to apply, `Ctrl+Space` to autocomplete).
+Add-on for Blender 5.2+ (`id = "base_node"`). The node tree is the only data: its `.bn` text is a temporary view of it.
+
+| Action | Where | Shortcut |
+|---|---|---|
+| Show the edited tree as `.bn` text, in the same area | Node Editor, sidebar *Text > Edit as Text* | ``Ctrl+` `` |
+| Write the text into the tree and return to the nodes (the text is removed) | Text Editor, sidebar *Nodes > Back to Nodes* | ``Ctrl+` `` |
+| Write the text into the tree and keep editing | Text Editor, *Apply to Tree* | `Ctrl+Enter` |
+| Suggestions | Text Editor | `Alt+Space` (set in the preferences) |
+| Build the graphs of one or more `.bn` files | *File > Import > Base Node (.bn)* | |
+
+An unchanged text leaves the tree as it is, node layout included; a text with errors stays open with its diagnostics until it builds.
+
+A `use name` without `from` finds its module in this order: the text `name.bn` of the .blend, `name.bn` next to the imported file, then `name.bn` in the *Module Folder* of the add-on preferences (point it at `stdlib/`).
+
+Build the package and install it in a local Blender:
+
+```bash
+blender --command extension build --source-dir base-node-for-blender --output-dir dist
+```
+
+```bash
+blender --command extension install-file -r user_default -e dist/base_node-0.8.0.zip
+```
 
 Run headless Blender tests:
 

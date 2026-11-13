@@ -296,7 +296,8 @@ class Graph:
 class Use:
     """`use math as m (fbm, bump) from "//lib/math.bn"`: alias, list and source are optional.
 
-    With no source, the module is the text `math.bn` of the same .blend.
+    With no source, the host finds the module: in Blender, the text `math.bn` of the .blend,
+    else `math.bn` next to the imported file or in the module folder of the preferences.
     """
     name: str
     names: list | None  # graph keys; None imports every graph of the module

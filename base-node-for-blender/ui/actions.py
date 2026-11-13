@@ -1,9 +1,11 @@
 """What the operators do, kept apart from them so tests can call it without a UI."""
 
+import hashlib
+import os
+
 import bpy
 
-from ..host import build_source, export_tree
-from ..host.builder import LINE
+from ..host import build_source, export_tree, modules
 from ..lang import BnError
 from ..lang.format import format_source
 
@@ -19,30 +21,85 @@ def is_bn(text):
     return text is not None and text.name.endswith(EXT)
 
 
-def linked_trees(text):
-    return [g for g in bpy.data.node_groups if g.base_node_text == text]
-
-
-def text_to_tree(text):
-    """Build every graph of the text and link the trees to it. Raises BnError."""
+def build_text(text):
+    """Build every graph of the text into its tree of the same name. Raises BnError."""
     DIAGNOSTICS.pop(text.name, None)
     try:
-        trees = build_source(text.as_string(), text.name)
+        return build_source(text.as_string(), text.name)
     except BnError as e:
         DIAGNOSTICS[text.name] = e.diagnostics
         first = e.diagnostics[0]
         text.cursor_set(first.line - 1, character=max(0, first.col - 1))
         raise
-    for tree in trees:
-        tree.base_node_text = text
-    return trees
+
+
+# Text view of a tree: the tree is the only data, the text lives while an area shows it.
+VIEW_TREE = "base_node_view"       # ID property of the text: name of the tree it shows
+VIEW_HASH = "base_node_view_hash"  # ID property of the text: hash of the source the tree holds
+
+
+def _digest(source):
+    return hashlib.sha1(source.encode("utf-8")).hexdigest()
+
+
+def is_view(text):
+    return text is not None and VIEW_TREE in text
+
+
+def view_tree(text):
+    """The tree a view text shows, or None when the text is not a view (or its tree is gone)."""
+    name = text.get(VIEW_TREE) if text is not None else None
+    return bpy.data.node_groups.get(name) if name else None
+
+
+def open_view(tree):
+    """Write the tree into a hidden text that only stands for it. Returns (text, warnings)."""
+    source, warnings = export_tree(tree)
+    name = f".{tree.name}{EXT}"  # leading dot: hidden from the text browser
+    text = bpy.data.texts.get(name) or bpy.data.texts.new(name)
+    text.from_string(source)
+    text.cursor_set(0)
+    text.use_fake_user = False
+    text[VIEW_TREE] = tree.name
+    text[VIEW_HASH] = _digest(text.as_string())
+    WARNINGS[text.name] = warnings
+    DIAGNOSTICS.pop(text.name, None)
+    return text, warnings
+
+
+def apply_view(text):
+    """Write a view text into its tree, keeping the text. Returns the tree; raises BnError.
+
+    An unchanged text leaves the tree as it is, so its layout survives a look at the code.
+    """
+    tree = view_tree(text)
+    source = text.as_string()
+    if tree is not None and text.get(VIEW_HASH) == _digest(source):
+        return tree
+    trees = build_text(text)
+    # Callees are written first: when the main graph was renamed in the text, it is the last one
+    if trees and tree not in trees:
+        tree = trees[-1]
+    if tree is not None:
+        text[VIEW_TREE] = tree.name
+    text[VIEW_HASH] = _digest(source)
+    return tree
+
+
+def close_view(text):
+    """Write a view text into its tree, then remove the text. Returns the tree; raises BnError.
+
+    On an error the text stays, with its diagnostics, so that it can be fixed.
+    """
+    tree = apply_view(text)
+    WARNINGS.pop(text.name, None)
+    DIAGNOSTICS.pop(text.name, None)
+    bpy.data.texts.remove(text)
+    return tree
 
 
 def format_text(text):
-    """Rewrite the text in the canonical layout. True when it changed; raises BnError.
-
-    Its linked trees are built again, so that their nodes keep pointing at the right lines.
-    """
+    """Rewrite the text in the canonical layout. True when it changed; raises BnError."""
     source = text.as_string()
     DIAGNOSTICS.pop(text.name, None)
     try:
@@ -58,32 +115,30 @@ def format_text(text):
     text.from_string(formatted)
     line = min(line, len(text.lines) - 1)
     text.cursor_set(line, character=min(char, len(text.lines[line].body)))
-    if linked_trees(text):
-        try:
-            text_to_tree(text)
-        except BnError:
-            pass  # the panel lists the errors; the text is formatted all the same
     return True
 
 
-def tree_to_text(tree):
-    """Write the tree (and the groups it calls) into its text, created when needed."""
-    source, warnings = export_tree(tree)
-    text = tree.base_node_text or bpy.data.texts.get(tree.name + EXT)
-    if text is None:
-        text = bpy.data.texts.new(tree.name + EXT)
-    text.from_string(source)
-    text.cursor_set(0)
-    tree.base_node_text = text
-    WARNINGS[text.name] = warnings
-    DIAGNOSTICS.pop(text.name, None)
-    return text, warnings
+def import_file(path):
+    """Build every graph of a .bn file into the trees of the same names. Returns them; raises BnError, OSError.
 
+    Its `use` lines find their modules in the .blend's texts, next to the file, then in the module folders.
+    """
+    with open(path, encoding="utf-8") as f:
+        source = f.read()
+    here = os.path.dirname(os.path.abspath(path))
+    beside = {}
 
-def node_line(node):
-    """1-based source line of a node, or None for a node the text did not build."""
-    return node.get(LINE)
+    def load(name, src):
+        if src is None and bpy.data.texts.get(name + EXT) is None:
+            found = modules.find(name, [here])
+            if found is not None:
+                beside[name] = found
+        return modules.load(name, src, [here, *modules.FOLDERS])
 
-
-def nodes_on_line(tree, line):
-    return [n for n in tree.nodes if n.get(LINE) == line]
+    trees = build_source(source, os.path.basename(path), load)
+    # A module found next to the file keeps its path, so that the text view of a tree finds it again
+    for g in bpy.data.node_groups:
+        name = g.get(modules.MODULE)
+        if name in beside and not g.get(modules.SOURCE):
+            g[modules.SOURCE] = beside[name]
+    return trees

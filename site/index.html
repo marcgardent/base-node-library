@@ -108,6 +108,15 @@
       border-radius: 4px;
       padding: 0.1rem 0.35rem;
     }
+    kbd {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      padding: 0.05rem 0.35rem;
+    }
     pre {
       margin: 0.75rem 0;
       padding: 1rem;
@@ -258,7 +267,7 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>base-node <span>(.bn) v0.7.0</span></h1>
+      <h1>base-node <span>(.bn) v0.8.0</span></h1>
       <nav>
         <a href="#examples">Examples</a>
         <a href="#profiles">Profiles</a>
@@ -527,8 +536,14 @@ let err = check_profile(&amp;f, ProfileKind::Vector2d);</code></pre>
 
     <h2 id="blender">3. Base Node for Blender (<code>base-node-for-blender/</code>)</h2>
     <p>
-      Blender 5.2+ extension (<code>id = "base_node"</code>). Synchronizes Geometry Nodes trees and <code>.bn</code> text blocks in real time.
+      Blender 5.2+ extension (<code>id = "base_node"</code>). The Geometry Nodes tree is the only data: its <code>.bn</code> text is a temporary view of it.
     </p>
+    <ul>
+      <li><kbd>Ctrl</kbd>+<kbd>`</kbd> in the Node Editor shows the edited tree as <code>.bn</code> text in the same area; again, it writes the text back into the tree and returns to the nodes.</li>
+      <li><kbd>Ctrl</kbd>+<kbd>Enter</kbd> applies the text to the tree without leaving it; <kbd>Alt</kbd>+<kbd>Space</kbd> opens suggestions.</li>
+      <li><em>File &gt; Import &gt; Base Node (.bn)</em> builds the graphs of one or more <code>.bn</code> files.</li>
+      <li>A <code>use math</code> finds <code>math.bn</code> in the .blend's texts, next to the imported file, then in the <em>Module Folder</em> of the preferences (point it at <code>stdlib/</code>).</li>
+    </ul>
     <p><strong>One-click install via Blender Remote Extension Repository:</strong></p>
     <div class="endpoint-bar">
       <span id="repo-url">https://marcgardent.github.io/base-node-library/extensions/index.json</span>
