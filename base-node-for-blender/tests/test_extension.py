@@ -6,7 +6,9 @@ Run in Blender via:
 
 from __future__ import annotations
 
+import difflib
 import importlib.util
+import os
 import sys
 import traceback
 from pathlib import Path
@@ -440,6 +442,7 @@ def test_real_world_assets():
     """8. Third-party assets (tests/fixtures, CC0) read as text, built back, evaluate the same."""
     print("-> Test 8: Real-world assets...")
     from base_node.host import build_source, export_tree
+    from base_node.lang.schema import key
 
     fixture = EXT_DIR / "tests" / "fixtures" / "everyday_geometry_nodes.blend"
     with bpy.data.libraries.load(str(fixture), link=False) as (src, dst):
@@ -455,6 +458,24 @@ def test_real_world_assets():
         lost = [w for w in warnings if "is split" not in w]
         assert not lost, f"{g.name}: {lost}"
         texts[g.name] = text
+    # The texts are kept beside the fixture, to read and to see what a change of the reader changes
+    expected_dir = fixture.with_suffix("")
+    if os.environ.get("BASE_NODE_UPDATE_FIXTURES"):
+        expected_dir.mkdir(exist_ok=True)
+        for old in expected_dir.glob("*.bn"):
+            old.unlink()
+        for name, text in texts.items():
+            (expected_dir / f"{key(name)}.bn").write_text(text, encoding="utf-8")
+    changed = []
+    for name, text in texts.items():
+        path = expected_dir / f"{key(name)}.bn"
+        expected = path.read_text(encoding="utf-8") if path.exists() else ""
+        if text != expected:
+            changed.append("".join(difflib.unified_diff(
+                expected.splitlines(True), text.splitlines(True), f"{path.name} (expected)", f"{path.name} (read)", n=1)))
+    assert not changed, ("the assets read otherwise than tests/fixtures/everyday_geometry_nodes/*.bn; "
+                         "if that is wanted, rerun with BASE_NODE_UPDATE_FIXTURES=1\n" + "\n".join(changed)[:4000])
+    assert len(list(expected_dir.glob("*.bn"))) == len(texts), "a .bn of the fixtures has no asset"
     # The originals step aside: the texts build groups of the same names
     originals = {}
     for g in loaded:

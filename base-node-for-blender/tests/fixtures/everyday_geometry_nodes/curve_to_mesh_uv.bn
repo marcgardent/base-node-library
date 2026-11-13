@@ -1,0 +1,53 @@
+// @profile "blender-geometry"
+
+geometry(is_modifier: false) graph "Curve to Mesh UV"(
+    Curve: Geometry,
+    "Profile Curve": Geometry,
+    "Fill Caps": Bool,
+    "UV"(default_closed: true) {
+        Name: String(optional_label: true) = "UVMap",
+        "Use Length X": Bool,
+        "Use Length Y": Bool
+    }
+) -> (Mesh: Geometry, UV: Vector) {
+  spline_length = SplineLength()
+  spline_parameter = SplineParameter()
+  curve_endpoint_selection = CurveEndpointSelection(0, SplineCyclic())
+  "Capture on Point" {
+    capture_attribute_2 = CaptureAttribute(Curve, Value: Float = curve_endpoint_selection) @ hide
+    capture_attribute = CaptureAttribute(
+      capture_attribute_2.geometry,
+      Value: spline_parameter.factor) @ hide
+    capture_attribute_5 = CaptureAttribute(capture_attribute.geometry, Value: spline_length.length) @ hide
+  }
+  "Capture on Point" {
+    capture_attribute_4 = CaptureAttribute(profile_curve, Value: Float = curve_endpoint_selection) @ hide
+    capture_attribute_3 = CaptureAttribute(
+      capture_attribute_4.geometry,
+      Value: spline_parameter.factor) @ hide
+    capture_attribute_6 = CaptureAttribute(
+      capture_attribute_3.geometry,
+      Value: spline_length.length) @ hide
+  }
+  "End Seam Selection" {
+    compare = capture_attribute_3.value <= 0.0 @ hide
+    boolean_math = compare and FieldOnDomain(capture_attribute_4.value, domain: FACE, data_type: BOOLEAN) @ hide
+    switch = Switch(boolean_math, capture_attribute_3.value, 1.0)
+    math_2 = switch * capture_attribute_6.value @ hide
+    switch_4 = Switch(use_length_y, switch, math_2) @ hide
+  }
+  "End Seam Selection" {
+    compare_2 = capture_attribute.value <= 0.0 @ hide
+    boolean_math_2 = compare_2 and FieldOnDomain(capture_attribute_2.value, domain: FACE, data_type: BOOLEAN) @ hide
+    switch_2 = Switch(boolean_math_2, capture_attribute.value, 1.0)
+    math = switch_2 * capture_attribute_5.value @ hide
+    switch_3 = Switch(use_length_x, switch_2, math) @ hide
+  }
+  "UV" {
+    combine_xyz = CombineXYZ(switch_3, switch_4) @ hide
+    named_attribute = NamedAttribute("radius")
+    return (
+      Mesh: capture_attribute_5.geometry |> CurveToMesh(capture_attribute_6.geometry, Switch(named_attribute.exists, 1.0, named_attribute.attribute), fill_caps) |> StoreNamedAttribute(name: Name, value: combine_xyz, data_type: FLOAT2, domain: CORNER),
+      UV: NamedAttribute(Name, data_type: FLOAT_VECTOR).attribute)
+  }
+}

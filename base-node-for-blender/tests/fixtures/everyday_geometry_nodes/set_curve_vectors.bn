@@ -1,0 +1,11 @@
+// @profile "blender-geometry"
+
+geometry(is_modifier: false) graph "Set Curve Vectors"(
+    Curve: Geometry,
+    Selection: Bool(hide_value: true) = true,
+    Vectors: Vector = (0.0, 0.0, 1.0)
+) -> (Curve: Geometry) {
+  vector_math = AccumulateField(Vectors, CurveOfPoint().curve_index, data_type: FLOAT_VECTOR).trailing + FieldAtIndex(Position(), FieldOnDomain(PointsOfCurve().point_index, domain: CURVE, data_type: INT), data_type: FLOAT_VECTOR) @ hide
+  set_position = SetPosition(Curve, Selection, vector_math) @ hide
+  return (Curve: set_position)
+}

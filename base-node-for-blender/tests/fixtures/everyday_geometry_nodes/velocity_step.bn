@@ -1,0 +1,20 @@
+// @profile "vector2d"
+
+geometry graph "Velocity Step"(
+    "Delta Time": Float(hide_value: true) = 0.04166667,
+    ">": Geometry,
+    Selection: Bool(hide_value: true) = true,
+    "" as __string: String = "velocity",
+    Forces: Vector = (0.0, 0.0, -9.81) in -10000.0..10000.0,
+    Damp: Float(subtype: FACTOR) in 0.0..1.0,
+    "Set Velocity": Bool
+) -> (">": Geometry) {
+  math = pow(1.0 - Damp, delta_time) @ hide
+  vector_math_3 = Forces * delta_time @ hide
+  vector_math_2 = NamedAttribute(__string, data_type: FLOAT_VECTOR).attribute + vector_math_3 @ hide
+  switch = Switch(set_velocity, vector_math_2, Forces, input_type: VECTOR) @ hide
+  vector_math = switch * math @ hide
+  vector_math_4 = NamedAttribute(__string, data_type: FLOAT_VECTOR).attribute * delta_time @ hide
+  return (
+    ">": _ |> StoreNamedAttribute(Selection, __string, vector_math, data_type: FLOAT_VECTOR) |> SetPosition(Selection, offset: vector_math_4))
+}

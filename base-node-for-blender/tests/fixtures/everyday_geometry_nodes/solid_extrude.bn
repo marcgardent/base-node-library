@@ -1,0 +1,53 @@
+// @profile "blender-geometry"
+
+geometry graph "Solid Extrude"(
+    Geometry: Geometry,
+    Selection: Bool(hide_value: true) = true,
+    Thickness: Float = 0.1 in -10000.0..10000.0,
+    Midlevel: Float(subtype: FACTOR) in 0.0..1.0,
+    Multiplier: Float = 1.0 in -10000.0..10000.0,
+    "Even Thickness": Bool,
+    "Keep Bottom": Bool = true
+) -> (Geometry: Geometry, "Original Normal": Vector, Top: Bool, Side: Bool) {
+  normal = Normal(legacy_corner_normals: true)
+  index = Index() @ hide
+  math_4 = Thickness * Multiplier @ hide
+  capture_attribute = CaptureAttribute(
+    Geometry,
+    Selection,
+    Index: index,
+    Value: normal.true_normal,
+    "Value.001": math_4)
+  capture_attribute_2 = CaptureAttribute(
+    capture_attribute.geometry,
+    Value: normal.true_normal,
+    domain: CORNER)
+  {
+    flip_faces = FlipFaces(capture_attribute_2.geometry) @ hide
+    extrude_mesh = ExtrudeMesh(
+      capture_attribute_2.geometry,
+      Selection,
+      offset_scale: 0.0,
+      individual: false)
+    boolean_math = not extrude_mesh.top @ hide
+    switch = Switch(
+      keep_bottom,
+      extrude_mesh.mesh,
+      MergePoints(extrude_mesh.mesh + flip_faces, boolean_math, capture_attribute.index),
+      input_type: GEOMETRY) @ hide
+  }
+  vector_math = capture_attribute_2.value ⋅ capture_attribute.value @ hide
+  {
+    math = extrude_mesh.top - Midlevel @ hide
+    math_3 = capture_attribute.value_001 / pow(FieldOnDomain(vector_math, domain: CORNER), 2.0) @ hide
+    switch_2 = Switch(even_thickness, capture_attribute.value_001, math_3) @ hide
+    math_2 = math * switch_2 @ hide
+    vector_math_2 = capture_attribute_2.value * math_2 @ hide
+    set_position = SetPosition(switch, offset: vector_math_2)
+  }
+  return (
+    Geometry: set_position,
+    "Original Normal": capture_attribute_2.value,
+    Top: extrude_mesh.top,
+    Side: extrude_mesh.side)
+}

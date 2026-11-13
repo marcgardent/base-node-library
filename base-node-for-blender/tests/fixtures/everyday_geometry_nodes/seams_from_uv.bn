@@ -1,0 +1,25 @@
+// @profile "blender-geometry"
+
+geometry graph "Seams from UV"(
+    "UV Map": Vector(hide_value: true),
+    Threshold: Float = 1e-05 in -10000.0..10000.0
+) -> ("Seam Edges": Bool) {
+  "Are Edge Corners in the Same Place?" {
+    corners_of_edge = CornersOfEdge()
+    vector_math = distance(
+      FieldAtIndex(uv_map, OffsetCornerInFace(CornersOfEdge().corner_index, 1), domain: CORNER, data_type: FLOAT_VECTOR),
+      FieldAtIndex(uv_map, CornersOfEdge(sort_index: 1).corner_index, domain: CORNER, data_type: FLOAT_VECTOR)) @ hide
+    vector_math_2 = distance(
+      FieldAtIndex(uv_map, corners_of_edge.corner_index, domain: CORNER, data_type: FLOAT_VECTOR),
+      FieldAtIndex(uv_map, OffsetCornerInFace(CornersOfEdge(sort_index: 1).corner_index, 1), domain: CORNER, data_type: FLOAT_VECTOR)) @ hide
+    boolean_math = vector_math_2 > Threshold or vector_math > Threshold @ hide
+  }
+  compare = corners_of_edge.total < 2
+  "Are Edge Corners in the Same Place?" .. {
+    field_on_domain = FieldOnDomain(
+      Switch(compare, boolean_math, true, input_type: BOOLEAN),
+      domain: EDGE,
+      data_type: BOOLEAN)
+  }
+  return ("Seam Edges": field_on_domain)
+}

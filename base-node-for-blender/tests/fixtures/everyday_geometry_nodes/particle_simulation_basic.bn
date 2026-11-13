@@ -1,0 +1,366 @@
+// @profile "blender-geometry"
+
+geometry graph ".Particle Rotation"(
+    Geometry: Geometry,
+    "Delta Time": Float = 0.04166667 in -10000.0..10000.0,
+    "Rotation" {
+        Rotation: Rotation(hide_value: true),
+        "Set Rotation": Bool
+    },
+    "Rotation Velocity" {
+        Axis: Vector = (0.0, 0.0, 1.0),
+        Angle: Float in -10000.0..10000.0,
+        "Set Velocity": Bool,
+        Damp: Float(subtype: FACTOR) in 0.0..1.0
+    },
+    "Is Hit" {
+        "Hit Rotation": Bool,
+        "Hit Rotation Friction": Float(subtype: FACTOR) = 1.0 in 0.0..1.0
+    }
+) -> Geometry {
+  "hit rotation" {
+    named_attribute = NamedAttribute("velocity", data_type: FLOAT_VECTOR)
+    named_attribute_2 = NamedAttribute("hit_normal", data_type: FLOAT_VECTOR)
+    vector_math_3 = normalize(named_attribute.attribute) @ hide
+    vector_math = named_attribute_2.attribute × vector_math_3 @ hide
+    vector_math_2 = vector_math_3 ⋅ named_attribute_2.attribute @ hide
+    vector_math_4 = length(named_attribute.attribute) @ hide
+    math_3 = abs(vector_math_2) @ hide
+    math_2 = Math(math_3, -1.0, 1.0, operation: MULTIPLY_ADD) * vector_math_4 @ hide
+    "Combine Axis Angle" {
+      vector_math_5 = normalize(vector_math) @ hide
+    }
+    radius = Radius() @ hide
+    math = math_2 / radius @ hide
+    "Combine Axis Angle" .. {
+      vector_math_6 = vector_math_5 * math @ hide
+    }
+  }
+  "hit" {
+    boolean_math = hit_rotation and NamedAttribute("is_hit", data_type: BOOLEAN).attribute @ hide
+  }
+  "input velocity" {
+    vector_math_10 = normalize(Axis) @ hide
+    vector_math_11 = vector_math_10 * Angle @ hide
+    vector_math_8 = NamedAttribute("rotation_velocity", data_type: FLOAT_VECTOR).attribute + vector_math_11 @ hide
+    switch_2 = Switch(set_velocity, vector_math_8, vector_math_11, input_type: VECTOR) @ hide
+  }
+  "rotation" {
+    "apply velocity offset" {
+      vector_math_12 = NamedAttribute("rotation_velocity", data_type: FLOAT_VECTOR).attribute * delta_time @ hide
+      vector_math_7 = length(vector_math_12) @ hide
+      axis_angle_to_rotation = AxisAngleToRotation(vector_math_12, vector_math_7) @ hide
+      rotate_rotation = RotateRotation(
+        RotateRotation(NamedAttribute("rotation", data_type: QUATERNION).attribute, Rotation),
+        axis_angle_to_rotation) @ hide
+    }
+    switch_3 = Switch(set_rotation, rotate_rotation, Rotation, input_type: ROTATION) @ hide
+  }
+  "Damp" {
+    math_4 = pow(1.0 - Damp, delta_time) @ hide
+    vector_math_9 = switch_2 * math_4 @ hide
+  }
+  "hit friction" {
+    mix = Mix(hit_rotation_friction, vector_math_9, vector_math_6, data_type: VECTOR) @ hide
+    switch = Switch(boolean_math, vector_math_9, mix, input_type: VECTOR) @ hide
+  }
+  "rotation velocity" {
+    store_named_attribute_2 = StoreNamedAttribute(
+      Geometry,
+      name: "rotation_velocity",
+      value: switch,
+      data_type: FLOAT_VECTOR)
+  }
+  "rotation" .. {
+    store_named_attribute = StoreNamedAttribute(
+      store_named_attribute_2,
+      name: "rotation",
+      value: switch_3,
+      data_type: QUATERNION)
+  }
+  return store_named_attribute
+}
+
+geometry graph "SDF Collision"(
+    ">": Geometry,
+    Selection: Bool(hide_value: true) = true,
+    "Signed Distance": Float(hide_value: true),
+    Normal: Vector(hide_value: true),
+    "" as __string: String = "velocity",
+    Bounce: Float(subtype: FACTOR) = 0.5 in 0.0..1.0,
+    Friction: Float(subtype: FACTOR) = 0.5 in 0.0..1.0
+) -> (">": Geometry, "Is Hit": Bool, "Hit Normal": Vector) {
+  mix = Mix(Bounce, -1.0, -2.0)
+  named_attribute = NamedAttribute(__string, data_type: FLOAT_VECTOR)
+  capture_attribute_2 = CaptureAttribute(_, Value: signed_distance)
+  capture_attribute = CaptureAttribute(capture_attribute_2.geometry, Value: Normal)
+  "Normal Impulse" {
+    vector_math = capture_attribute.value ⋅ named_attribute.attribute @ hide
+    math = vector_math * mix @ hide
+    vector_math_2 = capture_attribute.value * math @ hide
+  }
+  "New Velocity" {
+    vector_math_3 = vector_math_2 + named_attribute.attribute @ hide
+  }
+  "Tangent Impulse" {
+    math_2 = math * Friction @ hide
+  }
+  "Tangent" {
+    vector_math_9 = VectorMath(
+      named_attribute.attribute,
+      capture_attribute.value,
+      operation: PROJECT) @ hide
+    vector_math_4 = named_attribute.attribute - vector_math_9 @ hide
+    vector_math_5 = normalize(vector_math_4) @ hide
+    vector_math_6 = length(vector_math_4) @ hide
+  }
+  "Tangent Impulse" .. {
+    math_3 = min(math_2, vector_math_6) @ hide
+    vector_math_7 = vector_math_5 * math_3 @ hide
+  }
+  "New Velocity" .. {
+    vector_math_8 = vector_math_3 - vector_math_7 @ hide
+  }
+  compare = capture_attribute_2.value < 0.0 @ hide
+  boolean_math = Selection and compare @ hide
+  math_4 = 0.0 - capture_attribute_2.value @ hide
+  vector_math_10 = capture_attribute.value * math_4 @ hide
+  return (
+    ">": capture_attribute.geometry |> SetPosition(boolean_math, offset: vector_math_10) |> StoreNamedAttribute(boolean_math, __string, vector_math_8, data_type: FLOAT_VECTOR),
+    "Is Hit": boolean_math,
+    "Hit Normal": capture_attribute.value)
+}
+
+geometry graph "SDF Mesh Field"(
+    Mode: Menu(optional_label: true) = Faces,
+    Mesh: Geometry,
+    Radius: Float in -10000.0..10000.0,
+    "Sample Position": Vector(hide_value: true) = Position()
+) -> ("Signed Distance": Float, Normal: Vector, Position: Vector, Offset: Vector) {
+  position = Position() @ hide
+  normal = Normal(legacy_corner_normals: true) @ hide
+  menu_switch = MenuSwitch(Mode, Points: 0, Edges: 1, Faces: 2)
+  index_switch = IndexSwitch(
+    menu_switch.output,
+    Proximity(Mesh, sample_position: sample_position, target_element: POINTS).position,
+    Proximity(Mesh, sample_position: sample_position, target_element: EDGES).position,
+    SampleNearestSurface(Mesh, position, sample_position: sample_position, data_type: FLOAT_VECTOR).value)
+  vector_math = sample_position - index_switch @ hide
+  vector_math_2 = vector_math ⋅ SampleNearestSurface(Mesh, FieldOnDomain(normal.normal, data_type: FLOAT_VECTOR), sample_position: sample_position, data_type: FLOAT_VECTOR).value @ hide
+  vector_math_3 = normalize(vector_math) @ hide
+  vector_math_5 = length(vector_math) @ hide
+  math_2 = sign(vector_math_2) @ hide
+  index_switch_2 = IndexSwitch(menu_switch.output, 1.0, 1.0, math_2)
+  math_3 = vector_math_5 * index_switch_2 @ hide
+  math = math_3 - Radius @ hide
+  vector_math_6 = vector_math_3 * index_switch_2 @ hide
+  math_4 = 0.0 - math @ hide
+  math_5 = max(math_4, 0.0) @ hide
+  vector_math_4 = vector_math_6 * math_5 @ hide
+  return (
+    "Signed Distance": math,
+    Normal: vector_math_6,
+    Position: index_switch,
+    Offset: vector_math_4)
+}
+
+geometry graph "Velocity Step"(
+    "Delta Time": Float(hide_value: true) = 0.04166667,
+    ">": Geometry,
+    Selection: Bool(hide_value: true) = true,
+    "" as __string: String = "velocity",
+    Forces: Vector = (0.0, 0.0, -9.81) in -10000.0..10000.0,
+    Damp: Float(subtype: FACTOR) in 0.0..1.0,
+    "Set Velocity": Bool
+) -> (">": Geometry) {
+  math = pow(1.0 - Damp, delta_time) @ hide
+  vector_math_3 = Forces * delta_time @ hide
+  vector_math_2 = NamedAttribute(__string, data_type: FLOAT_VECTOR).attribute + vector_math_3 @ hide
+  switch = Switch(set_velocity, vector_math_2, Forces, input_type: VECTOR) @ hide
+  vector_math = switch * math @ hide
+  vector_math_4 = NamedAttribute(__string, data_type: FLOAT_VECTOR).attribute * delta_time @ hide
+  return (
+    ">": _ |> StoreNamedAttribute(Selection, __string, vector_math, data_type: FLOAT_VECTOR) |> SetPosition(Selection, offset: vector_math_4))
+}
+
+geometry graph "Particle Simulation Basic"(
+    "Particles" {
+        "Start Particles" {
+            "Start Particles": Geometry(description: "Geometry to update the ID attribute on"),
+            Lifetime: Float(subtype: TIME_ABSOLUTE) = 10.0,
+            Velocity: Vector
+        },
+        "New Particles"(default_closed: true) {
+            "New Particles": Geometry,
+            Lifetime as new_particles_lifetime: Float(subtype: TIME_ABSOLUTE) = 10.0 in 0.0..,
+            Velocity as new_particles_velocity: Vector
+        }
+    },
+    "Simulation"(default_closed: true) {
+        "Step"(default_closed: true) {
+            Substeps: Int = 1 in 1..100,
+            "Time Multiplier": Float = 1.0 in -10000.0..10000.0
+        },
+        "Velocity"(default_closed: true) {
+            Forces: Vector = (0.0, 0.0, -9.81) in -10000.0..10000.0,
+            Damp: Float(subtype: FACTOR) in 0.0..1.0,
+            "Set Velocity": Bool
+        },
+        "Collision"(default_closed: true) {
+            Collider: Collection(optional_label: true),
+            "Collider Extra": Geometry(description: "Geometry whose instances are (partially) realized"),
+            Bounce: Float(subtype: FACTOR) = 0.5 in 0.0..1.0,
+            Friction: Float(subtype: FACTOR) = 0.5 in 0.0..1.0,
+            "Delete on Hit": Bool
+        },
+        "Rotation"(default_closed: true) {
+            "State"(default_closed: true) {
+                Rotation: Rotation,
+                "Set Rotation": Bool
+            },
+            "Velocity" {
+                Axis: Vector = (0.0, 0.0, 1.0),
+                Angle: Float in -10000.0..10000.0,
+                "Set Velocity" as set_velocity_bool: Bool,
+                Damp as damp_float: Float(subtype: FACTOR) in 0.0..1.0
+            },
+            "On Hit"(default_closed: true) {
+                "Hit Rotation": Bool = true,
+                "Hit Rotation Friction": Float(subtype: FACTOR) = 1.0 in 0.0..1.0
+            }
+        },
+        "Closures"(default_closed: true) {
+            "Simulation per Frame" {
+                First: Closure,
+                Last: Closure
+            },
+            "Simulation per Substep" {
+                First as simulation_per_substep_first: Closure,
+                Last as simulation_per_substep_last: Closure
+            }
+        }
+    },
+    "Instance"(default_closed: true) {
+        Instance: Bool(is_panel_toggle: true),
+        Instances: Collection(optional_label: true),
+        "Extra Instances": Geometry(description: "Geometry that is instanced on the points"),
+        Selection: Bool(hide_value: true) = true,
+        "Instance Index": Int(description: "Index of the instance used for each point. This is only used when Pick Instances is on. By default the point index is used", hide_value: true) = ID()
+    }
+) -> Geometry {
+  "start particles" {
+    index = Index() @ hide
+    set_id = start_particles |> StoreNamedAttribute(name: "velocity", value: Velocity, data_type: FLOAT_VECTOR)
+      |> StoreNamedAttribute(name: "lifetime", value: Lifetime)
+      |> SetID(id: index)
+  }
+  "new particles with id" {
+    index_2 = Index() @ hide
+    index_3 = Index() @ hide
+  }
+  "collision" {
+    realize_instances = RealizeInstances(
+      collider_extra + CollectionInfo(Collider, true, transform_space: RELATIVE)) @ hide
+    radius = Radius() @ hide
+    group_3 = sdf_mesh_field(mesh: realize_instances, radius: radius)
+    named_attribute = NamedAttribute("is_hit", data_type: BOOLEAN)
+    boolean_math = named_attribute.attribute and delete_on_hit @ hide
+  }
+  "trigger delete" {
+    compare = NamedAttribute("age").attribute > NamedAttribute("lifetime").attribute @ hide
+  }
+  "new particles" {
+    store_named_attribute_2 = new_particles |> StoreNamedAttribute(name: "velocity", value: new_particles_velocity, data_type: FLOAT_VECTOR)
+      |> StoreNamedAttribute(name: "lifetime", value: new_particles_lifetime)
+  }
+  simulation_output = simulate(Geometry: set_id) {
+    "time" {
+      math_3 = time_multiplier * delta_time @ hide
+      math_2 = math_3 / Substeps @ hide
+      math = math_2 + NamedAttribute("age").attribute @ hide
+    }
+    repeat_output = repeat(
+      Substeps,
+      Geometry: EvaluateClosure(First, Geometry: Geometry, "Delta Time": math_3) -> Geometry) {
+      "time" .. {
+        store_named_attribute = EvaluateClosure(simulation_per_substep_first, Geometry: DeleteGeometry(Geometry, NamedAttribute("delete_next_step", data_type: BOOLEAN).attribute), "Delta Time": math_2) -> Geometry |> StoreNamedAttribute(name: "age", value: math)
+      }
+      "trigger delete" .. {
+        store_named_attribute_4 = StoreNamedAttribute(
+          store_named_attribute,
+          compare,
+          "delete_next_step",
+          true,
+          data_type: BOOLEAN)
+      }
+      "velocity" {
+        group = velocity_step(
+          math_2,
+          store_named_attribute_4,
+          forces: Forces,
+          damp: Damp,
+          set_velocity: set_velocity)
+      }
+      "collision" .. {
+        group_2 = sdf_collision(
+          group,
+          signed_distance: group_3.signed_distance,
+          normal: group_3.normal,
+          bounce: Bounce,
+          friction: Friction)
+        switch_2 = Switch(
+          AttributeDomainSize(realize_instances).face_count,
+          group,
+          group_2._ |> StoreNamedAttribute(name: "is_hit", value: group_2.is_hit, data_type: BOOLEAN) |> StoreNamedAttribute(named_attribute.attribute, "hit_normal", group_2.hit_normal, data_type: FLOAT_VECTOR) |> StoreNamedAttribute(boolean_math, "delete_next_step", true, data_type: BOOLEAN),
+          input_type: GEOMETRY) @ hide
+      }
+      "rotation" {
+        group_4 = particle_rotation(
+          switch_2,
+          math_2,
+          Rotation,
+          set_rotation,
+          Axis,
+          Angle,
+          set_velocity_bool,
+          damp_float,
+          hit_rotation,
+          hit_rotation_friction)
+      }
+      return EvaluateClosure(
+        simulation_per_substep_last,
+        Geometry: group_4,
+        "Delta Time": math_2) -> Geometry
+    }
+    "new particles with id" .. {
+      integer_math = IntegerMath(
+        SampleIndex(repeat_output, FieldMinAndMax(index_2, data_type: INT).max, data_type: INT),
+        IntegerMath(index_3, 1, operation: ADD),
+        operation: ADD) @ hide
+      join_geometry = SetID(store_named_attribute_2, id: integer_math) + repeat_output
+    }
+    return EvaluateClosure(Last, Geometry: join_geometry, "Delta Time": math_3) -> Geometry
+  }
+  "convenience attributes" {
+    math_4 = NamedAttribute("age").attribute / NamedAttribute("lifetime").attribute @ hide
+    store_named_attribute_3 = simulation_output |> StoreNamedAttribute(name: "random", value: RandomValue(seed: 88))
+      |> StoreNamedAttribute(name: "life", value: math_4)
+  }
+  "Instance on Point" {
+    radius_2 = Radius() @ hide
+    join_geometry_2 = extra_instances + CollectionInfo(Instances, true)
+    geometry_to_instance = GeometryToInstance(
+      DeleteGeometry(MeshUVSphere(6, 4).mesh, mode: ONLY_FACE, domain: FACE)) @ hide
+    switch_3 = Switch(
+      AttributeDomainSize(join_geometry_2, component: INSTANCES),
+      geometry_to_instance,
+      join_geometry_2,
+      input_type: GEOMETRY) @ hide
+    switch = Switch(
+      Instance,
+      store_named_attribute_3,
+      InstanceOnPoints(store_named_attribute_3, Selection, switch_3, true, instance_index, NamedAttribute("rotation", data_type: QUATERNION).attribute, radius_2),
+      input_type: GEOMETRY) @ hide
+  }
+  return switch
+}

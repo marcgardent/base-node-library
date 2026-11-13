@@ -1,0 +1,51 @@
+// @profile "vector2d"
+
+geometry(is_modifier: false) graph "SDF Collision"(
+    ">": Geometry,
+    Selection: Bool(hide_value: true) = true,
+    "Signed Distance": Float(hide_value: true),
+    Normal: Vector(hide_value: true),
+    "" as __string: String = "velocity",
+    Bounce: Float(subtype: FACTOR) = 0.5 in 0.0..1.0,
+    Friction: Float(subtype: FACTOR) = 0.5 in 0.0..1.0
+) -> (">": Geometry, "Is Hit": Bool, "Hit Normal": Vector) {
+  mix = Mix(Bounce, -1.0, -2.0)
+  named_attribute = NamedAttribute(__string, data_type: FLOAT_VECTOR)
+  capture_attribute_2 = CaptureAttribute(_, Value: signed_distance)
+  capture_attribute = CaptureAttribute(capture_attribute_2.geometry, Value: Normal)
+  "Normal Impulse" {
+    vector_math = capture_attribute.value ⋅ named_attribute.attribute @ hide
+    math = vector_math * mix @ hide
+    vector_math_2 = capture_attribute.value * math @ hide
+  }
+  "New Velocity" {
+    vector_math_3 = vector_math_2 + named_attribute.attribute @ hide
+  }
+  "Tangent Impulse" {
+    math_2 = math * Friction @ hide
+  }
+  "Tangent" {
+    vector_math_9 = VectorMath(
+      named_attribute.attribute,
+      capture_attribute.value,
+      operation: PROJECT) @ hide
+    vector_math_4 = named_attribute.attribute - vector_math_9 @ hide
+    vector_math_5 = normalize(vector_math_4) @ hide
+    vector_math_6 = length(vector_math_4) @ hide
+  }
+  "Tangent Impulse" .. {
+    math_3 = min(math_2, vector_math_6) @ hide
+    vector_math_7 = vector_math_5 * math_3 @ hide
+  }
+  "New Velocity" .. {
+    vector_math_8 = vector_math_3 - vector_math_7 @ hide
+  }
+  compare = capture_attribute_2.value < 0.0 @ hide
+  boolean_math = Selection and compare @ hide
+  math_4 = 0.0 - capture_attribute_2.value @ hide
+  vector_math_10 = capture_attribute.value * math_4 @ hide
+  return (
+    ">": capture_attribute.geometry |> SetPosition(boolean_math, offset: vector_math_10) |> StoreNamedAttribute(boolean_math, __string, vector_math_8, data_type: FLOAT_VECTOR),
+    "Is Hit": boolean_math,
+    "Hit Normal": capture_attribute.value)
+}

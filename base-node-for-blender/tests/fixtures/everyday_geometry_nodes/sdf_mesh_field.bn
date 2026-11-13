@@ -1,0 +1,34 @@
+// @profile "blender-geometry"
+
+geometry graph "SDF Mesh Field"(
+    Mode: Menu(optional_label: true) = Faces,
+    Mesh: Geometry,
+    Radius: Float in -10000.0..10000.0,
+    "Sample Position": Vector(hide_value: true) = Position()
+) -> ("Signed Distance": Float, Normal: Vector, Position: Vector, Offset: Vector) {
+  position = Position() @ hide
+  normal = Normal(legacy_corner_normals: true) @ hide
+  menu_switch = MenuSwitch(Mode, Points: 0, Edges: 1, Faces: 2)
+  index_switch = IndexSwitch(
+    menu_switch.output,
+    Proximity(Mesh, sample_position: sample_position, target_element: POINTS).position,
+    Proximity(Mesh, sample_position: sample_position, target_element: EDGES).position,
+    SampleNearestSurface(Mesh, position, sample_position: sample_position, data_type: FLOAT_VECTOR).value)
+  vector_math = sample_position - index_switch @ hide
+  vector_math_2 = vector_math ⋅ SampleNearestSurface(Mesh, FieldOnDomain(normal.normal, data_type: FLOAT_VECTOR), sample_position: sample_position, data_type: FLOAT_VECTOR).value @ hide
+  vector_math_3 = normalize(vector_math) @ hide
+  vector_math_5 = length(vector_math) @ hide
+  math_2 = sign(vector_math_2) @ hide
+  index_switch_2 = IndexSwitch(menu_switch.output, 1.0, 1.0, math_2)
+  math_3 = vector_math_5 * index_switch_2 @ hide
+  math = math_3 - Radius @ hide
+  vector_math_6 = vector_math_3 * index_switch_2 @ hide
+  math_4 = 0.0 - math @ hide
+  math_5 = max(math_4, 0.0) @ hide
+  vector_math_4 = vector_math_6 * math_5 @ hide
+  return (
+    "Signed Distance": math,
+    Normal: vector_math_6,
+    Position: index_switch,
+    Offset: vector_math_4)
+}

@@ -1,0 +1,82 @@
+// @profile "vector2d"
+
+geometry graph ".BounceOut"(Value: Float, n1: Float = 7.5625, d1: Float = 2.75) -> (Value: Float) {
+  compare = Value < 1.0 / d1 @ hide
+  compare_2 = Value < 2.0 / d1 @ hide
+  compare_3 = Value < 2.5 / d1 @ hide
+  math = Value * Value @ hide
+  math_2 = math * n1 @ hide
+  math_5 = Value - 2.625 / d1 @ hide
+  math_3 = math_5 * math_5 @ hide
+  math_4 = math_3 * n1 @ hide
+  math_8 = Value - 1.5 / d1 @ hide
+  math_6 = math_8 * math_8 @ hide
+  math_7 = math_6 * n1 @ hide
+  math_11 = Value - 2.25 / d1 @ hide
+  math_9 = math_11 * math_11 @ hide
+  math_10 = math_9 * n1 @ hide
+  return (
+    Value: Switch(compare, Switch(compare_2, Switch(compare_3, math_4 + 0.984375, math_10 + 0.9375), math_7 + 0.75), math_2))
+}
+
+geometry graph "Ease Functions"(
+    Value: Float(subtype: FACTOR, hide_value: true) in 0.0..1.0,
+    Type: Menu(optional_label: true) = Cubic,
+    "Ease In-Out": Float(subtype: FACTOR) = 0.5 in 0.0..1.0,
+    "Range"(default_closed: true) {
+        "Ease Factor": Float(subtype: FACTOR) = 1.0 in 0.0..1.0,
+        "To Min": Float in -10000.0..10000.0,
+        "To Max": Float = 1.0 in -10000.0..10000.0
+    }
+) -> (Value: Float) {
+  "Ease I/O" {
+    math_11 = 1.0 - ease_in_out @ hide
+    compare = Value > math_11 @ hide
+    switch = Switch(
+      compare,
+      MapRange(Value, from_max: math_11, to_min: 1.0, to_max: 0.0),
+      MapRange(Value, math_11))
+  }
+  "Circular" {
+    math = sqrt(1.0 - pow(switch - 1.0, 2.0))
+  }
+  "Elastic" {
+    math_3 = sin((switch * 10.0 - 0.75) * 2.094397) @ hide
+    math_2 = pow(2.0, switch * -10.0) * math_3 @ hide
+    math_4 = math_2 + 1.0
+  }
+  "Sine" {
+    math_5 = sin(switch * 1.570795)
+  }
+  "Exponential" {
+    math_6 = 1.0 - pow(2.0, switch * -10.0)
+  }
+  "Cubic" {
+    math_7 = 1.0 - pow(1.0 - switch, 5.0)
+  }
+  "Back" {
+    math_9 = switch - 1.0
+    math_10 = pow(math_9, 3.0) * 2.70158 + pow(math_9, 2.0) * 1.702 @ hide
+    math_8 = math_10 + 1.0
+  }
+  menu_switch = MenuSwitch(
+    Type,
+    Sine: math_5,
+    Cubic: math_7,
+    Exponential: math_6,
+    Circular: math,
+    Back: math_8,
+    Bounce: bounceout(switch),
+    Elastic: math_4)
+  clamp = Clamp(Value) @ hide
+  "Ease I/O" {
+    math_12 = 1.0 - ease_in_out @ hide
+    compare_2 = Value > math_12 @ hide
+    switch_2 = Switch(
+      compare_2,
+      MapRange(menu_switch.output, to_min: math_12, to_max: 0.0, clamp: false),
+      MapRange(menu_switch.output, to_min: math_12, clamp: false))
+  }
+  return (
+    Value: MapRange(Mix(ease_factor, clamp, switch_2, clamp_factor: false), to_min: to_min, to_max: to_max, clamp: false))
+}

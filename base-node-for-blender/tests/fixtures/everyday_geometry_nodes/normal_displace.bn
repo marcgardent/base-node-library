@@ -1,0 +1,15 @@
+// @profile "vector2d"
+
+geometry(is_modifier: false) graph "Normal Displace"(
+    Geometry: Geometry,
+    Selection: Bool(hide_value: true) = true,
+    Value: Float = 1.0 in -10000.0..10000.0,
+    Strength: Float = 1.0 in -10000.0..10000.0,
+    Midlevel: Float(subtype: FACTOR) in 0.0..1.0
+) -> Geometry {
+  normal = Normal(legacy_corner_normals: true) @ hide
+  math = Value - Midlevel @ hide
+  math_2 = math * Strength @ hide
+  vector_math = normal.normal * math_2 @ hide
+  return SetPosition(Geometry, Selection, offset: vector_math)
+}
