@@ -22,9 +22,9 @@ MANIFEST_PATH = STDLIB_DIR / "manifest.json"
 
 def test_package_version_constants():
     """Verify package version constants are defined and follow expected formats."""
-    assert __version__ == "0.8.0"
+    assert __version__ == "0.8.1"
     assert EDITION == "2026"
-    assert STDLIB_VERSION == "0.8.0"
+    assert STDLIB_VERSION == "0.8.1"
 
 
 def test_cli_version_flag(capsys):
@@ -45,7 +45,7 @@ def test_profiles_versioning():
     for pf in profile_files:
         data = json.loads(pf.read_text(encoding="utf-8"))
         assert data.get("version") == 1, f"{pf.name} version must be integer schema 1"
-        assert data.get("profile_version") == "0.8.0", f"{pf.name} profile_version mismatch"
+        assert data.get("profile_version") == "0.8.1", f"{pf.name} profile_version mismatch"
         assert data.get("edition") == "2026", f"{pf.name} edition mismatch"
 
 
@@ -103,3 +103,13 @@ def test_stdlib_modules_match_manifest_and_headers():
         assert len(ast.graphs) > 0
         diagnostics = check_profile(ast, entry["profile"])
         assert diagnostics == [], f"{mod_name} has profile violations under {entry['profile']}: {diagnostics}"
+
+
+def test_blender_extension_bundles_the_stdlib():
+    """The Blender extension ships a copy of stdlib/: it must stay identical to it."""
+    bundled = REPO_ROOT / "base-node-for-blender" / "stdlib"
+    names = sorted(p.name for p in STDLIB_DIR.iterdir() if p.suffix in (".bn", ".json"))
+    assert sorted(p.name for p in bundled.iterdir()) == names, "copy stdlib/ into base-node-for-blender/stdlib/"
+    for name in names:
+        assert (bundled / name).read_bytes() == (STDLIB_DIR / name).read_bytes(), \
+            f"base-node-for-blender/stdlib/{name} differs from stdlib/{name}"

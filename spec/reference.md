@@ -1,6 +1,6 @@
 # Base Node (`.bn`) Language Reference
 
-Language Edition 2026 · Specification Version 0.8.0 (Pre-LTS).  
+Language Edition 2026 · Specification Version 0.8.1 (Pre-LTS).  
 See [Versioning Specification](versioning.md) for stability policies and release lifecycles.
 
 ## 1. File Structure
@@ -12,7 +12,7 @@ A `.bn` file is UTF-8 text containing:
    - `use ink2d as gp` imports with an alias namespace (`gp::living_ink(...)`).
    - `use ink2d (living_ink)` imports selected symbols into local scope (`living_ink(...)`).
    - `use math from "//lib/math.bn"` imports from an external or relative file.
-   - Without `from`, the host finds the module. Blender looks for the text `math.bn` of the .blend, then `math.bn` next to the imported file, then in the *Module Folder* of the add-on preferences.
+   - Without `from`, the host finds the module. Blender looks for the text `math.bn` of the .blend, then `math.bn` next to the imported file, then in the *Module Folder* of the add-on preferences, then in the standard library bundled with the add-on.
 2. One or more `graph` declarations.
 
 `//` starts a line comment. Whitespace and newlines are not significant outside literals; a statement ends when the next token cannot continue the current expression.

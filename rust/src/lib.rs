@@ -1,6 +1,6 @@
-pub const VERSION: &str = "0.8.0";
+pub const VERSION: &str = "0.8.1";
 pub const EDITION: &str = "2026";
-pub const STDLIB_VERSION: &str = "0.8.0";
+pub const STDLIB_VERSION: &str = "0.8.1";
 
 pub mod ast;
 pub mod errors;

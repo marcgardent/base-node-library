@@ -1,0 +1,110 @@
+// Base Node Standard Library — Module patterns2d
+// @module patterns2d
+// @version 0.8.1
+// @profile vector2d
+// @edition 2026
+
+use math (r2_sequence)
+
+geometry graph "hexagonal grid 2d"(
+    columns: Int = 8 in 1..256,
+    rows: Int = 8 in 1..256,
+    radius: Float = 0.5 in 0.001..,
+    margin: Float = 0.0 in 0.0..0.95
+) -> (Mesh: Geometry, Centers: Geometry) {
+  "Regular staggered hexagonal tiling in the XY plane, with cell mesh and centers"
+  count = columns * rows
+  i = Index()
+  col = mod(i, columns)
+  row = floor(i / columns)
+  dx = radius * 1.732051
+  dy = radius * 1.5
+  shift = mod(row, 2.0) * 0.5
+  x = (col + shift - (columns - 0.5) * 0.5) * dx
+  y = (row - (rows - 1.0) * 0.5) * dy
+  centers = Points(count, CombineXYZ(x, y))
+  r_eff = radius * (1.0 - margin)
+  c = MeshCircle(6, r_eff, fill_type: NGON)
+  hex = Transform(c, rotation: (0.0, 0.0, 0.5235988))
+  inst = InstanceOnPoints(centers, instance: hex)
+  mesh = inst |> RealizeInstances()
+    |> MergeByDistance(distance: radius * 0.001)
+  return (Mesh: mesh, Centers: centers)
+}
+
+geometry graph "triangular grid 2d"(
+    columns: Int = 8 in 1..256,
+    rows: Int = 8 in 1..256,
+    side: Float = 0.5 in 0.001..
+) -> Geometry {
+  "Regular equilateral triangle tiling in the XY plane"
+  nx = columns + 1.0
+  ny = rows + 1.0
+  grid = MeshGrid(vertices_x: nx, vertices_y: ny)
+  i = Index()
+  col = mod(i, nx)
+  row = floor(i / nx)
+  h = side * 0.8660254
+  shift = mod(row, 2.0) * 0.5
+  x = (col + shift - columns * 0.5) * side
+  y = (row - rows * 0.5) * h
+  p = CombineXYZ(x, y)
+  pos = SetPosition(grid.mesh, position: p)
+  return Triangulate(pos)
+}
+
+geometry graph "phyllotaxis spiral 2d"(
+    count: Int = 200 in 1..100000,
+    radius: Float = 1.0 in 0.001..
+) -> (Points: Geometry, Factor: Float) {
+  "Sunflower disk distribution using golden angle and radial factor"
+  i = Index()
+  f = sqrt(i / (count * 1.0))
+  a = i * 2.399963
+  r = f * radius
+  x = r * cos(a)
+  y = r * sin(a)
+  pts = Points(count, CombineXYZ(x, y))
+  return (Points: pts, Factor: f)
+}
+
+geometry graph "jitter points 2d"(
+    columns: Int = 10 in 1..256,
+    rows: Int = 10 in 1..256,
+    size: Vector = (2.0, 2.0, 0.0),
+    jitter: Float = 0.8 in 0.0..1.0
+) -> Geometry {
+  "2D grid perturbed by stratified R2 sequence sampling for clump-free distribution"
+  count = columns * rows
+  dx = size.x / columns
+  dy = size.y / rows
+  i = Index()
+  col = mod(i, columns)
+  row = floor(i / columns)
+  base_x = (col + 0.5 - columns * 0.5) * dx
+  base_y = (row + 0.5 - rows * 0.5) * dy
+  r2 = r2_sequence(i)
+  jit_x = (r2.x - 0.5) * dx * jitter
+  jit_y = (r2.y - 0.5) * dy * jitter
+  p = CombineXYZ(base_x + jit_x, base_y + jit_y)
+  return Points(count, p)
+}
+
+geometry graph "hatching 2d"(
+    width: Float = 2.0 in 0.01..,
+    height: Float = 2.0 in 0.01..,
+    lines: Int = 24 in 2..1024,
+    angle: Float = 0.785398,
+    crossed: Bool = false
+) -> Geometry {
+  "Regular array of parallel or crossed lines oriented by angle"
+  line = CurvePrimitiveLine(CombineXYZ(-width * 0.5), CombineXYZ(width * 0.5))
+  step = height / (lines - 1.0)
+  pts = Points(lines, CombineXYZ(y: (Index() - (lines - 1.0) * 0.5) * step))
+  inst = InstanceOnPoints(pts, instance: line)
+  l1 = inst |> RealizeInstances()
+    |> Transform(rotation: CombineXYZ(z: angle))
+  l2 = Transform(l1, rotation: (0.0, 0.0, 1.570796))
+  both = l1 + l2
+  return Switch(crossed, l1, both, input_type: GEOMETRY)
+}

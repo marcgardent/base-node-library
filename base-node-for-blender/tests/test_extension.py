@@ -266,23 +266,24 @@ def test_import_files():
     text.from_string(text.as_string() + "\n")
     assert actions.close_view(text) == caller
 
-    # A file elsewhere finds its modules through the module folder
+    # A file elsewhere finds its modules in the module folders: by default, the stdlib bundled with the add-on
     import tempfile
+    assert modules.FOLDERS == [modules.STDLIB], modules.FOLDERS
+    assert os.path.isfile(os.path.join(modules.STDLIB, "math.bn")), "the stdlib is not bundled"
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "lifted.bn")
         with open(path, "w", encoding="utf-8") as f:
             f.write("use math (sine01)\n\ngeometry graph lifted(geometry: Geometry) -> Geometry {\n"
                     "  return SetPosition(geometry, offset: CombineXYZ(z: sine01(1.0)))\n}\n")
+        modules.FOLDERS[:] = []
         try:
             actions.import_file(path)
             raise AssertionError("math found with no module folder")
         except BnError:
             pass
-        modules.FOLDERS[:] = [str(STDLIB_DIR)]
-        try:
-            trees = actions.import_file(path)
         finally:
-            modules.FOLDERS[:] = []
+            modules.FOLDERS[:] = [modules.STDLIB]
+        trees = actions.import_file(path)
     assert [t.name for t in trees] == ["lifted"], trees
     print("   ✓ Import verified")
 

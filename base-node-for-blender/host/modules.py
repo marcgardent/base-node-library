@@ -1,6 +1,7 @@
 """Where a `use` finds its module: a text datablock of the .blend, or a .bn file.
 
-`use math` reads the text datablock math.bn, else math.bn in a module folder;
+`use math` reads the text datablock math.bn, else math.bn in a module folder: the one
+of the preferences, then the stdlib bundled with the add-on;
 `use math from "//lib/math.bn"` a file relative to the .blend, as elsewhere in
 Blender. Libraries, URLs and {project_root} come later.
 """
@@ -14,8 +15,11 @@ MODULE = "base_node_module"
 SOURCE = "base_node_source"
 
 
+# The standard library shipped with the add-on, a copy of the repository's stdlib/
+STDLIB = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "stdlib")
+
 # Folders where `use name` looks for name.bn after the texts of the .blend: the preferences set it
-FOLDERS = []
+FOLDERS = [STDLIB]
 
 
 def find(name, folders):

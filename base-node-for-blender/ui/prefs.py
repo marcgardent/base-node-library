@@ -40,10 +40,10 @@ def get():
 
 
 def apply_folders(self=None, context=None):
-    """Give the host the folder where `use name` looks for name.bn."""
+    """Give the host the folders where `use name` looks for name.bn: the user's one, then the bundled stdlib."""
     from ..host import modules
     folder = get().module_folder
-    modules.FOLDERS[:] = [folder] if folder else []
+    modules.FOLDERS[:] = ([folder] if folder else []) + [modules.STDLIB]
 
 
 def update_keys(self, context):
@@ -60,7 +60,7 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
     module_folder: bpy.props.StringProperty(
         name="Module Folder", subtype="DIR_PATH", update=apply_folders,
         description="Where `use name` finds name.bn when the .blend has no text of that name, "
-                    "for example the stdlib folder")
+                    "before the standard library bundled with the add-on")
     auto_complete: bpy.props.BoolProperty(
         name="Open after ( . :", default=True,
         description="Suggestions open automatically after a parenthesis, period, or colon")

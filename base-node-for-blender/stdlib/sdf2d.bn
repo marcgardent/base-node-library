@@ -1,0 +1,229 @@
+// Base Node Standard Library — Module sdf2d
+// @module sdf2d
+// @version 0.8.1
+// @profile sdf2d
+// @edition 2026
+
+// 2D Signed Distance Field (SDF) toolkit for Geometry Nodes:
+// elementary 2D primitives, chamfered booleans, repetitions, and isolines.
+// Formulas follow definitions published by Inigo Quilez (iquilezles.org).
+// All functions operate in the XY plane (z ignored).
+
+// ---- 2D Primitives ----
+
+geometry graph "sdf segment 2d"(
+    p: Vector = Position(),
+    a: Vector = (-0.5, 0.0, 0.0),
+    b: Vector = (0.5, 0.0, 0.0),
+    thickness: Float = 0.1 in 0.0..
+) -> Float {
+  "Signed distance to an XY-plane line segment thickened by thickness (2D: z ignored)"
+  p2 = CombineXYZ(p.x, p.y)
+  a2 = CombineXYZ(a.x, a.y)
+  b2 = CombineXYZ(b.x, b.y)
+  ba = b2 - a2
+  pa = p2 - a2
+  h = Clamp((pa ⋅ ba) / (ba ⋅ ba))
+  return distance(pa, ba * h) - thickness * 0.5
+}
+
+geometry graph "sdf rounded box 2d"(
+    p: Vector = Position(),
+    "half size": Vector = (0.6, 0.4, 0.0),
+    radius: Float = 0.15 in 0.0..
+) -> Float {
+  "XY-plane rectangle with rounded corners of given half-size (2D: z ignored)"
+  d = CombineXYZ(abs(p.x) - half_size.x + radius, abs(p.y) - half_size.y + radius)
+  return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - radius
+}
+
+geometry graph "sdf rhombus 2d"(
+    p: Vector = Position(),
+    "half size": Vector = (0.6, 0.4, 0.0)
+) -> Float {
+  "XY-plane rhombus centered at origin (2D: z ignored)"
+  q = CombineXYZ(abs(p.x), abs(p.y))
+  b = CombineXYZ(half_size.x, half_size.y)
+  f = (-2.0 * (q.x * b.x - q.y * b.y) + (b.x * b.x - b.y * b.y)) / (b ⋅ b)
+  h = Clamp(f, -1.0)
+  proj = b * CombineXYZ(1.0 - h, 1.0 + h) * 0.5
+  d = length(q - proj)
+  return d * sign(q.x * b.y + q.y * b.x - b.x * b.y)
+}
+
+geometry graph "sdf equilateral triangle 2d"(
+    p: Vector = Position(),
+    radius: Float = 0.7 in 0.0..
+) -> Float {
+  "XY-plane equilateral triangle centered at origin (2D: z ignored)"
+  px0 = abs(p.x) - radius
+  py0 = p.y + radius * 0.5773503
+  cond = px0 + 1.732051 * py0 > 0.0
+  ppx = (px0 - 1.732051 * py0) * 0.5
+  ppy = (-1.732051 * px0 - py0) * 0.5
+  px1 = Switch(cond, px0, ppx)
+  py1 = Switch(cond, py0, ppy)
+  px2 = px1 - Clamp(px1, -2.0 * radius, 0.0)
+  return -length(CombineXYZ(px2, py1)) * sign(py1)
+}
+
+geometry graph "sdf hexagon 2d"(p: Vector = Position(), radius: Float = 0.6 in 0.0..) -> Float {
+  "XY-plane regular hexagon centered at origin (2D: z ignored)"
+  p0 = CombineXYZ(abs(p.x), abs(p.y))
+  dot_kp = min((-0.8660254, 0.5, 0.0) ⋅ p0, 0.0)
+  p1 = p0 - (-0.8660254, 0.5, 0.0) * (2.0 * dot_kp)
+  bound = 0.5773503 * radius
+  p2 = p1 - CombineXYZ(Clamp(p1.x, -bound, bound), radius)
+  return length(p2) * sign(p2.y)
+}
+
+geometry graph "sdf regular polygon 2d"(
+    p: Vector = Position(),
+    radius: Float = 0.6 in 0.0..,
+    sides: Int = 5 in 3..64
+) -> Float {
+  "XY-plane regular N-sided polygon centered at origin (2D: z ignored)"
+  an = 3.141593 / sides
+  acs = CombineXYZ(radius * cos(an), radius * sin(an))
+  ang = atan2(p.y, p.x)
+  step = 2.0 * an
+  bn = ang - step * floor(ang / step + 0.5)
+  r = length(CombineXYZ(p.x, p.y))
+  q = CombineXYZ(cos(bn), abs(sin(bn))) * r
+  dx = q.x - acs.x
+  dy = q.y - Clamp(q.y, max: acs.y)
+  return length(CombineXYZ(dx, dy)) * sign(dx)
+}
+
+geometry graph "sdf star 2d"(
+    p: Vector = Position(),
+    radius: Float = 0.7 in 0.0..,
+    points: Int = 5 in 3..32,
+    indent: Float = 0.5 in 0.05..1.0
+) -> Float {
+  "XY-plane regular N-pointed star (2D: z ignored)"
+  an = 3.141593 / points
+  a = CombineXYZ(radius * cos(an), radius * sin(an))
+  b = CombineXYZ(radius * indent)
+  ang = atan2(p.y, p.x)
+  step = 2.0 * an
+  bn = ang - step * floor(ang / step + 0.5)
+  r = length(CombineXYZ(p.x, p.y))
+  q = CombineXYZ(cos(bn), abs(sin(bn))) * r
+  ba = b - a
+  pa = q - a
+  h = Clamp((pa ⋅ ba) / (ba ⋅ ba))
+  d = length(pa - ba * h)
+  det = (a.x - b.x) * q.y - a.y * (q.x - b.x)
+  return d * sign(-det)
+}
+
+geometry graph "sdf arc 2d"(
+    p: Vector = Position(),
+    aperture: Float = 2.0 in 0.0..3.141593,
+    radius: Float = 0.6 in 0.0..,
+    thickness: Float = 0.1 in 0.0..
+) -> Float {
+  "XY-plane circular arc centered at origin (2D: z ignored)"
+  sc = CombineXYZ(sin(aperture), cos(aperture))
+  p0 = CombineXYZ(abs(p.x), p.y)
+  cap = length(p0 - sc * radius)
+  arc = abs(length(p0) - radius)
+  d = Switch(sc.y * p0.x > sc.x * p0.y, arc, cap)
+  return d - thickness * 0.5
+}
+
+geometry graph "sdf sector 2d"(
+    p: Vector = Position(),
+    aperture: Float = 1.0 in 0.0..3.141593,
+    radius: Float = 0.7 in 0.0..
+) -> Float {
+  "XY-plane angular sector centered at origin (2D: z ignored)"
+  c = CombineXYZ(sin(aperture), cos(aperture))
+  p0 = CombineXYZ(abs(p.x), p.y)
+  l = length(p0) - radius
+  h = Clamp((p0 ⋅ c) / radius)
+  m = length(p0 - c * (h * radius))
+  return max(l, m * sign(c.y * p0.x - c.x * p0.y))
+}
+
+geometry graph "sdf cross 2d"(
+    p: Vector = Position(),
+    length: Float = 0.7 in 0.0..,
+    thickness: Float = 0.25 in 0.0..,
+    radius: Float in 0.0..
+) -> Float {
+  "XY-plane cross with arms of given length and thickness (2D: z ignored)"
+  p0 = CombineXYZ(abs(p.x), abs(p.y))
+  cond = p0.y > p0.x
+  p1 = CombineXYZ(Switch(cond, p0.x, p0.y), Switch(cond, p0.y, p0.x))
+  b = CombineXYZ(length, thickness)
+  q = p1 - b
+  k = max(q.y, q.x)
+  cond_k = k > 0.0
+  wx = Switch(cond_k, b.y - p1.x, q.x)
+  wy = Switch(cond_k, -k, q.y)
+  w = max(CombineXYZ(wx, wy), 0.0)
+  return sign(k) * length(w) + radius
+}
+
+// ---- Operators ----
+
+geometry graph "sdf ring 2d"(distance: Float, thickness: Float = 0.1 in 0.0..) -> Float {
+  "2D shell or band of given thickness centered on an SDF contour"
+  return abs(distance) - thickness * 0.5
+}
+
+geometry graph "sdf chamfer union"(a: Float, b: Float, chamfer: Float = 0.15 in 0.0..) -> Float {
+  "Union of two shapes with a beveled chamfer join"
+  return min(min(a, b), (a + b - chamfer) * 0.7071068)
+}
+
+geometry graph "sdf chamfer subtraction"(
+    a: Float,
+    b: Float,
+    chamfer: Float = 0.15 in 0.0..
+) -> Float {
+  "Subtraction of b from a with a beveled chamfer join"
+  return max(max(a, -b), (a - b + chamfer) * 0.7071068)
+}
+
+// ---- Domains and Repetition ----
+
+geometry graph "sdf repeat 2d"(p: Vector = Position(), cell: Vector = (1.0, 1.0, 0.0)) -> Vector {
+  "Repeats the XY plane in an infinite grid: wraps p into its origin-centered cell"
+  p2 = CombineXYZ(p.x, p.y)
+  c2 = CombineXYZ(cell.x, cell.y)
+  return p2 - c2 * floor(p2 / c2 + 0.5)
+}
+
+geometry graph "sdf limited repeat 2d"(
+    p: Vector = Position(),
+    step: Float = 1.0 in 0.0001..,
+    limit: Vector = (2.0, 2.0, 0.0)
+) -> Vector {
+  "Repeats the XY plane in a finite origin-centered grid without distance discontinuities"
+  p2 = CombineXYZ(p.x, p.y)
+  lim = CombineXYZ(limit.x, limit.y)
+  idx = floor(p2 / step + 0.5)
+  return p2 - min(max(idx, -lim), lim) * step
+}
+
+geometry graph "sdf polar repeat 2d"(p: Vector = Position(), sectors: Int = 6 in 1..128) -> Vector {
+  "Repeats the XY plane with radial symmetry across N angular sectors"
+  an = 6.283185 / sectors
+  a = atan2(p.y, p.x) + an * 0.5
+  a_mod = a - an * floor(a / an) - an * 0.5
+  r = length(CombineXYZ(p.x, p.y))
+  return CombineXYZ(r * cos(a_mod), r * sin(a_mod))
+}
+
+geometry graph "sdf isolines"(
+    distance: Float,
+    step: Float = 0.2 in 0.001..,
+    width: Float = 0.03 in 0.0..
+) -> Float {
+  "Distance field to contour lines (isolines) spaced by step"
+  d_line = abs(distance - step * floor(distance / step + 0.5))
+  return d_line - width * 0.5
+}

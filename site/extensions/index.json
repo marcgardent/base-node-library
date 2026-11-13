@@ -6,23 +6,31 @@
     {
       "schema_version": "1.0.0",
       "id": "base_node",
-      "name": "Base Node for Blender",
+      "name": "Base Node",
       "tagline": "Nodes as Text (.bn) \u2014 Read and write node trees as functions",
-      "version": "0.8.0",
+      "version": "0.8.1",
       "type": "add-on",
       "maintainer": "Marc Gardent",
       "license": [
         "SPDX:GPL-3.0-or-later"
       ],
       "blender_version_min": "5.2.0",
-      "website": "https://github.com/marcgardent/base-node-library",
+      "website": "https://marcgardent.github.io/base-node-library/",
+      "copyright": [
+        "2026 Marc Gardent"
+      ],
+      "permissions": {
+        "files": "Import .bn files and the modules they use from disk"
+      },
       "tags": [
         "Node",
-        "Geometry Nodes"
+        "Geometry Nodes",
+        "Text Editor",
+        "Import-Export"
       ],
-      "archive_url": "./base_node-0.8.0.zip",
-      "archive_size": 107946,
-      "archive_hash": "sha256:95b5fe41786e17dd49801940ef65000344d20f9d239232575de5c661d8f04d74"
+      "archive_url": "./base_node-0.8.1.zip",
+      "archive_size": 135989,
+      "archive_hash": "sha256:0362b5aa03e495431f08cd6ed3c5b8d7cddfb74c55d8d4ef3f4ce24b919fe144"
     }
   ]
 }

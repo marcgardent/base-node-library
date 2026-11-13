@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "stdlib_version": "0.8.1",
+  "edition": "2026",
+  "description": "Standard Library for the Base Node (.bn) language",
+  "modules": {
+    "math": {
+      "name": "math",
+      "version": "0.8.1",
+      "edition": "2026",
+      "profile": "core",
+      "file": "math.bn",
+      "dependencies": [],
+      "description": "Mathematical toolkit for Geometry Nodes: shaping curves, waves, vectors, SDFs, and noise distributions"
+    },
+    "sdf2d": {
+      "name": "sdf2d",
+      "version": "0.8.1",
+      "edition": "2026",
+      "profile": "sdf2d",
+      "file": "sdf2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "2D signed distance fields, boolean operations, and 2D primitive SDF shapes"
+    },
+    "curves2d": {
+      "name": "curves2d",
+      "version": "0.8.1",
+      "edition": "2026",
+      "profile": "vector2d",
+      "file": "curves2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "2D curves, resampling, curvature analysis, and path operations"
+    },
+    "patterns2d": {
+      "name": "patterns2d",
+      "version": "0.8.1",
+      "edition": "2026",
+      "profile": "vector2d",
+      "file": "patterns2d.bn",
+      "dependencies": [
+        "math",
+        "curves2d"
+      ],
+      "description": "2D procedural patterns, tilings, grids, radial arrays, and geometric motifs"
+    },
+    "ink2d": {
+      "name": "ink2d",
+      "version": "0.8.1",
+      "edition": "2026",
+      "profile": "ink2d",
+      "file": "ink2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "Living ink, organic stroke dynamics, taper, wobble, bleed, and artistic drawing"
+    },
+    "planar2d": {
+      "name": "planar2d",
+      "version": "0.8.1",
+      "edition": "2026",
+      "profile": "vector2d",
+      "file": "planar2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "Planar map partitioning, intersection splitting, face extraction, and region boundaries"
+    },
+    "fillet2d": {
+      "name": "fillet2d",
+      "version": "0.8.1",
+      "edition": "2026",
+      "profile": "vector2d",
+      "file": "fillet2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "Fillets, chamfers, and bevels for 2D polygonal curves and corners"
+    },
+    "hachures2d": {
+      "name": "hachures2d",
+      "version": "0.8.1",
+      "edition": "2026",
+      "profile": "vector2d",
+      "file": "hachures2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "Engraving cross-hatching, guilloché security patterns, screentone halftone dots, and Lehmann slope hachures"
+    },
+    "deform2d": {
+      "name": "deform2d",
+      "version": "0.8.1",
+      "edition": "2026",
+      "profile": "vector2d",
+      "file": "deform2d.bn",
+      "dependencies": [
+        "math"
+      ],
+      "description": "Frenet-Serret 2D moving frames, flow along curve deformation, ribbon outlines, and parametric arrowheads"
+    }
+  }
+}

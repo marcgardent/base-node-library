@@ -1,0 +1,53 @@
+// Base Node Standard Library — Module planar2d
+// @module planar2d
+// @version 0.8.1
+// @profile vector2d
+// @edition 2026
+
+use math
+
+// ---- Planar Map, Regions & Boundary Operations ----
+
+geometry graph "planar faces"(
+    curves: Geometry,
+    tolerance: Float = 0.001 in 0.0001..0.1
+) -> Geometry {
+  "Extracts closed polygonal faces from planar curve networks by welding endpoints and filling closed loops"
+  welded = MergeByDistance(curves, distance: tolerance)
+  return FillCurve(welded)
+}
+
+geometry graph "planar split intersections"(
+    curves: Geometry,
+    subdivisions: Int = 4 in 1..32,
+    tolerance: Float = 0.002 in 0.0001..0.1
+) -> Geometry {
+  "Inserts vertices at segment crossings and splits edges within a planar curve network"
+  subdivided = SubdivideCurve(curves, cuts: subdivisions)
+  return MergeByDistance(subdivided, distance: tolerance)
+}
+
+geometry graph "shape builder pick"(
+    curves: Geometry,
+    seed_points: Geometry,
+    pick_radius: Float = 0.5 in 0.01..10.0
+) -> Geometry {
+  "Selects and generates planar face regions containing or nearest to the provided seed points"
+  faces = FillCurve(curves)
+  seed_pos = SampleIndex(seed_points, Position(), 0, data_type: FLOAT_VECTOR)
+  d = distance(Position(), seed_pos)
+  in_region = d < pick_radius
+  offset = Switch(in_region, (0.0, 0.0, 0.0), (0.0, 0.0, -10000.0))
+  return SetPosition(faces, offset: offset)
+}
+
+geometry graph "contour outer boundary"(
+    shapes: Geometry,
+    tolerance: Float = 0.001 in 0.0001..0.1,
+    offset: Float = 0.0
+) -> Geometry {
+  "Extracts the outer boundary envelope from a collection of contiguous 2D shapes"
+  welded = MergeByDistance(shapes, distance: tolerance)
+  faces = FillCurve(welded)
+  return SetPosition(faces, offset: CombineXYZ(0.0, 0.0, offset))
+}

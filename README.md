@@ -33,7 +33,7 @@ geometry graph relief(geometry: Geometry, height: Float = 0.4 in 0.0..2.0) -> Ge
 | [`conformance/`](conformance/) | Shared `.bn` test corpus and expected ASTs | MIT OR Apache-2.0 |
 | [`python/`](python/) | Zero-dependency Python parser, formatter, and CLI (`base_node`) | MIT OR Apache-2.0 |
 | [`rust/`](rust/) | `wasm32`-compatible Rust parser, formatter, and profile checker (`base-node`) | MIT OR Apache-2.0 |
-| [`base-node-for-blender/`](base-node-for-blender/) | Blender 5.2+ extension (`Tree ⇄ Text` live sync) | GPL-3.0-or-later |
+| [`base-node-for-blender/`](base-node-for-blender/) | Blender 5.2+ extension *Base Node* (node tree ⇄ `.bn` text, stdlib bundled) | GPL-3.0-or-later |
 
 ## Profiles
 
@@ -144,7 +144,7 @@ Add-on for Blender 5.2+ (`id = "base_node"`). The node tree is the only data: it
 
 An unchanged text leaves the tree as it is, node layout included; a text with errors stays open with its diagnostics until it builds.
 
-A `use name` without `from` finds its module in this order: the text `name.bn` of the .blend, `name.bn` next to the imported file, then `name.bn` in the *Module Folder* of the add-on preferences (point it at `stdlib/`).
+A `use name` without `from` finds its module in this order: the text `name.bn` of the .blend, `name.bn` next to the imported file, `name.bn` in the *Module Folder* of the add-on preferences, then the standard library bundled with the add-on (a copy of `stdlib/`, kept identical by a test).
 
 Build the package and install it in a local Blender:
 
@@ -153,7 +153,7 @@ blender --command extension build --source-dir base-node-for-blender --output-di
 ```
 
 ```bash
-blender --command extension install-file -r user_default -e dist/base_node-0.8.0.zip
+blender --command extension install-file -r user_default -e dist/base_node-0.8.1.zip
 ```
 
 Run headless Blender tests:

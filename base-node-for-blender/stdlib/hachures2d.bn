@@ -1,0 +1,83 @@
+// Base Node Standard Library — Module hachures2d
+// @module hachures2d
+// @version 0.8.1
+// @profile vector2d
+// @edition 2026
+
+use math (sine01, triangle)
+
+// ---- Engraving Hatching, Guilloché & Halftones ----
+
+geometry graph "hatch cross"(
+    pos: Vector = Position(),
+    angle: Float = 45.0,
+    spacing: Float = 0.1 in 0.001..10.0,
+    cross_angle: Float = 90.0,
+    shade: Float = 0.5 in 0.0..1.0
+) -> Float {
+  "Evaluates engraving cross-hatching field with density and second pass modulated by shade intensity"
+  rad1 = angle * 0.01745329
+  cos1 = cos(rad1)
+  sin1 = sin(rad1)
+  u1 = (pos.x * cos1 - pos.y * sin1) / spacing
+  line1 = triangle(u1)
+  rad2 = (angle + cross_angle) * 0.01745329
+  cos2 = cos(rad2)
+  sin2 = sin(rad2)
+  u2 = (pos.x * cos2 - pos.y * sin2) / spacing
+  line2 = triangle(u2)
+  dark_pass = Clamp((shade - 0.5) * 2.0, 0.0, 1.0)
+  hatch = Mix(dark_pass, line1, min(line1, line2))
+  return Clamp(hatch * (shade * 2.0), 0.0, 1.0)
+}
+
+geometry graph guilloche(
+    t: Float,
+    r1: Float = 1.0 in 0.01..,
+    r2: Float = 0.25 in 0.001..,
+    p: Float = 0.2 in 0.0..,
+    waves: Float = 12.0 in 1.0..64.0
+) -> Vector {
+  "Generates parametric cycloidal and harmonic security rosette coordinates (banknote/guilloché style)"
+  theta = t * 6.2831853
+  r_mod = r1 + r2 * cos(waves * theta)
+  harmonic_phase = (waves + 1.0) * theta
+  x = r_mod * cos(theta) + p * cos(harmonic_phase)
+  y = r_mod * sin(theta) - p * sin(harmonic_phase)
+  return CombineXYZ(x, y, 0.0)
+}
+
+geometry graph "halftone dots"(
+    pos: Vector = Position(),
+    density: Float = 0.5 in 0.0..1.0,
+    frequency: Float = 10.0 in 0.1..100.0,
+    angle: Float = 45.0
+) -> Float {
+  "Evaluates rotated halftone screentone dot pattern with dot size driven by density"
+  rad = angle * 0.01745329
+  cos_a = cos(rad)
+  sin_a = sin(rad)
+  u = (pos.x * cos_a - pos.y * sin_a) * frequency
+  v = (pos.x * sin_a + pos.y * cos_a) * frequency
+  cu = fract(u) - 0.5
+  cv = fract(v) - 0.5
+  dist_sq = cu * cu + cv * cv
+  target_radius_sq = density * 0.25
+  is_inside = dist_sq < target_radius_sq
+  return Switch(is_inside, 1.0, 0.0)
+}
+
+geometry graph "lehmann hachures"(
+    gradient_dir: Vector = (1.0, 0.0, 0.0),
+    slope: Float = 0.3 in 0.0..1.0,
+    length: Float = 0.5 in 0.01..5.0,
+    width: Float = 0.05 in 0.001..1.0
+) -> Geometry {
+  "Generates a cartographic Lehmann slope hachure segment with thickness proportional to terrain gradient"
+  dir = normalize(gradient_dir)
+  line = CurvePrimitiveLine((0.0, 0.0, 0.0), dir * length)
+  radius = slope * width
+  c = SetCurveRadius(line, radius: radius)
+  profile = CurvePrimitiveLine((-0.5, 0.0, 0.0), (0.5, 0.0, 0.0))
+  return CurveToMesh(c, profile, Radius())
+}
