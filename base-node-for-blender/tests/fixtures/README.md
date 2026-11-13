@@ -14,7 +14,8 @@ compressed with Blender 5.3. The nodes themselves are unchanged.
 
 ## `everyday_geometry_nodes/*.bn`
 
-The same assets as `.bn` text, one file per asset with the hidden groups it calls: what Tree → Text gives for them.
+The same assets as `.bn` text, one file per asset with the hidden groups it calls: what Tree → Text gives for them,
+under a header that credits them.
 Same author, source and license as the `.blend`.
 
 `test_extension.py` (`test_real_world_assets`) writes each asset as `.bn` text and checks that it is these files,

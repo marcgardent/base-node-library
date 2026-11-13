@@ -1,3 +1,10 @@
+// Velocity Step, from Cartesian Caramel's Everyday Nodes
+// Author: Cartesian Caramel
+// Source: https://github.com/cartesiancaramel/blender-remote-asset-library-test-v1 (6c078f7)
+// License: CC0-1.0, https://creativecommons.org/publicdomain/zero/1.0/
+// Written by Base Node from tests/fixtures/everyday_geometry_nodes.blend;
+// to write it again: BASE_NODE_UPDATE_FIXTURES=1, see tests/fixtures/README.md
+
 // @profile "vector2d"
 
 geometry graph "Velocity Step"(

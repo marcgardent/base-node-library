@@ -438,6 +438,17 @@ def evaluate(group, kind):
     return prints
 
 
+def credits(name):
+    """The header of the .bn of an asset of the fixture: where it comes from, under which license."""
+    return (f"// {name}, from Cartesian Caramel's Everyday Nodes\n"
+            "// Author: Cartesian Caramel\n"
+            "// Source: https://github.com/cartesiancaramel/blender-remote-asset-library-test-v1 (6c078f7)\n"
+            "// License: CC0-1.0, https://creativecommons.org/publicdomain/zero/1.0/\n"
+            "// Written by Base Node from tests/fixtures/everyday_geometry_nodes.blend;\n"
+            "// to write it again: BASE_NODE_UPDATE_FIXTURES=1, see tests/fixtures/README.md\n"
+            "\n")
+
+
 def test_real_world_assets():
     """8. Third-party assets (tests/fixtures, CC0) read as text, built back, evaluate the same."""
     print("-> Test 8: Real-world assets...")
@@ -465,14 +476,15 @@ def test_real_world_assets():
         for old in expected_dir.glob("*.bn"):
             old.unlink()
         for name, text in texts.items():
-            (expected_dir / f"{key(name)}.bn").write_text(text, encoding="utf-8")
-    changed = []
+            (expected_dir / f"{key(name)}.bn").write_text(credits(name) + text, encoding="utf-8")
+    changed, files = [], {}
     for name, text in texts.items():
         path = expected_dir / f"{key(name)}.bn"
-        expected = path.read_text(encoding="utf-8") if path.exists() else ""
-        if text != expected:
+        expected = files[name] = path.read_text(encoding="utf-8") if path.exists() else ""
+        if credits(name) + text != expected:
             changed.append("".join(difflib.unified_diff(
-                expected.splitlines(True), text.splitlines(True), f"{path.name} (expected)", f"{path.name} (read)", n=1)))
+                expected.splitlines(True), (credits(name) + text).splitlines(True),
+                f"{path.name} (expected)", f"{path.name} (read)", n=1)))
     assert not changed, ("the assets read otherwise than tests/fixtures/everyday_geometry_nodes/*.bn; "
                          "if that is wanted, rerun with BASE_NODE_UPDATE_FIXTURES=1\n" + "\n".join(changed)[:4000])
     assert len(list(expected_dir.glob("*.bn"))) == len(texts), "a .bn of the fixtures has no asset"
@@ -483,8 +495,9 @@ def test_real_world_assets():
         g.name = f"original {name}"
         originals[name] = g
 
+    # Built from the files themselves, their credits included
     for name, text in texts.items():
-        tree = build_source(text, filename=f"{name}.bn")[-1]
+        tree = build_source(files[name], filename=f"{key(name)}.bn")[-1]
         assert tree.name == name, tree.name
         again, _ = export_tree(tree)
         assert again == text, f"{name}: Tree -> Text is not stable"
