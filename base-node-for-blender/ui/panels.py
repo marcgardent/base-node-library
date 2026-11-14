@@ -161,6 +161,9 @@ class NODE_PT_base_node(bpy.types.Panel):
         rows.button(col, "base_node.toggle_view")
         rows.button(col, "base_node.arrange")
         rows.legend(layout)
+        options = prefs.get()
+        if isinstance(options, bpy.types.AddonPreferences):
+            layout.prop(options, "show_comments", text="Comments", toggle=True, icon="TEXT")
 
 
 classes = (TEXT_PT_base_node, NODE_PT_base_node)
