@@ -2,7 +2,9 @@
 
 Each `tests/libraries/<name>.toml` names a .blend: in the repository (`file`), or fetched at a fixed
 version (`url`, and `member` when it lies in a .zip), checked by its `sha256`. Every Geometry Nodes group
-of it is read as .bn text, built back from that text, read again and evaluated beside the original.
+of it is read as .bn text, built back from that text, read again and evaluated beside the original,
+except in the kinds of evaluation its manifest's `[nondeterministic]` table names for a group: there
+the original itself does not give twice the same geometry.
 What happens to each group is kept in `tests/libraries/<name>.baseline.json`: its status, the first
 error, the warnings and a hash of its text. The test fails when that changes, for better or worse.
 
@@ -111,8 +113,12 @@ def warning_kind(w):
     return re.sub(r"\s*\(\d+\)$", "", w.split(": ", 1)[-1])
 
 
-def round_trip(blend):
-    """{group: record} and {group: text} for every Geometry Nodes group of `blend`."""
+def round_trip(blend, nondeterministic=None):
+    """{group: record} and {group: text} for every Geometry Nodes group of `blend`.
+
+    `nondeterministic` is {group: [kind, ...]}: the kinds of evaluation in which the original itself does
+    not give twice the same geometry, which are not compared (the manifest's `[nondeterministic]`)."""
+    nondeterministic = nondeterministic or {}
     from base_node.host import build_source, export_tree
     from base_node.lang.schema import key
 
@@ -156,7 +162,12 @@ def round_trip(blend):
             r["status"] = "unstable"
             continue
         differs = []
+        skipped = [k for k in KINDS if k in nondeterministic.get(name, ())]
+        if skipped:
+            r["not_compared"] = skipped
         for kind in KINDS:
+            if kind in skipped:
+                continue
             try:
                 if T.evaluate(originals[name], kind) != T.evaluate(bpy.data.node_groups[name], kind):
                     differs.append(kind)
@@ -217,7 +228,7 @@ def test_library(manifest):
     lib = tomllib.loads(manifest.read_text(encoding="utf-8"))
     name = manifest.stem
     print(f"-> {lib['name']} {lib.get('version', '')} ({lib['license']})")
-    records, texts = round_trip(fetch(lib))
+    records, texts = round_trip(fetch(lib), lib.get("nondeterministic"))
     kept = keep_texts(name, texts)
     print(f"   {len(records)} groups: {summary(records)}; texts in {kept}")
     baseline_path = manifest.with_suffix(".baseline.json")

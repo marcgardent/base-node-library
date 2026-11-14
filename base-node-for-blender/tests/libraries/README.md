@@ -25,6 +25,14 @@ member = "assets/nodes.blend"                                          # …the 
 sha256 = "905e…"                                                       # of the .blend
 ```
 
+A group whose original does not give twice the same geometry in a kind of evaluation of the test (a sample on
+overlapping UVs, say) names that kind in the manifest, which is then not compared for it:
+
+```toml
+[nondeterministic]
+"UV Deform" = ["mesh caller fed"]   # kinds: "mesh", "curves", "mesh caller", "mesh caller fed"
+```
+
 A `.blend` inside a `.zip` is read by HTTP ranges: only the zip's directory and that file are downloaded.
 
 ## Baseline
