@@ -7,6 +7,7 @@ What happens to each group is kept in `<name>.baseline.json`; the test fails whe
 | Library | Version | Author | License | Groups |
 |---|---|---|---|---|
 | [Molecular Nodes](https://github.com/BradyAJohnston/MolecularNodes) | v520.2.0 | Brady Johnston and contributors | GPL-3.0-or-later | see `molecularnodes.baseline.json` |
+| [Bioxel Nodes](https://github.com/OmooLab/BioxelNodes) | v2.0.4 | OmooLab | GPL-3.0-or-later | see `bioxelnodes.baseline.json` |
 
 The `.blend` files are not in this repository: each is fetched once at its fixed version, checked by its
 `sha256` and kept in the cache (`$BASE_NODE_CACHE`, `~/.cache/base-node` by default). A library under a license

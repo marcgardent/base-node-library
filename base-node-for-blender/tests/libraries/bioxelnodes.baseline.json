@@ -1,0 +1,163 @@
+{
+ "library": "Bioxel Nodes",
+ "version": "v2.0.4",
+ "sha256": "7768cf857939494c527f223267d08c7ad2da8933188899dadca9949630fd3f87",
+ "blender": "5.3.0",
+ "summary": "28 ok, 6 build_error",
+ "groups": {
+  "Geometry Nodes": {
+   "status": "ok",
+   "text": "4073f5d8b253b75a",
+   "warnings": [
+    "appearance of Group Input not exported: color"
+   ]
+  },
+  "NodeGroup": {
+   "status": "ok",
+   "text": "6adf245ba87c649e"
+  },
+  "Normal Selection": {
+   "status": "ok",
+   "text": "9de732b0bb7ea673"
+  },
+  "O Bioxel Nodes": {
+   "status": "build_error",
+   "text": "058b0c45c7267bf4",
+   "warnings": [
+    "'O Region Selection' has no tree; written as empty call"
+   ],
+   "error": "unknown node 'missing_group' in a geometry tree"
+  },
+  "O Build Structure": {
+   "status": "ok",
+   "text": "3e5808c23f102295"
+  },
+  "O Color Layer to Color": {
+   "status": "ok",
+   "text": "0c70db201b4e81b6"
+  },
+  "O Crop Layer": {
+   "status": "ok",
+   "text": "28f0a01f74010a74"
+  },
+  "O Cut Small Parts": {
+   "status": "ok",
+   "text": "efa871e5d066e9fb"
+  },
+  "O Cut Structure": {
+   "status": "ok",
+   "text": "3554d33155eae1fa"
+  },
+  "O Cut to Region": {
+   "status": "ok",
+   "text": "3200e477ad2e7ce6"
+  },
+  "O Cutout by Hue": {
+   "status": "ok",
+   "text": "45bc4fbffada6cc5"
+  },
+  "O Cutout by Label": {
+   "status": "ok",
+   "text": "f4e608ca31e28390"
+  },
+  "O Cutout by Luminous": {
+   "status": "ok",
+   "text": "ce9e8e0b5c0ac12c"
+  },
+  "O Cutout by Range": {
+   "status": "ok",
+   "text": "5f1a6cac88c8cbe5"
+  },
+  "O Cutout by Threshold": {
+   "status": "ok",
+   "text": "e644a813bf46e453"
+  },
+  "O Debug Layer": {
+   "status": "ok",
+   "text": "7377b4061526ce79"
+  },
+  "O Debug Structure": {
+   "status": "ok",
+   "text": "dabd1d8c27c5e018"
+  },
+  "O Float to Target Digits": {
+   "status": "ok",
+   "text": "ecd896bdba1cee37"
+  },
+  "O Grid Info": {
+   "status": "ok",
+   "text": "20689acf3498667d"
+  },
+  "O Label Layer to Factor": {
+   "status": "ok",
+   "text": "5b6edc08c80a37b5"
+  },
+  "O Layer": {
+   "status": "build_error",
+   "text": "82423f98f55438ff",
+   "error": "Blender rejected link Scalar (BUNDLE) → Menu (MENU)"
+  },
+  "O Layer Info": {
+   "status": "ok",
+   "text": "07d2bfd36db255e7"
+  },
+  "O Mesh to Layer": {
+   "status": "build_error",
+   "text": "6afea203edc6537e",
+   "warnings": [
+    "'O Region Selection' has no tree; written as empty call"
+   ],
+   "error": "unknown node 'missing_group' in a geometry tree"
+  },
+  "O Realize Structure": {
+   "status": "ok",
+   "text": "64f62b2b7d325a7b"
+  },
+  "O Resample Layer": {
+   "status": "ok",
+   "text": "7a2d7928f2ec3f66"
+  },
+  "O Sample Layer": {
+   "status": "ok",
+   "text": "150becf321ef831b"
+  },
+  "O Scalar Layer to Color": {
+   "status": "ok",
+   "text": "1dfeb1b590993675"
+  },
+  "O Scalar Layer to Factor": {
+   "status": "ok",
+   "text": "389143de293e9c7e"
+  },
+  "O Separate Color Layer": {
+   "status": "ok",
+   "text": "5ac5622de860891e"
+  },
+  "O Slice": {
+   "status": "ok",
+   "text": "6dbe32f0676e7ece"
+  },
+  "O Slice View": {
+   "status": "build_error",
+   "text": "5c44a516526767e7",
+   "warnings": [
+    "'Group.003' has no tree; written as empty call"
+   ],
+   "error": "unknown node 'missing_group' in a geometry tree"
+  },
+  "O Structure to Mesh": {
+   "status": "build_error",
+   "text": "c3e5aa801e9bf53c",
+   "error": "unknown name 'Value'"
+  },
+  "O Transform Layer": {
+   "status": "build_error",
+   "text": "e824ab682ecf6794",
+   "error": "Blender rejected link Scalar (BUNDLE) → Menu (MENU)"
+  },
+  "O Zero Padding": {
+   "status": "ok",
+   "text": "4ebcc969ef7d5fca"
+  }
+ }
+}

@@ -1,0 +1,12 @@
+# Bioxel Nodes: the node groups of its asset library (assets/O_Bioxel/O_Bioxel_Nodes.blend, in Git LFS in
+# its repository), shipped in its release zips; only that member of the 180 MB zip is downloaded.
+name = "Bioxel Nodes"
+author = "OmooLab"
+homepage = "https://github.com/OmooLab/BioxelNodes"
+license = "GPL-3.0-or-later"
+# Compatible with base-node-for-blender (GPL-3.0-or-later), but fetched at test time rather than
+# committed: 14 MB, and a new version is one line here. The baseline keeps names, statuses and hashes.
+version = "v2.0.4"
+url = "https://github.com/OmooLab/BioxelNodes/releases/download/v2.0.4/BioxelNodes.v2.0.4.linux-x64.zip"
+member = "assets/O_Bioxel/O_Bioxel_Nodes.blend"
+sha256 = "7768cf857939494c527f223267d08c7ad2da8933188899dadca9949630fd3f87"
