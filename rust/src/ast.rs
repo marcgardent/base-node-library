@@ -391,12 +391,18 @@ impl Graph {
             if let Some(ref pt) = self.param_tree {
                 pt.clone()
             } else {
-                self.params.iter().map(|p| ParamTreeItem::Param(p.clone())).collect()
+                self.params
+                    .iter()
+                    .map(|p| ParamTreeItem::Param(p.clone()))
+                    .collect()
             }
         } else if let Some(ref ot) = self.output_tree {
             ot.clone()
         } else {
-            self.outputs.iter().map(|p| ParamTreeItem::Param(p.clone())).collect()
+            self.outputs
+                .iter()
+                .map(|p| ParamTreeItem::Param(p.clone()))
+                .collect()
         }
     }
 }

@@ -7,8 +7,12 @@ fn read_stdlib_file(candidates: &[&str]) -> (String, String) {
     let mut last_err = String::new();
     for &name in candidates {
         let relative = format!("../stdlib/{}", name);
-        let content = fs::read_to_string(&relative)
-            .or_else(|_| fs::read_to_string(format!("/home/marcgardent/base-node-library/stdlib/{}", name)));
+        let content = fs::read_to_string(&relative).or_else(|_| {
+            fs::read_to_string(format!(
+                "/home/marcgardent/base-node-library/stdlib/{}",
+                name
+            ))
+        });
         if let Ok(src) = content {
             if let Ok(file) = parse(&src, name) {
                 if !file.graphs.is_empty() {
@@ -41,8 +45,8 @@ fn test_stdlib_conformance() {
     for (candidates, expected_graphs) in files {
         let (filename, src) = read_stdlib_file(candidates);
 
-        let file = parse(&src, &filename)
-            .unwrap_or_else(|e| panic!("Parse error on {}: {}", filename, e));
+        let file =
+            parse(&src, &filename).unwrap_or_else(|e| panic!("Parse error on {}: {}", filename, e));
         assert_eq!(
             file.graphs.len(),
             *expected_graphs,
@@ -80,7 +84,10 @@ fn test_compat_1_0_files() {
             if filename == "shapes.bn" {
                 // shapes.bn contains 1.0 variants (dot, cross, ·) that the formatter canonicalizes
                 let idempotent = format_source(&formatted, filename).unwrap();
-                assert_eq!(idempotent, formatted, "Formatting not idempotent on shapes.bn");
+                assert_eq!(
+                    idempotent, formatted,
+                    "Formatting not idempotent on shapes.bn"
+                );
             } else {
                 assert_eq!(
                     formatted, src,
@@ -235,7 +242,8 @@ fn test_versioning_and_manifest() {
         .or_else(|_| fs::read_to_string("/home/marcgardent/base-node-library/stdlib/manifest.json"))
         .expect("Failed to read stdlib/manifest.json");
 
-    let v: serde_json::Value = serde_json::from_str(&manifest_content).expect("Invalid JSON in manifest.json");
+    let v: serde_json::Value =
+        serde_json::from_str(&manifest_content).expect("Invalid JSON in manifest.json");
     assert_eq!(v["stdlib_version"], "0.10.0");
     assert_eq!(v["edition"], "2026");
 
@@ -252,7 +260,8 @@ fn test_profile_ascent_solving() {
     use base_node::{analyze_profile_ascent, parse, solve_minimal_profile, ProfileKind};
 
     // 1. Math -> Core
-    let src_core = "geometry graph calc(a: Float, b: Float) -> Float {\n  return sin(a) + cos(b)\n}\n";
+    let src_core =
+        "geometry graph calc(a: Float, b: Float) -> Float {\n  return sin(a) + cos(b)\n}\n";
     let file_core = parse(src_core, "core.bn").unwrap();
     assert_eq!(solve_minimal_profile(&file_core), ProfileKind::Core);
 
@@ -278,4 +287,3 @@ fn test_profile_ascent_solving() {
     assert!(analysis.barriers.contains_key("sdf2d"));
     assert!(!analysis.barriers.contains_key("vector2d"));
 }
-

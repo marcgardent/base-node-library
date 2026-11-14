@@ -168,10 +168,44 @@ pub fn load_profile(kind: ProfileKind) -> Profile {
 }
 
 const BUILTIN_MATH_FUNCS: &[&str] = &[
-    "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh", "sqrt", "abs",
-    "exp", "log", "pow", "min", "max", "clamp", "floor", "ceil", "fract", "round", "trunc", "sign", "mod",
-    "radians", "degrees", "length", "normalize", "distance", "dot", "cross", "xor", "xnor",
-    "nand", "nor", "imply", "nimply",
+    "sin",
+    "cos",
+    "tan",
+    "asin",
+    "acos",
+    "atan",
+    "atan2",
+    "sinh",
+    "cosh",
+    "tanh",
+    "sqrt",
+    "abs",
+    "exp",
+    "log",
+    "pow",
+    "min",
+    "max",
+    "clamp",
+    "floor",
+    "ceil",
+    "fract",
+    "round",
+    "trunc",
+    "sign",
+    "mod",
+    "radians",
+    "degrees",
+    "length",
+    "normalize",
+    "distance",
+    "dot",
+    "cross",
+    "xor",
+    "xnor",
+    "nand",
+    "nor",
+    "imply",
+    "nimply",
 ];
 
 struct CheckCtx<'a> {
@@ -382,7 +416,9 @@ pub fn check_profile_custom(file: &File, profile: &Profile) -> Vec<String> {
             let req_rank = match u.name.as_str() {
                 "math" => 0,
                 "sdf2d" => 1,
-                "curves2d" | "patterns2d" | "planar2d" | "fillet2d" | "hachures2d" | "deform2d" => 2,
+                "curves2d" | "patterns2d" | "planar2d" | "fillet2d" | "hachures2d" | "deform2d" => {
+                    2
+                }
                 "ink2d" => 3,
                 _ => 0,
             };
@@ -511,4 +547,3 @@ pub fn analyze_profile_ascent(file: &File) -> AscentAnalysis {
         barriers,
     }
 }
-

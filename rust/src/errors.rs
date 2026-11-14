@@ -10,7 +10,11 @@ pub struct Diagnostic {
 
 impl fmt::Display for Diagnostic {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}:{}:{}: {}", self.filename, self.line, self.col, self.message)
+        write!(
+            f,
+            "{}:{}:{}: {}",
+            self.filename, self.line, self.col, self.message
+        )
     }
 }
 
@@ -20,7 +24,12 @@ pub struct BnError {
 }
 
 impl BnError {
-    pub fn new(filename: impl Into<String>, line: usize, col: usize, message: impl Into<String>) -> Self {
+    pub fn new(
+        filename: impl Into<String>,
+        line: usize,
+        col: usize,
+        message: impl Into<String>,
+    ) -> Self {
         Self {
             diagnostics: vec![Diagnostic {
                 filename: filename.into(),

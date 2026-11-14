@@ -137,7 +137,11 @@ pub fn format_source(source: &str, filename: &str) -> Result<String, BnError> {
             printed.push((o, t, k == 0));
         }
         if let Some(ref desc) = g.description {
-            printed.push((g.description_line, format!("{}{}", INDENT, quote(desc)), true));
+            printed.push((
+                g.description_line,
+                format!("{}{}", INDENT, quote(desc)),
+                true,
+            ));
         }
         walk(&g.body, INDENT, &alone, &mut printed);
         printed.push((g.end, "}".to_string(), false));
@@ -255,7 +259,10 @@ pub fn format_file(file: &File) -> String {
                 lines.extend(format_statement(s, INDENT));
             }
             lines.push((g.end, "}".to_string()));
-            lines.into_iter().map(|(_, t)| format!("{}\n", t)).collect::<String>()
+            lines
+                .into_iter()
+                .map(|(_, t)| format!("{}\n", t))
+                .collect::<String>()
         })
         .collect::<Vec<_>>()
         .join("\n");
@@ -266,9 +273,12 @@ pub fn format_file(file: &File) -> String {
 fn sorted_uses(uses: &[Use]) -> Vec<Use> {
     let mut out = uses.to_vec();
     out.sort_by(|a, b| {
-        a.name
-            .cmp(&b.name)
-            .then_with(|| a.source.as_deref().unwrap_or("").cmp(b.source.as_deref().unwrap_or("")))
+        a.name.cmp(&b.name).then_with(|| {
+            a.source
+                .as_deref()
+                .unwrap_or("")
+                .cmp(b.source.as_deref().unwrap_or(""))
+        })
     });
     out
 }
@@ -316,7 +326,11 @@ fn format_header(g: &Graph) -> Vec<(usize, String)> {
     } else {
         format!(
             "({})",
-            g.outputs.iter().map(format_param).collect::<Vec<_>>().join(", ")
+            g.outputs
+                .iter()
+                .map(format_param)
+                .collect::<Vec<_>>()
+                .join(", ")
         )
     };
     let head = format!("{lead}({}) -> {} {{", params.join(", "), outputs);
@@ -409,8 +423,16 @@ pub fn format_param(p: &Param) -> String {
         text.push_str(&format!(" = {}", format_expr(default, 0)));
     }
     if let Some(ref range) = p.range {
-        let lo = range.0.as_ref().map(|b| format_expr(b, 0)).unwrap_or_default();
-        let hi = range.1.as_ref().map(|b| format_expr(b, 0)).unwrap_or_default();
+        let lo = range
+            .0
+            .as_ref()
+            .map(|b| format_expr(b, 0))
+            .unwrap_or_default();
+        let hi = range
+            .1
+            .as_ref()
+            .map(|b| format_expr(b, 0))
+            .unwrap_or_default();
         text.push_str(&format!(" in {}..{}", lo, hi));
     }
     text
@@ -533,7 +555,12 @@ fn zone_head(name: &str, z: &AssignValue, pad: &str, _assign_line: usize) -> Vec
             if char_len(&line) <= WIDTH || s.states.is_empty() {
                 return vec![(s.line, line)];
             }
-            let mut lines = spread(&format!("{}{} = simulate(", pad, name), &s.states, s.line, pad);
+            let mut lines = spread(
+                &format!("{}{} = simulate(", pad, name),
+                &s.states,
+                s.line,
+                pad,
+            );
             if let Some(last) = lines.last_mut() {
                 last.1.push_str(" {");
             }
@@ -566,7 +593,12 @@ fn zone_head(name: &str, z: &AssignValue, pad: &str, _assign_line: usize) -> Vec
 
 fn closure_head(name: &str, c: &Closure, pad: &str) -> Vec<(usize, String)> {
     let outs = signature_outputs(&c.outputs, c.single_output);
-    let params_str = c.params.iter().map(format_param).collect::<Vec<_>>().join(", ");
+    let params_str = c
+        .params
+        .iter()
+        .map(format_param)
+        .collect::<Vec<_>>()
+        .join(", ");
     let line = format!("{}{} = closure({}) -> {} {{", pad, name, params_str, outs);
     if char_len(&line) <= WIDTH || c.params.is_empty() {
         return vec![(c.line, line)];
@@ -591,7 +623,11 @@ fn signature_outputs(outputs: &[Param], single: bool) -> String {
     } else {
         format!(
             "({})",
-            outputs.iter().map(format_param).collect::<Vec<_>>().join(", ")
+            outputs
+                .iter()
+                .map(format_param)
+                .collect::<Vec<_>>()
+                .join(", ")
         )
     }
 }
@@ -628,10 +664,18 @@ fn block(lead: &str, e: &Expr, origin: usize, pad: &str) -> Vec<(usize, String)>
         let rest = &pipes[1..];
         let mut lines = vec![(
             origin,
-            format!("{}{} |> {}", lead, format_expr(cur, 0), format_expr(&first.call, 0)),
+            format!(
+                "{}{} |> {}",
+                lead,
+                format_expr(cur, 0),
+                format_expr(&first.call, 0)
+            ),
         )];
         for p in rest {
-            lines.push((p.line, format!("{}{}|> {}", pad, INDENT, format_expr(&p.call, 0))));
+            lines.push((
+                p.line,
+                format!("{}{}|> {}", pad, INDENT, format_expr(&p.call, 0)),
+            ));
         }
         return lines;
     }
@@ -642,7 +686,8 @@ fn block(lead: &str, e: &Expr, origin: usize, pad: &str) -> Vec<(usize, String)>
                 let mut lines = spread(&format!("{}{}(", lead, c.name), &c.args, origin, pad);
                 if let Some(ref outs) = c.outputs {
                     if let Some(last) = lines.last_mut() {
-                        last.1.push_str(&format!(" -> {}", signature_outputs(outs, c.single_output)));
+                        last.1
+                            .push_str(&format!(" -> {}", signature_outputs(outs, c.single_output)));
                     }
                 }
                 return lines;
@@ -688,7 +733,12 @@ pub fn format_arg(a: &Arg) -> String {
                 format_expr(&a.value, 0)
             )
         } else {
-            format!("{}{}: {}", label_display(name), options, format_expr(&a.value, 0))
+            format!(
+                "{}{}: {}",
+                label_display(name),
+                options,
+                format_expr(&a.value, 0)
+            )
         }
     } else {
         format_expr(&a.value, 0)

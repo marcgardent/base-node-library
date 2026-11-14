@@ -74,16 +74,27 @@ impl<'a> Parser<'a> {
             Ok(self.advance())
         } else {
             let desc = what.unwrap_or(kind_or_punct);
-            Err(self.fail(format!("expected {}, found {}", desc, self.tok().describe()), None))
+            Err(self.fail(
+                format!("expected {}, found {}", desc, self.tok().describe()),
+                None,
+            ))
         }
     }
 
-    fn expect_text(&mut self, kind: &str, text: &str, what: Option<&str>) -> Result<Token, BnError> {
+    fn expect_text(
+        &mut self,
+        kind: &str,
+        text: &str,
+        what: Option<&str>,
+    ) -> Result<Token, BnError> {
         if self.at_text(kind, text) {
             Ok(self.advance())
         } else {
             let desc = what.unwrap_or(text);
-            Err(self.fail(format!("expected {}, found {}", desc, self.tok().describe()), None))
+            Err(self.fail(
+                format!("expected {}, found {}", desc, self.tok().describe()),
+                None,
+            ))
         }
     }
 
@@ -102,7 +113,10 @@ impl<'a> Parser<'a> {
         let mut graphs = Vec::new();
         while !self.at("EOF") {
             if self.at_use() {
-                return Err(self.fail("use declarations must appear at top of file before graphs", None));
+                return Err(self.fail(
+                    "use declarations must appear at top of file before graphs",
+                    None,
+                ));
             }
             graphs.push(self.parse_graph()?);
         }
@@ -137,7 +151,10 @@ impl<'a> Parser<'a> {
             }
             if list.is_empty() {
                 return Err(self.fail(
-                    format!("empty list: write 'use {}' to import the entire module", name_tok.text),
+                    format!(
+                        "empty list: write 'use {}' to import the entire module",
+                        name_tok.text
+                    ),
                     Some(&t),
                 ));
             }
@@ -216,8 +233,12 @@ impl<'a> Parser<'a> {
             body.push(self.statement()?);
         }
         let end = self.advance();
-        let has_panels_in_params = param_tree.iter().any(|i| matches!(i, ParamTreeItem::Panel(_)));
-        let has_panels_in_outputs = output_tree.iter().any(|i| matches!(i, ParamTreeItem::Panel(_)));
+        let has_panels_in_params = param_tree
+            .iter()
+            .any(|i| matches!(i, ParamTreeItem::Panel(_)));
+        let has_panels_in_outputs = output_tree
+            .iter()
+            .any(|i| matches!(i, ParamTreeItem::Panel(_)));
         Ok(Graph {
             kind: kind.text,
             name: name_tok.text,
@@ -245,7 +266,10 @@ impl<'a> Parser<'a> {
     }
 
     fn at_description(&self) -> bool {
-        self.at("STRING") && !self.peek(1).is("{") && !self.peek(1).is("COLOR") && !self.peek(1).is("..")
+        self.at("STRING")
+            && !self.peek(1).is("{")
+            && !self.peek(1).is("COLOR")
+            && !self.peek(1).is("..")
     }
 
     fn typed_list(&mut self, close: &str, header: bool) -> Result<Vec<ParamTreeItem>, BnError> {
@@ -355,7 +379,8 @@ impl<'a> Parser<'a> {
         if self.accept_text("KEYWORD", "return").is_some() {
             if self.at("(")
                 && (self.peek(1).is(")")
-                    || ((self.peek(1).is("IDENT") || self.peek(1).is("STRING")) && self.peek(2).is(":")))
+                    || ((self.peek(1).is("IDENT") || self.peek(1).is("STRING"))
+                        && self.peek(2).is(":")))
             {
                 self.advance();
                 let fields = self.args(true)?;
@@ -382,12 +407,13 @@ impl<'a> Parser<'a> {
         }
         if self.at("IDENT") && self.peek(1).is("=") {
             if t.text == "dot" || t.text == "cross" {
-                let msg = if t.text == "dot" { "dot product" } else { "cross product" };
+                let msg = if t.text == "dot" {
+                    "dot product"
+                } else {
+                    "cross product"
+                };
                 return Err(self.fail(
-                    format!(
-                        "'{}' is reserved for {}: choose another name",
-                        t.text, msg
-                    ),
+                    format!("'{}' is reserved for {}: choose another name", t.text, msg),
                     Some(&t),
                 ));
             }
@@ -816,7 +842,9 @@ impl<'a> Parser<'a> {
         let punct_ops = ["*", "/", "⋅", "·", "×"];
         let is_punct = |s: &str| punct_ops.contains(&s);
         let is_word_product = |t: &Token, peek: &Token| {
-            t.is("IDENT") && (t.text == "dot" || t.text == "cross" || t.text == "·") && !peek.is("=")
+            t.is("IDENT")
+                && (t.text == "dot" || t.text == "cross" || t.text == "·")
+                && !peek.is("=")
         };
 
         while is_punct(self.tok().kind_str()) || is_word_product(self.tok(), self.peek(1)) {
@@ -892,9 +920,13 @@ impl<'a> Parser<'a> {
         if self.accept("NUMBER").is_some() {
             let is_int = !t.text.contains('.') && !t.text.contains('e') && !t.text.contains('E');
             let val: f64 = if is_int {
-                t.text.parse::<i64>().map_err(|_| self.fail("invalid integer", Some(&t)))? as f64
+                t.text
+                    .parse::<i64>()
+                    .map_err(|_| self.fail("invalid integer", Some(&t)))? as f64
             } else {
-                t.text.parse::<f64>().map_err(|_| self.fail("invalid float", Some(&t)))?
+                t.text
+                    .parse::<f64>()
+                    .map_err(|_| self.fail("invalid float", Some(&t)))?
             };
             return Ok(Expr::Number(Number {
                 value: val,
@@ -989,7 +1021,10 @@ impl<'a> Parser<'a> {
                 }))
             };
         }
-        Err(self.fail(format!("expected expression, found {}", t.describe()), Some(&t)))
+        Err(self.fail(
+            format!("expected expression, found {}", t.describe()),
+            Some(&t),
+        ))
     }
 
     fn args(&mut self, named_only: bool) -> Result<Vec<Arg>, BnError> {
@@ -1135,7 +1170,9 @@ impl<'a> Parser<'a> {
         }
         if let Expr::Call(c) = e {
             if c.outputs.is_none()
-                && c.args.iter().all(|a| a.name.is_some() && a.type_decl.is_none())
+                && c.args
+                    .iter()
+                    .all(|a| a.name.is_some() && a.type_decl.is_none())
             {
                 return Ok(Param {
                     name: name.to_string(),
