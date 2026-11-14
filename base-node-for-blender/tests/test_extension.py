@@ -522,6 +522,50 @@ def credits(name):
             "\n")
 
 
+def test_arrange():
+    """10. Arrange a tree: links go left to right, no two nodes overlap, frames keep their nodes."""
+    print("-> Test 10: Arranging nodes...")
+    from base_node.host import build_source
+    from base_node.host.arrange import _box, arrange_nodes
+
+    src = """
+geometry graph ripple(geometry: Geometry, frequency: Float = 2.0, amplitude: Float = 0.5) -> Geometry {
+  p = Position()
+  "Height" {
+    r = length(p)
+    h = sin(r * frequency) * amplitude
+  }
+  return SetPosition(geometry, offset: CombineXYZ(z: h))
+}
+"""
+    tree = build_source(src, filename="ripple.bn")[0]
+    nodes = [n for n in tree.nodes if n.bl_idname != "NodeFrame"]
+    for i, n in enumerate(nodes):  # scrambled
+        n.location_absolute = ((i * 377) % 900, (i * 613) % 700)
+    assert arrange_nodes(tree) == len(nodes)
+
+    for l in tree.links:
+        assert l.from_node.location_absolute.x < l.to_node.location_absolute.x, \
+            f"{l.from_node.name} -> {l.to_node.name} goes right to left"
+    scale = bpy.context.preferences.system.ui_scale or 1.0
+    rects = []
+    for n in nodes:
+        b = _box(n, scale)
+        rects.append((n.name, b.x, b.y, b.x + b.width, b.y - b.height))
+    for i, (a, ax0, ay0, ax1, ay1) in enumerate(rects):
+        for b, bx0, by0, bx1, by1 in rects[i + 1:]:
+            assert ax1 <= bx0 or bx1 <= ax0 or ay1 >= by0 or by1 >= ay0, f"{a} and {b} overlap"
+    framed = {n.name for n in nodes if n.parent}
+    assert framed, "the frame lost its nodes"
+    inside = [r for r in rects if r[0] in framed]
+    left, right = min(r[1] for r in inside), max(r[3] for r in inside)
+    top, bottom = max(r[2] for r in inside), min(r[4] for r in inside)
+    for name, x0, y0, x1, y1 in rects:
+        if name not in framed:
+            assert x1 <= left or x0 >= right or y1 >= top or y0 <= bottom, f"{name} is inside the frame"
+    print(f"   ✓ {len(nodes)} nodes arranged")
+
+
 def test_real_world_assets():
     """8. Third-party assets (tests/fixtures, CC0) read as text, built back, evaluate the same."""
     print("-> Test 8: Real-world assets...")
@@ -596,6 +640,7 @@ def main():
         test_text_view,
         test_import_files,
         test_zones_read_back,
+        test_arrange,
         test_real_world_assets,
     ]
     failed = 0

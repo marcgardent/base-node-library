@@ -142,6 +142,7 @@ Add-on for Blender 5.2+ (`id = "base_node"`). The node tree is the only data: it
 | Rewrite the text in the canonical layout, keeping its comments | Text Editor, sidebar *Format* | `Ctrl+Shift+A` |
 | Suggestions | Text Editor | `Alt+Space` (set in the preferences) |
 | Build the graphs of one or more `.bn` files | *File > Import > Base Node (.bn)* | |
+| Arrange the selected nodes (all of them if none is): links left to right, in line with their sockets, frames kept together | Node Editor, *Node > Arrange Nodes*, sidebar *Text* | `Ctrl+Shift+A` |
 
 An unchanged text leaves the tree as it is, node layout included; a text with errors stays open with its diagnostics until it builds.
 

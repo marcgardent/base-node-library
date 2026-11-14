@@ -14,6 +14,7 @@ def register():
     keys.bind()
     prefs.apply_folders()
     bpy.types.TOPBAR_MT_file_import.append(operators.menu_import)
+    bpy.types.NODE_MT_node.append(operators.menu_arrange)
     highlight.register()  # first, so that the popup draws over it
     pipes.register()
     completion.register()
@@ -25,6 +26,7 @@ def unregister():
     highlight.unregister()
     keys.unbind()
     bpy.types.TOPBAR_MT_file_import.remove(operators.menu_import)
+    bpy.types.NODE_MT_node.remove(operators.menu_arrange)
     if hasattr(bpy.types.NodeTree, "base_node_text"):
         del bpy.types.NodeTree.base_node_text
     for cls in reversed(classes):

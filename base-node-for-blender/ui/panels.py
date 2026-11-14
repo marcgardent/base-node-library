@@ -84,6 +84,7 @@ class NODE_PT_base_node(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.operator("base_node.toggle_view", text="Edit as Text", icon="TEXT")
+        layout.operator("base_node.arrange", icon="SNAP_GRID")
 
 
 classes = (TEXT_PT_base_node, NODE_PT_base_node)

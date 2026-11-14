@@ -10,6 +10,7 @@ Base Node writes and reads Geometry Nodes trees as text. A tree becomes a `.bn` 
 - **Ctrl+`** in the Node Editor shows the edited tree as `.bn` text, in the same area. Press it again to write the text back into the tree and return to the nodes.
 - **Ctrl+Enter** applies the text to the tree without leaving the text.
 - The tree stays the only data: the text is a temporary view, removed when you go back to the nodes. An unchanged text leaves the tree and its layout untouched; a text with errors stays open with its diagnostics until it builds.
+- **Ctrl+Shift+A** arranges the selected nodes, or the whole tree: links go left to right, in line with their sockets, and each frame keeps its nodes together. It works in every node editor.
 
 ## Writing `.bn`
 

@@ -3,6 +3,7 @@ import os
 import bpy
 from bpy_extras.io_utils import ImportHelper
 
+from ..host.arrange import arrange_nodes
 from ..lang import BnError
 from . import actions
 
@@ -188,9 +189,42 @@ class BASE_NODE_OT_import(bpy.types.Operator, ImportHelper):
         return {"FINISHED"}
 
 
+class BASE_NODE_OT_arrange(bpy.types.Operator):
+    """Lay out the selected nodes, or all of them when none is: links go left to right,
+    in line with their sockets, and each frame keeps its nodes together"""
+    bl_idname = "base_node.arrange"
+    bl_label = "Arrange Nodes"
+    bl_options = {"REGISTER", "UNDO"}
+
+    spacing: bpy.props.IntVectorProperty(name="Spacing", size=2, default=(50, 50), min=0, subtype="XYZ",
+                                         description="Room between two columns, then between two nodes of a column")
+
+    @classmethod
+    def poll(cls, context):
+        space = context.space_data
+        return space is not None and space.type == "NODE_EDITOR" and space.edit_tree is not None
+
+    def execute(self, context):
+        tree = context.space_data.edit_tree
+        nodes = [n for n in tree.nodes if n.select] or list(tree.nodes)
+        # A node never drawn has no size yet: draw once, so that the layout uses the real ones
+        if context.window and any(not n.dimensions.y for n in nodes if n.bl_idname not in {"NodeFrame", "NodeReroute"}):
+            bpy.ops.wm.redraw_timer(type="DRAW", iterations=0)
+        count = arrange_nodes(tree, nodes, spacing=self.spacing)
+        if not count:
+            self.report({"WARNING"}, "no node to arrange")
+            return {"CANCELLED"}
+        return {"FINISHED"}
+
+
+def menu_arrange(self, context):
+    self.layout.separator()
+    self.layout.operator(BASE_NODE_OT_arrange.bl_idname, icon="SNAP_GRID")
+
+
 def menu_import(self, context):
     self.layout.operator(BASE_NODE_OT_import.bl_idname, text="Base Node (.bn)")
 
 
 classes = (BASE_NODE_OT_import, BASE_NODE_OT_apply_view, BASE_NODE_OT_format, BASE_NODE_OT_toggle_view, BASE_NODE_OT_goto,
-           BASE_NODE_OT_add_modifier)
+           BASE_NODE_OT_add_modifier, BASE_NODE_OT_arrange)

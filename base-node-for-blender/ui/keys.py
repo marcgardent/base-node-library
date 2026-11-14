@@ -27,6 +27,8 @@ def bind():
     _items.append((km, km.keymap_items.new("base_node.format", "A", "PRESS", shift=True, ctrl=not mac, oskey=mac)))
     km = kc.keymaps.new("Node Editor", space_type="NODE_EDITOR")
     _items.append((km, km.keymap_items.new("base_node.toggle_view", "ACCENT_GRAVE", "PRESS", ctrl=True)))
+    # Ctrl+Shift+A arranges the nodes, as Node Arrange did; the same keys format a text
+    _items.append((km, km.keymap_items.new("base_node.arrange", "A", "PRESS", shift=True, ctrl=not mac, oskey=mac)))
 
 
 def unbind():
