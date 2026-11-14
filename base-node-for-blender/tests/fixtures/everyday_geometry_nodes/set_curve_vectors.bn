@@ -12,7 +12,7 @@ geometry(is_modifier: false) graph "Set Curve Vectors"(
     Selection: Bool(hide_value: true) = true,
     Vectors: Vector = (0.0, 0.0, 1.0)
 ) -> (Curve: Geometry) {
-  vector_math = AccumulateField(Vectors, CurveOfPoint().curve_index, data_type: FLOAT_VECTOR).trailing + FieldAtIndex(Position(), FieldOnDomain(PointsOfCurve().point_index, domain: CURVE, data_type: INT), data_type: FLOAT_VECTOR) @ hide
-  set_position = SetPosition(Curve, Selection, vector_math) @ hide
+  vector_math = AccumulateField(value: Vectors, group_id: CurveOfPoint().curve_index, data_type: FLOAT_VECTOR).trailing + FieldAtIndex(value: Position(), index: FieldOnDomain(value: PointsOfCurve().point_index, domain: CURVE, data_type: INT), data_type: FLOAT_VECTOR) @ hide
+  set_position = SetPosition(Curve, selection: Selection, position: vector_math) @ hide
   return (Curve: set_position)
 }

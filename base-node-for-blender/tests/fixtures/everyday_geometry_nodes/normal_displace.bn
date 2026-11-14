@@ -18,5 +18,5 @@ geometry(is_modifier: false) graph "Normal Displace"(
   math = Value - Midlevel @ hide
   math_2 = math * Strength @ hide
   vector_math = normal.normal * math_2 @ hide
-  return SetPosition(Geometry, Selection, offset: vector_math)
+  return SetPosition(Geometry, selection: Selection, offset: vector_math)
 }

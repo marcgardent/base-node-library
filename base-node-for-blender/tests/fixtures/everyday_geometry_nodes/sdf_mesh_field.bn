@@ -15,14 +15,14 @@ geometry graph "SDF Mesh Field"(
 ) -> ("Signed Distance": Float, Normal: Vector, Position: Vector, Offset: Vector) {
   position = Position() @ hide
   normal = Normal(legacy_corner_normals: true) @ hide
-  menu_switch = MenuSwitch(Mode, Points: 0, Edges: 1, Faces: 2)
+  menu_switch = MenuSwitch(menu: Mode, Points: 0, Edges: 1, Faces: 2)
   index_switch = IndexSwitch(
     menu_switch.output,
     Proximity(Mesh, sample_position: sample_position, target_element: POINTS).position,
     Proximity(Mesh, sample_position: sample_position, target_element: EDGES).position,
-    SampleNearestSurface(Mesh, position, sample_position: sample_position, data_type: FLOAT_VECTOR).value)
+    SampleNearestSurface(Mesh, value: position, sample_position: sample_position, data_type: FLOAT_VECTOR).value)
   vector_math = sample_position - index_switch @ hide
-  vector_math_2 = vector_math ⋅ SampleNearestSurface(Mesh, FieldOnDomain(normal.normal, data_type: FLOAT_VECTOR), sample_position: sample_position, data_type: FLOAT_VECTOR).value @ hide
+  vector_math_2 = vector_math ⋅ SampleNearestSurface(Mesh, value: FieldOnDomain(value: normal.normal, data_type: FLOAT_VECTOR), sample_position: sample_position, data_type: FLOAT_VECTOR).value @ hide
   vector_math_3 = normalize(vector_math) @ hide
   vector_math_5 = length(vector_math) @ hide
   math_2 = sign(vector_math_2) @ hide

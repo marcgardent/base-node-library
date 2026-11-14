@@ -23,7 +23,7 @@ geometry graph ".BounceOut"(Value: Float, n1: Float = 7.5625, d1: Float = 2.75) 
   math_9 = math_11 * math_11 @ hide
   math_10 = math_9 * n1 @ hide
   return (
-    Value: Switch(compare, Switch(compare_2, Switch(compare_3, math_4 + 0.984375, math_10 + 0.9375), math_7 + 0.75), math_2))
+    Value: Switch(switch: compare, false_: Switch(switch: compare_2, false_: Switch(switch: compare_3, false_: math_4 + 0.984375, true_: math_10 + 0.9375), true_: math_7 + 0.75), true_: math_2))
 }
 
 geometry graph "Ease Functions"(
@@ -40,9 +40,9 @@ geometry graph "Ease Functions"(
     math_11 = 1.0 - ease_in_out @ hide
     compare = Value > math_11 @ hide
     switch = Switch(
-      compare,
-      MapRange(Value, from_max: math_11, to_min: 1.0, to_max: 0.0),
-      MapRange(Value, math_11))
+      switch: compare,
+      false_: MapRange(value: Value, from_max: math_11, to_min: 1.0, to_max: 0.0),
+      true_: MapRange(value: Value, from_min: math_11))
   }
   "Circular" {
     math = sqrt(1.0 - pow(switch - 1.0, 2.0))
@@ -67,23 +67,23 @@ geometry graph "Ease Functions"(
     math_8 = math_10 + 1.0
   }
   menu_switch = MenuSwitch(
-    Type,
+    menu: Type,
     Sine: math_5,
     Cubic: math_7,
     Exponential: math_6,
     Circular: math,
     Back: math_8,
-    Bounce: bounceout(switch),
+    Bounce: bounceout(value: switch),
     Elastic: math_4)
-  clamp = Clamp(Value) @ hide
+  clamp = Clamp(value: Value) @ hide
   "Ease I/O" {
     math_12 = 1.0 - ease_in_out @ hide
     compare_2 = Value > math_12 @ hide
     switch_2 = Switch(
-      compare_2,
-      MapRange(menu_switch.output, to_min: math_12, to_max: 0.0, clamp: false),
-      MapRange(menu_switch.output, to_min: math_12, clamp: false))
+      switch: compare_2,
+      false_: MapRange(value: menu_switch.output, to_min: math_12, to_max: 0.0, clamp: false),
+      true_: MapRange(value: menu_switch.output, to_min: math_12, clamp: false))
   }
   return (
-    Value: MapRange(Mix(ease_factor, clamp, switch_2, clamp_factor: false), to_min: to_min, to_max: to_max, clamp: false))
+    Value: MapRange(value: Mix(factor: ease_factor, a: clamp, b: switch_2, clamp_factor: false), to_min: to_min, to_max: to_max, clamp: false))
 }

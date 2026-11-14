@@ -26,14 +26,14 @@ geometry graph ".Particle Rotation"(
     }
 ) -> Geometry {
   "hit rotation" {
-    named_attribute = NamedAttribute("velocity", data_type: FLOAT_VECTOR)
-    named_attribute_2 = NamedAttribute("hit_normal", data_type: FLOAT_VECTOR)
+    named_attribute = NamedAttribute(name: "velocity", data_type: FLOAT_VECTOR)
+    named_attribute_2 = NamedAttribute(name: "hit_normal", data_type: FLOAT_VECTOR)
     vector_math_3 = normalize(named_attribute.attribute) @ hide
     vector_math = named_attribute_2.attribute × vector_math_3 @ hide
     vector_math_2 = vector_math_3 ⋅ named_attribute_2.attribute @ hide
     vector_math_4 = length(named_attribute.attribute) @ hide
     math_3 = abs(vector_math_2) @ hide
-    math_2 = Math(math_3, -1.0, 1.0, operation: MULTIPLY_ADD) * vector_math_4 @ hide
+    math_2 = Math(Value: math_3, Value_001: -1.0, Value_002: 1.0, operation: MULTIPLY_ADD) * vector_math_4 @ hide
     "Combine Axis Angle" {
       vector_math_5 = normalize(vector_math) @ hide
     }
@@ -44,32 +44,40 @@ geometry graph ".Particle Rotation"(
     }
   }
   "hit" {
-    boolean_math = hit_rotation and NamedAttribute("is_hit", data_type: BOOLEAN).attribute @ hide
+    boolean_math = hit_rotation and NamedAttribute(name: "is_hit", data_type: BOOLEAN).attribute @ hide
   }
   "input velocity" {
     vector_math_10 = normalize(Axis) @ hide
     vector_math_11 = vector_math_10 * Angle @ hide
-    vector_math_8 = NamedAttribute("rotation_velocity", data_type: FLOAT_VECTOR).attribute + vector_math_11 @ hide
-    switch_2 = Switch(set_velocity, vector_math_8, vector_math_11, input_type: VECTOR) @ hide
+    vector_math_8 = NamedAttribute(name: "rotation_velocity", data_type: FLOAT_VECTOR).attribute + vector_math_11 @ hide
+    switch_2 = Switch(
+      switch: set_velocity,
+      false_: vector_math_8,
+      true_: vector_math_11,
+      input_type: VECTOR) @ hide
   }
   "rotation" {
     "apply velocity offset" {
-      vector_math_12 = NamedAttribute("rotation_velocity", data_type: FLOAT_VECTOR).attribute * delta_time @ hide
+      vector_math_12 = NamedAttribute(name: "rotation_velocity", data_type: FLOAT_VECTOR).attribute * delta_time @ hide
       vector_math_7 = length(vector_math_12) @ hide
-      axis_angle_to_rotation = AxisAngleToRotation(vector_math_12, vector_math_7) @ hide
+      axis_angle_to_rotation = AxisAngleToRotation(axis: vector_math_12, angle: vector_math_7) @ hide
       rotate_rotation = RotateRotation(
-        RotateRotation(NamedAttribute("rotation", data_type: QUATERNION).attribute, Rotation),
-        axis_angle_to_rotation) @ hide
+        rotation: RotateRotation(rotation: NamedAttribute(name: "rotation", data_type: QUATERNION).attribute, rotate_by: Rotation),
+        rotate_by: axis_angle_to_rotation) @ hide
     }
-    switch_3 = Switch(set_rotation, rotate_rotation, Rotation, input_type: ROTATION) @ hide
+    switch_3 = Switch(
+      switch: set_rotation,
+      false_: rotate_rotation,
+      true_: Rotation,
+      input_type: ROTATION) @ hide
   }
   "Damp" {
     math_4 = pow(1.0 - Damp, delta_time) @ hide
     vector_math_9 = switch_2 * math_4 @ hide
   }
   "hit friction" {
-    mix = Mix(hit_rotation_friction, vector_math_9, vector_math_6, data_type: VECTOR) @ hide
-    switch = Switch(boolean_math, vector_math_9, mix, input_type: VECTOR) @ hide
+    mix = Mix(factor: hit_rotation_friction, a: vector_math_9, b: vector_math_6, data_type: VECTOR) @ hide
+    switch = Switch(switch: boolean_math, false_: vector_math_9, true_: mix, input_type: VECTOR) @ hide
   }
   "rotation velocity" {
     store_named_attribute_2 = StoreNamedAttribute(
@@ -97,8 +105,8 @@ geometry graph "SDF Collision"(
     Bounce: Float(subtype: FACTOR) = 0.5 in 0.0..1.0,
     Friction: Float(subtype: FACTOR) = 0.5 in 0.0..1.0
 ) -> (">": Geometry, "Is Hit": Bool, "Hit Normal": Vector) {
-  mix = Mix(Bounce, -1.0, -2.0)
-  named_attribute = NamedAttribute(__string, data_type: FLOAT_VECTOR)
+  mix = Mix(factor: Bounce, a: -1.0, b: -2.0)
+  named_attribute = NamedAttribute(name: __string, data_type: FLOAT_VECTOR)
   capture_attribute_2 = CaptureAttribute(_, Value: signed_distance)
   capture_attribute = CaptureAttribute(capture_attribute_2.geometry, Value: Normal)
   "Normal Impulse" {
@@ -114,8 +122,8 @@ geometry graph "SDF Collision"(
   }
   "Tangent" {
     vector_math_9 = VectorMath(
-      named_attribute.attribute,
-      capture_attribute.value,
+      Vector: named_attribute.attribute,
+      Vector_001: capture_attribute.value,
       operation: PROJECT) @ hide
     vector_math_4 = named_attribute.attribute - vector_math_9 @ hide
     vector_math_5 = normalize(vector_math_4) @ hide
@@ -133,7 +141,7 @@ geometry graph "SDF Collision"(
   math_4 = 0.0 - capture_attribute_2.value @ hide
   vector_math_10 = capture_attribute.value * math_4 @ hide
   return (
-    ">": capture_attribute.geometry |> SetPosition(boolean_math, offset: vector_math_10) |> StoreNamedAttribute(boolean_math, __string, vector_math_8, data_type: FLOAT_VECTOR),
+    ">": capture_attribute.geometry |> SetPosition(selection: boolean_math, offset: vector_math_10) |> StoreNamedAttribute(selection: boolean_math, name: __string, value: vector_math_8, data_type: FLOAT_VECTOR),
     "Is Hit": boolean_math,
     "Hit Normal": capture_attribute.value)
 }
@@ -146,14 +154,14 @@ geometry graph "SDF Mesh Field"(
 ) -> ("Signed Distance": Float, Normal: Vector, Position: Vector, Offset: Vector) {
   position = Position() @ hide
   normal = Normal(legacy_corner_normals: true) @ hide
-  menu_switch = MenuSwitch(Mode, Points: 0, Edges: 1, Faces: 2)
+  menu_switch = MenuSwitch(menu: Mode, Points: 0, Edges: 1, Faces: 2)
   index_switch = IndexSwitch(
     menu_switch.output,
     Proximity(Mesh, sample_position: sample_position, target_element: POINTS).position,
     Proximity(Mesh, sample_position: sample_position, target_element: EDGES).position,
-    SampleNearestSurface(Mesh, position, sample_position: sample_position, data_type: FLOAT_VECTOR).value)
+    SampleNearestSurface(Mesh, value: position, sample_position: sample_position, data_type: FLOAT_VECTOR).value)
   vector_math = sample_position - index_switch @ hide
-  vector_math_2 = vector_math ⋅ SampleNearestSurface(Mesh, FieldOnDomain(normal.normal, data_type: FLOAT_VECTOR), sample_position: sample_position, data_type: FLOAT_VECTOR).value @ hide
+  vector_math_2 = vector_math ⋅ SampleNearestSurface(Mesh, value: FieldOnDomain(value: normal.normal, data_type: FLOAT_VECTOR), sample_position: sample_position, data_type: FLOAT_VECTOR).value @ hide
   vector_math_3 = normalize(vector_math) @ hide
   vector_math_5 = length(vector_math) @ hide
   math_2 = sign(vector_math_2) @ hide
@@ -182,12 +190,12 @@ geometry graph "Velocity Step"(
 ) -> (">": Geometry) {
   math = pow(1.0 - Damp, delta_time) @ hide
   vector_math_3 = Forces * delta_time @ hide
-  vector_math_2 = NamedAttribute(__string, data_type: FLOAT_VECTOR).attribute + vector_math_3 @ hide
-  switch = Switch(set_velocity, vector_math_2, Forces, input_type: VECTOR) @ hide
+  vector_math_2 = NamedAttribute(name: __string, data_type: FLOAT_VECTOR).attribute + vector_math_3 @ hide
+  switch = Switch(switch: set_velocity, false_: vector_math_2, true_: Forces, input_type: VECTOR) @ hide
   vector_math = switch * math @ hide
-  vector_math_4 = NamedAttribute(__string, data_type: FLOAT_VECTOR).attribute * delta_time @ hide
+  vector_math_4 = NamedAttribute(name: __string, data_type: FLOAT_VECTOR).attribute * delta_time @ hide
   return (
-    ">": _ |> StoreNamedAttribute(Selection, __string, vector_math, data_type: FLOAT_VECTOR) |> SetPosition(Selection, offset: vector_math_4))
+    ">": _ |> StoreNamedAttribute(selection: Selection, name: __string, value: vector_math, data_type: FLOAT_VECTOR) |> SetPosition(selection: Selection, offset: vector_math_4))
 }
 
 geometry graph "Particle Simulation Basic"(
@@ -267,14 +275,14 @@ geometry graph "Particle Simulation Basic"(
   }
   "collision" {
     realize_instances = RealizeInstances(
-      collider_extra + CollectionInfo(Collider, true, transform_space: RELATIVE)) @ hide
+      collider_extra + CollectionInfo(collection: Collider, separate_children: true, transform_space: RELATIVE)) @ hide
     radius = Radius() @ hide
     group_3 = sdf_mesh_field(mesh: realize_instances, radius: radius)
-    named_attribute = NamedAttribute("is_hit", data_type: BOOLEAN)
+    named_attribute = NamedAttribute(name: "is_hit", data_type: BOOLEAN)
     boolean_math = named_attribute.attribute and delete_on_hit @ hide
   }
   "trigger delete" {
-    compare = NamedAttribute("age").attribute > NamedAttribute("lifetime").attribute @ hide
+    compare = NamedAttribute(name: "age").attribute > NamedAttribute(name: "lifetime").attribute @ hide
   }
   "new particles" {
     store_named_attribute_2 = new_particles |> StoreNamedAttribute(name: "velocity", value: new_particles_velocity, data_type: FLOAT_VECTOR)
@@ -284,26 +292,26 @@ geometry graph "Particle Simulation Basic"(
     "time" {
       math_3 = time_multiplier * delta_time @ hide
       math_2 = math_3 / Substeps @ hide
-      math = math_2 + NamedAttribute("age").attribute @ hide
+      math = math_2 + NamedAttribute(name: "age").attribute @ hide
     }
     repeat_output = repeat(
       Substeps,
       Geometry: EvaluateClosure(First, Geometry: Geometry, "Delta Time": math_3) -> Geometry) {
       "time" .. {
-        store_named_attribute = EvaluateClosure(simulation_per_substep_first, Geometry: DeleteGeometry(Geometry, NamedAttribute("delete_next_step", data_type: BOOLEAN).attribute), "Delta Time": math_2) -> Geometry |> StoreNamedAttribute(name: "age", value: math)
+        store_named_attribute = EvaluateClosure(simulation_per_substep_first, Geometry: DeleteGeometry(Geometry, selection: NamedAttribute(name: "delete_next_step", data_type: BOOLEAN).attribute), "Delta Time": math_2) -> Geometry |> StoreNamedAttribute(name: "age", value: math)
       }
       "trigger delete" .. {
         store_named_attribute_4 = StoreNamedAttribute(
           store_named_attribute,
-          compare,
-          "delete_next_step",
-          true,
+          selection: compare,
+          name: "delete_next_step",
+          value: true,
           data_type: BOOLEAN)
       }
       "velocity" {
         group = velocity_step(
-          math_2,
-          store_named_attribute_4,
+          delta_time: math_2,
+          _: store_named_attribute_4,
           forces: Forces,
           damp: Damp,
           set_velocity: set_velocity)
@@ -316,23 +324,23 @@ geometry graph "Particle Simulation Basic"(
           bounce: Bounce,
           friction: Friction)
         switch_2 = Switch(
-          AttributeDomainSize(realize_instances).face_count,
-          group,
-          group_2._ |> StoreNamedAttribute(name: "is_hit", value: group_2.is_hit, data_type: BOOLEAN) |> StoreNamedAttribute(named_attribute.attribute, "hit_normal", group_2.hit_normal, data_type: FLOAT_VECTOR) |> StoreNamedAttribute(boolean_math, "delete_next_step", true, data_type: BOOLEAN),
+          switch: AttributeDomainSize(realize_instances).face_count,
+          false_: group,
+          true_: group_2._ |> StoreNamedAttribute(name: "is_hit", value: group_2.is_hit, data_type: BOOLEAN) |> StoreNamedAttribute(selection: named_attribute.attribute, name: "hit_normal", value: group_2.hit_normal, data_type: FLOAT_VECTOR) |> StoreNamedAttribute(selection: boolean_math, name: "delete_next_step", value: true, data_type: BOOLEAN),
           input_type: GEOMETRY) @ hide
       }
       "rotation" {
         group_4 = particle_rotation(
           switch_2,
-          math_2,
-          Rotation,
-          set_rotation,
-          Axis,
-          Angle,
-          set_velocity_bool,
-          damp_float,
-          hit_rotation,
-          hit_rotation_friction)
+          delta_time: math_2,
+          rotation: Rotation,
+          set_rotation: set_rotation,
+          axis: Axis,
+          angle: Angle,
+          set_velocity: set_velocity_bool,
+          damp: damp_float,
+          hit_rotation: hit_rotation,
+          hit_rotation_friction: hit_rotation_friction)
       }
       return EvaluateClosure(
         simulation_per_substep_last,
@@ -341,32 +349,32 @@ geometry graph "Particle Simulation Basic"(
     }
     "new particles with id" .. {
       integer_math = IntegerMath(
-        SampleIndex(repeat_output, FieldMinAndMax(index_2, data_type: INT).max, data_type: INT),
-        IntegerMath(index_3, 1, operation: ADD),
+        Value: SampleIndex(repeat_output, value: FieldMinAndMax(value: index_2, data_type: INT).max, data_type: INT),
+        Value_001: IntegerMath(Value: index_3, Value_001: 1, operation: ADD),
         operation: ADD) @ hide
       join_geometry = SetID(store_named_attribute_2, id: integer_math) + repeat_output
     }
     return EvaluateClosure(Last, Geometry: join_geometry, "Delta Time": math_3) -> Geometry
   }
   "convenience attributes" {
-    math_4 = NamedAttribute("age").attribute / NamedAttribute("lifetime").attribute @ hide
+    math_4 = NamedAttribute(name: "age").attribute / NamedAttribute(name: "lifetime").attribute @ hide
     store_named_attribute_3 = simulation_output |> StoreNamedAttribute(name: "random", value: RandomValue(seed: 88))
       |> StoreNamedAttribute(name: "life", value: math_4)
   }
   "Instance on Point" {
     radius_2 = Radius() @ hide
-    join_geometry_2 = extra_instances + CollectionInfo(Instances, true)
+    join_geometry_2 = extra_instances + CollectionInfo(collection: Instances, separate_children: true)
     geometry_to_instance = GeometryToInstance(
-      DeleteGeometry(MeshUVSphere(6, 4).mesh, mode: ONLY_FACE, domain: FACE)) @ hide
+      DeleteGeometry(MeshUVSphere(segments: 6, rings: 4).mesh, mode: ONLY_FACE, domain: FACE)) @ hide
     switch_3 = Switch(
-      AttributeDomainSize(join_geometry_2, component: INSTANCES),
-      geometry_to_instance,
-      join_geometry_2,
+      switch: AttributeDomainSize(join_geometry_2, component: INSTANCES),
+      false_: geometry_to_instance,
+      true_: join_geometry_2,
       input_type: GEOMETRY) @ hide
     switch = Switch(
-      Instance,
-      store_named_attribute_3,
-      InstanceOnPoints(store_named_attribute_3, Selection, switch_3, true, instance_index, NamedAttribute("rotation", data_type: QUATERNION).attribute, radius_2),
+      switch: Instance,
+      false_: store_named_attribute_3,
+      true_: InstanceOnPoints(store_named_attribute_3, selection: Selection, instance: switch_3, pick_instance: true, instance_index: instance_index, rotation: NamedAttribute(name: "rotation", data_type: QUATERNION).attribute, scale: radius_2),
       input_type: GEOMETRY) @ hide
   }
   return switch

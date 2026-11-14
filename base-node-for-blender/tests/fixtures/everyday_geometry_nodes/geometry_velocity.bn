@@ -22,14 +22,14 @@ geometry graph "Geometry Velocity"(
     "instance warning " {
       realize_instances = RealizeInstances(Geometry) @ hide
       switch_2 = Switch(
-        Warning(AttributeDomainSize(Geometry, component: INSTANCES), "Instances Realized for Point Velocity", warning_type: INFO),
-        Geometry,
-        realize_instances,
+        switch: Warning(show: AttributeDomainSize(Geometry, component: INSTANCES), message: "Instances Realized for Point Velocity", warning_type: INFO),
+        false_: Geometry,
+        true_: realize_instances,
         input_type: GEOMETRY) @ hide
     }
     "velocity" {
       position = Position() @ hide
-      vector_math_2 = position - NamedAttribute("reserved_old_position", data_type: FLOAT_VECTOR).attribute @ hide
+      vector_math_2 = position - NamedAttribute(name: "reserved_old_position", data_type: FLOAT_VECTOR).attribute @ hide
     }
     "old point position from ID" {
       position_2 = Position() @ hide
@@ -46,26 +46,32 @@ geometry graph "Geometry Velocity"(
       }
       transfer_attributes = TransferAttributes(
         store_named_attribute,
-        ID,
+        target_point_id: ID,
         source: simulation_output.geometry_001,
         source_point_id: ID,
         attribute_names: FieldToList("Attribute Names": "reserved_old_position"))
     }
     "velocity" .. {
       vector_math = VectorMath(
-        1.0 / simulation_output.delta_time_2,
-        vector_math_2,
+        Vector: 1.0 / simulation_output.delta_time_2,
+        Vector_001: vector_math_2,
         operation: MULTIPLY) @ hide
       "global space" {
-        transform_direction = TransformDirection(vector_math, ObjectInfo(SelfObject()).transform) @ hide
-        switch = Switch(global_space, vector_math, transform_direction, input_type: VECTOR) @ hide
+        transform_direction = TransformDirection(
+          direction: vector_math,
+          transform: ObjectInfo(object: SelfObject()).transform) @ hide
+        switch = Switch(
+          switch: global_space,
+          false_: vector_math,
+          true_: transform_direction,
+          input_type: VECTOR) @ hide
       }
       remove_attribute = transfer_attributes.target |> StoreNamedAttribute(name: velocity_attribute, value: switch, data_type: FLOAT_VECTOR)
         |> RemoveAttribute(name: "reserved_old_position")
     }
   }
   "menu" {
-    menu_switch = MenuSwitch(Menu, Points: 0, Instances: 1)
+    menu_switch = MenuSwitch(menu: Menu, Points: 0, Instances: 1)
   }
   "instance mode" {
     "instance old transform" {
@@ -73,7 +79,7 @@ geometry graph "Geometry Velocity"(
       "old instance transform (no points)" {
         instance_transform = InstanceTransform() @ hide
       }
-      named_attribute = NamedAttribute("reserved_instance_id", data_type: INT)
+      named_attribute = NamedAttribute(name: "reserved_instance_id", data_type: INT)
       separate_components = SeparateComponents(Geometry)
       "old instance transform (no points)" .. {
         instances_to_points = separate_components.instances |> StoreNamedAttribute(name: "reserved_instance_id", value: ID, data_type: INT, domain: INSTANCE)
@@ -89,21 +95,25 @@ geometry graph "Geometry Velocity"(
       store_named_attribute_2 = StoreNamedAttribute(
         separate_components.instances,
         name: old_instance_transform_attribute,
-        value: SampleIndex(TransferAttributes(instances_to_points, named_attribute.attribute, source: simulation_output_2.geometry_001, source_point_id: named_attribute.attribute, attribute_names: FieldToList("Attribute Names": "old_instance_transform")).target, NamedAttribute("old_instance_transform", data_type: FLOAT4X4).attribute, index_2, data_type: FLOAT4X4),
+        value: SampleIndex(TransferAttributes(instances_to_points, target_point_id: named_attribute.attribute, source: simulation_output_2.geometry_001, source_point_id: named_attribute.attribute, attribute_names: FieldToList("Attribute Names": "old_instance_transform")).target, value: NamedAttribute(name: "old_instance_transform", data_type: FLOAT4X4).attribute, index: index_2, data_type: FLOAT4X4),
         data_type: FLOAT4X4,
         domain: INSTANCE)
     }
     "instance velocity" {
-      separate_transform = SeparateTransform(InstanceTransform()) @ hide
+      separate_transform = SeparateTransform(transform: InstanceTransform()) @ hide
       separate_transform_2 = SeparateTransform(
-        NamedAttribute(old_instance_transform_attribute, data_type: FLOAT4X4).attribute) @ hide
+        transform: NamedAttribute(name: old_instance_transform_attribute, data_type: FLOAT4X4).attribute) @ hide
       vector_math_3 = separate_transform.translation - separate_transform_2.translation @ hide
       vector_math_4 = vector_math_3 * (1.0 / simulation_output_2.delta_time_2) @ hide
       "global space" {
         transform_direction_2 = TransformDirection(
-          vector_math_4,
-          ObjectInfo(SelfObject()).transform) @ hide
-        switch_4 = Switch(global_space, vector_math_4, transform_direction_2, input_type: VECTOR) @ hide
+          direction: vector_math_4,
+          transform: ObjectInfo(object: SelfObject()).transform) @ hide
+        switch_4 = Switch(
+          switch: global_space,
+          false_: vector_math_4,
+          true_: transform_direction_2,
+          input_type: VECTOR) @ hide
       }
       store_named_attribute_3 = StoreNamedAttribute(
         store_named_attribute_2,
@@ -118,24 +128,28 @@ geometry graph "Geometry Velocity"(
         store_named_attribute_3,
         domain: INSTANCE,
         Transform: InstanceTransform(),
-        Attribute: NamedAttribute(old_instance_transform_attribute, data_type: FLOAT4X4).attribute) {
-        transform_point = TransformPoint(position_3, Transform) @ hide
-        transform_point_2 = TransformPoint(position_3, Attribute) @ hide
+        Attribute: NamedAttribute(name: old_instance_transform_attribute, data_type: FLOAT4X4).attribute) {
+        transform_point = TransformPoint(vector: position_3, transform: Transform) @ hide
+        transform_point_2 = TransformPoint(vector: position_3, transform: Attribute) @ hide
         vector_math_5 = transform_point - transform_point_2 @ hide
         vector_math_6 = vector_math_5 * (1.0 / simulation_output_2.delta_time_2) @ hide
         "global space" {
           transform_direction_3 = TransformDirection(
-            vector_math_6,
-            ObjectInfo(SelfObject()).transform) @ hide
-          switch_5 = Switch(global_space, vector_math_6, transform_direction_3, input_type: VECTOR) @ hide
+            direction: vector_math_6,
+            transform: ObjectInfo(object: SelfObject()).transform) @ hide
+          switch_5 = Switch(
+            switch: global_space,
+            false_: vector_math_6,
+            true_: transform_direction_3,
+            input_type: VECTOR) @ hide
         }
         return (
           Geometry: StoreNamedAttribute(element, name: point_velocity_attribute, value: switch_5, data_type: FLOAT_VECTOR))
       }
       switch_3 = Switch(
-        point_velocity_non_deform,
-        store_named_attribute_3,
-        foreach_output.Geometry,
+        switch: point_velocity_non_deform,
+        false_: store_named_attribute_3,
+        true_: foreach_output.Geometry,
         input_type: GEOMETRY) @ hide
     }
   }

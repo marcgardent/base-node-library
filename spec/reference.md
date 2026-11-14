@@ -119,7 +119,7 @@ Flags: `"Label"`, `#color`, `hide` (collapsed), `mute` (bypassed).
 
 ## 5. Expressions
 
-- **Node call**: `NodeName(pos_arg, socket: named_arg, PROP: ENUM_VAL)`
+- **Node call**: `NodeName(geometry, socket: value, PROP: ENUM_VAL)`. Inputs are named by their socket's key: the canonical form, the one a tree reads back to, names every input but those a name cannot tell — the geometry the node works on (its first input, linked: the pipe's), the items of a switch (`IndexSwitch(0, a, b)`) and the values of a multi-input, with the inputs before them. A value may still be written by position, in socket order and before the named ones
 - **Output access**: `node.output_name`
 - **Vector swizzle**: `v.x`, `v.y`, `v.z`
 - **Pipe**: `a |> f(b)` is `f(a, b)`

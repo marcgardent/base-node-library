@@ -21,7 +21,7 @@ geometry graph "Solid Extrude"(
   math_4 = Thickness * Multiplier @ hide
   capture_attribute = CaptureAttribute(
     Geometry,
-    Selection,
+    selection: Selection,
     Index: index,
     Value: normal.true_normal,
     "Value.001": math_4)
@@ -33,21 +33,21 @@ geometry graph "Solid Extrude"(
     flip_faces = FlipFaces(capture_attribute_2.geometry) @ hide
     extrude_mesh = ExtrudeMesh(
       capture_attribute_2.geometry,
-      Selection,
+      selection: Selection,
       offset_scale: 0.0,
       individual: false)
     boolean_math = not extrude_mesh.top @ hide
     switch = Switch(
-      keep_bottom,
-      extrude_mesh.mesh,
-      MergePoints(extrude_mesh.mesh + flip_faces, boolean_math, capture_attribute.index),
+      switch: keep_bottom,
+      false_: extrude_mesh.mesh,
+      true_: MergePoints(extrude_mesh.mesh + flip_faces, selection: boolean_math, merge_id: capture_attribute.index),
       input_type: GEOMETRY) @ hide
   }
   vector_math = capture_attribute_2.value ⋅ capture_attribute.value @ hide
   {
     math = extrude_mesh.top - Midlevel @ hide
-    math_3 = capture_attribute.value_001 / pow(FieldOnDomain(vector_math, domain: CORNER), 2.0) @ hide
-    switch_2 = Switch(even_thickness, capture_attribute.value_001, math_3) @ hide
+    math_3 = capture_attribute.value_001 / pow(FieldOnDomain(value: vector_math, domain: CORNER), 2.0) @ hide
+    switch_2 = Switch(switch: even_thickness, false_: capture_attribute.value_001, true_: math_3) @ hide
     math_2 = math * switch_2 @ hide
     vector_math_2 = capture_attribute_2.value * math_2 @ hide
     set_position = SetPosition(switch, offset: vector_math_2)

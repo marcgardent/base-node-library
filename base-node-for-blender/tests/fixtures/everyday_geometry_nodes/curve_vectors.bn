@@ -12,11 +12,11 @@ geometry graph "Curve Vectors"() -> (Vectors: Vector, "Is Valid": Bool) {
   offset_point_in_curve = OffsetPointInCurve(offset: 1)
   index = Index() @ hide
   switch = Switch(
-    offset_point_in_curve.is_valid_offset,
-    index,
-    offset_point_in_curve.point_index,
+    switch: offset_point_in_curve.is_valid_offset,
+    false_: index,
+    true_: offset_point_in_curve.point_index,
     input_type: INT) @ hide
-  field_at_index = FieldAtIndex(position, switch, data_type: FLOAT_VECTOR) @ hide
+  field_at_index = FieldAtIndex(value: position, index: switch, data_type: FLOAT_VECTOR) @ hide
   vector_math = field_at_index - position @ hide
   return (Vectors: vector_math, "Is Valid": offset_point_in_curve.is_valid_offset)
 }

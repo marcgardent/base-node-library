@@ -18,10 +18,10 @@ geometry(is_modifier: false) graph "Relax Points"(
   position_2 = Position() @ hide
   repeat_output = repeat(Iterations, Geometry: capture_attribute_2.geometry) {
     capture_attribute = CaptureAttribute(Geometry, Value: IndexOfNearest().index) @ hide
-    vector_math = position_2 - FieldAtIndex(position, capture_attribute.value, data_type: FLOAT_VECTOR) @ hide
+    vector_math = position_2 - FieldAtIndex(value: position, index: capture_attribute.value, data_type: FLOAT_VECTOR) @ hide
     vector_math_2 = normalize(vector_math) @ hide
     vector_math_4 = length(vector_math) @ hide
-    math_3 = FieldAtIndex(capture_attribute_2.value, capture_attribute.value) + capture_attribute_2.value @ hide
+    math_3 = FieldAtIndex(value: capture_attribute_2.value, index: capture_attribute.value) + capture_attribute_2.value @ hide
     math_2 = vector_math_4 - math_3 @ hide
     math_4 = math_2 / -2.0 * Factor @ hide
     math = max(math_4, 0.0) @ hide

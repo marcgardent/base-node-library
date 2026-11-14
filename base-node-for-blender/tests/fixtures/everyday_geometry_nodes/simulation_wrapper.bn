@@ -8,12 +8,15 @@
 // @profile "blender-geometry"
 
 geometry graph ".Evaluate Nested Bundle Closures"(Geometry: Geometry, Bundle: Bundle) -> Geometry {
-  get_nested_bundle_paths = GetNestedBundlePaths(Bundle, "Data Type", data_type: Closure)
+  get_nested_bundle_paths = GetNestedBundlePaths(
+    bundle: Bundle,
+    mode: "Data Type",
+    data_type: Closure)
   repeat_output = repeat(
-    ListLength(get_nested_bundle_paths, data_type: STRING),
+    ListLength(list: get_nested_bundle_paths, data_type: STRING),
     Geometry: Geometry) {
     return EvaluateClosure(
-      GetBundleItem(Bundle, ListGetItem(get_nested_bundle_paths, iteration, socket_type: STRING), socket_type: CLOSURE).item,
+      GetBundleItem(bundle: Bundle, path: ListGetItem(list: get_nested_bundle_paths, index: iteration, socket_type: STRING), socket_type: CLOSURE).item,
       Geometry: Geometry) -> Geometry
   }
   return repeat_output
@@ -51,42 +54,44 @@ geometry(is_modifier: false) graph "Simulation Wrapper"(
     }
 ) -> Geometry {
   simulation_output = simulate(
-    Geometry: evaluate_nested_bundle_closures(Geometry, before_simulation)) {
+    Geometry: evaluate_nested_bundle_closures(Geometry, bundle: before_simulation)) {
     math_2 = time_mutliplier * delta_time @ hide
     math = math_2 / Substep @ hide
     "frame dt" {
       get_geometry_bundle = GetGeometryBundle(Geometry) @ hide
       set_geometry_bundle = SetGeometryBundle(
         get_geometry_bundle.geometry,
-        StoreBundleItem(get_geometry_bundle.bundle, "Delta Time", math_2)) @ hide
+        bundle: StoreBundleItem(bundle: get_geometry_bundle.bundle, path: "Delta Time", item: math_2)) @ hide
     }
     repeat_output = repeat(
       Substep,
-      Geometry: evaluate_nested_bundle_closures(set_geometry_bundle, before_substeps)) {
+      Geometry: evaluate_nested_bundle_closures(set_geometry_bundle, bundle: before_substeps)) {
       "substep dt" {
         get_geometry_bundle_2 = GetGeometryBundle(Geometry) @ hide
         set_geometry_bundle_2 = SetGeometryBundle(
           get_geometry_bundle_2.geometry,
-          StoreBundleItem(get_geometry_bundle_2.bundle, "Delta Time", math)) @ hide
+          bundle: StoreBundleItem(bundle: get_geometry_bundle_2.bundle, path: "Delta Time", item: math)) @ hide
       }
-      return evaluate_nested_bundle_closures(set_geometry_bundle_2, simulation_closures_substep)
+      return evaluate_nested_bundle_closures(
+        set_geometry_bundle_2,
+        bundle: simulation_closures_substep)
     }
     "frame dt" {
       get_geometry_bundle_3 = GetGeometryBundle(repeat_output) @ hide
       set_geometry_bundle_3 = SetGeometryBundle(
         get_geometry_bundle_3.geometry,
-        StoreBundleItem(get_geometry_bundle_3.bundle, "Delta Time", math_2)) @ hide
+        bundle: StoreBundleItem(bundle: get_geometry_bundle_3.bundle, path: "Delta Time", item: math_2)) @ hide
     }
-    return evaluate_nested_bundle_closures(set_geometry_bundle_3, after_substeps)
+    return evaluate_nested_bundle_closures(set_geometry_bundle_3, bundle: after_substeps)
   }
-  group = evaluate_nested_bundle_closures(simulation_output, after_simulation)
+  group = evaluate_nested_bundle_closures(simulation_output, bundle: after_simulation)
   "Undo Transform" {
     self_object = SelfObject() @ hide
-    invert_matrix = InvertMatrix(ObjectInfo(self_object).transform) @ hide
+    invert_matrix = InvertMatrix(matrix: ObjectInfo(object: self_object).transform) @ hide
     switch = Switch(
-      undo_self_transform,
-      group,
-      Transform(group, Matrix, transform: invert_matrix.matrix),
+      switch: undo_self_transform,
+      false_: group,
+      true_: Transform(group, mode: Matrix, transform: invert_matrix.matrix),
       input_type: GEOMETRY) @ hide
   }
   return switch

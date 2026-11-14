@@ -929,7 +929,11 @@ class GraphReader:
             fresh = fresh_item_options(node.bl_idname, made)
             item_of = {s.identifier: (i, f) for s, i, f in zip(every, getattr(node, shape.collection), fresh)}
             aliases = self.item_aliases(node)
+        # Every input is named, as nobody can tell an input by its rank, but where a name cannot
+        # be written: the items of a switch (IndexSwitch(0, a, b)) and the values of a multi-input,
+        # and the inputs before them. The geometry a node works on comes first, unnamed: the pipe's
         positional = True
+        by_position = shape is not None and not shape.named or any(s.is_multi_input for s in inputs)
         geometry_first = False
         for i, sock in enumerate(inputs):
             item = shape is not None and i >= shape.inputs
@@ -961,9 +965,12 @@ class GraphReader:
                 continue
             if item and shape.named:
                 positional = False
+            subject = i == 0 and sock.type == "GEOMETRY" and not sock.is_multi_input and links
+            if not (by_position or subject):
+                positional = False
             label = None if positional else sock.name if item else \
                 socket_name(sock, inputs, group, group_keys(node, "INPUT"))
-            if i == 0 and sock.type == "GEOMETRY" and not sock.is_multi_input and links:
+            if subject:
                 geometry_first = True
             options = self.item_options(node, shape, *item_of[sock.identifier], sock) if item else []
             for v in values:

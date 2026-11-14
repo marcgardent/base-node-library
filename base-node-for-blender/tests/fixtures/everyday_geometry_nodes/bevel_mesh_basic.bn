@@ -27,13 +27,13 @@ geometry graph ".Closest Edge Edge Pair"(
   math_4 = vector_math_5 * vector_math_8 @ hide
   math_6 = vector_math_6 * vector_math_7 @ hide
   math_5 = math_4 - math_6 @ hide
-  math_7 = Math(math_5, math_2, operation: DIVIDE, use_clamp: true) @ "t" hide
+  math_7 = Math(Value: math_5, Value_001: math_2, operation: DIVIDE, use_clamp: true) @ "t" hide
   vector_math_10 = vector_math * math_7 @ hide
   vector_math_9 = edge1_p1 + vector_math_10 @ hide
   math_8 = vector_math_4 * vector_math_8 @ hide
   math_10 = vector_math_5 * vector_math_7 @ hide
   math_9 = math_8 - math_10 @ hide
-  math_11 = Math(math_9, math_2, operation: DIVIDE, use_clamp: true) @ "s" hide
+  math_11 = Math(Value: math_9, Value_001: math_2, operation: DIVIDE, use_clamp: true) @ "s" hide
   vector_math_12 = vector_math_2 * math_11 @ hide
   vector_math_11 = edge2_q1 + vector_math_12 @ hide
   compare = vector_math_9 == vector_math_11 @ hide
@@ -48,8 +48,8 @@ geometry graph ".Bevel Edge Width Clamped v1"(
 ) -> (Geometry: Geometry, Selection: Bool, Width: Float) {
   "bisector and perpendicular " {
     position = Position() @ hide
-    vector_math = FieldAtIndex(position, OffsetCornerInFace(offset: 1), domain: CORNER, data_type: FLOAT_VECTOR) - position @ hide
-    vector_math_2 = FieldAtIndex(position, OffsetCornerInFace(offset: -1), domain: CORNER, data_type: FLOAT_VECTOR) - position @ hide
+    vector_math = FieldAtIndex(value: position, index: OffsetCornerInFace(offset: 1), domain: CORNER, data_type: FLOAT_VECTOR) - position @ hide
+    vector_math_2 = FieldAtIndex(value: position, index: OffsetCornerInFace(offset: -1), domain: CORNER, data_type: FLOAT_VECTOR) - position @ hide
     vector_math_3 = normalize(vector_math) @ hide
     vector_math_4 = normalize(vector_math_2) @ hide
     vector_math_5 = vector_math_3 + vector_math_4 @ hide
@@ -65,8 +65,8 @@ geometry graph ".Bevel Edge Width Clamped v1"(
     offset_corner_in_face = OffsetCornerInFace(offset: 1)
     position_2 = Position() @ hide
     field_at_index_2 = FieldAtIndex(
-      position_2,
-      offset_corner_in_face,
+      value: position_2,
+      index: offset_corner_in_face,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     position_3 = Position() @ hide
@@ -77,8 +77,12 @@ geometry graph ".Bevel Edge Width Clamped v1"(
   {
     corners_of_edge = CornersOfEdge()
     corners_of_edge_2 = CornersOfEdge(sort_index: 1)
-    offset_corner_in_face_3 = OffsetCornerInFace(corners_of_edge.corner_index, 1)
-    offset_corner_in_face_4 = OffsetCornerInFace(corners_of_edge_2.corner_index, 1)
+    offset_corner_in_face_3 = OffsetCornerInFace(
+      corner_index: corners_of_edge.corner_index,
+      offset: 1)
+    offset_corner_in_face_4 = OffsetCornerInFace(
+      corner_index: corners_of_edge_2.corner_index,
+      offset: 1)
   }
   {
     edges_of_corner = EdgesOfCorner()
@@ -87,8 +91,8 @@ geometry graph ".Bevel Edge Width Clamped v1"(
     offset_corner_in_face_2 = OffsetCornerInFace(offset: -1)
     position_5 = Position() @ hide
     field_at_index_6 = FieldAtIndex(
-      position_5,
-      offset_corner_in_face_2,
+      value: position_5,
+      index: offset_corner_in_face_2,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     position_6 = Position() @ hide
@@ -99,34 +103,34 @@ geometry graph ".Bevel Edge Width Clamped v1"(
   {
     position_10 = Position() @ hide
     field_at_index_15 = FieldAtIndex(
-      position_10,
-      corners_of_edge.corner_index,
+      value: position_10,
+      index: corners_of_edge.corner_index,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     vector_math_27 = position_10 - field_at_index_15 @ hide
     position_11 = Position() @ hide
     field_at_index_17 = FieldAtIndex(
-      position_11,
-      corners_of_edge_2.corner_index,
+      value: position_11,
+      index: corners_of_edge_2.corner_index,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     vector_math_29 = position_11 - field_at_index_17 @ hide
     position_12 = Position() @ hide
     field_at_index_19 = FieldAtIndex(
-      position_12,
-      offset_corner_in_face_4,
+      value: position_12,
+      index: offset_corner_in_face_4,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     vector_math_31 = position_12 - field_at_index_19 @ hide
     position_13 = Position() @ hide
     field_at_index_21 = FieldAtIndex(
-      position_13,
-      offset_corner_in_face_3,
+      value: position_13,
+      index: offset_corner_in_face_3,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     vector_math_33 = position_13 - field_at_index_21 @ hide
   }
-  capture_attribute_2 = CaptureAttribute(Geometry, Selection, domain: EDGE)
+  capture_attribute_2 = CaptureAttribute(Geometry, selection: Selection, domain: EDGE)
   capture_attribute = CaptureAttribute(
     capture_attribute_2.geometry,
     bisector: vector_math_6,
@@ -135,27 +139,27 @@ geometry graph ".Bevel Edge Width Clamped v1"(
     domain: CORNER)
   {
     field_at_index = FieldAtIndex(
-      capture_attribute.bisector,
-      offset_corner_in_face,
+      value: capture_attribute.bisector,
+      index: offset_corner_in_face,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     vector_math_8 = field_at_index * 999.0 @ hide
     vector_math_7 = field_at_index_2 + vector_math_8 @ hide
     vector_math_10 = capture_attribute.bisector * 999.0 @ hide
     vector_math_9 = position_4 + vector_math_10 @ hide
-    vector_math_13 = closest_edge_edge_pair(position_4, vector_math_9, field_at_index_2, vector_math_7).p - position_3 @ hide
+    vector_math_13 = closest_edge_edge_pair(edge1_p1: position_4, edge1_p2: vector_math_9, edge2_q1: field_at_index_2, edge2_q2: vector_math_7).p - position_3 @ hide
     vector_math_12 = capture_attribute.perpendicular_next ⋅ vector_math_13 @ hide
     vector_math_24 = vector_math_23 ⋅ capture_attribute.perpendicular_prev @ hide
   }
   {
     field_at_index_3 = FieldAtIndex(
-      capture_attribute_2.selection,
-      edges_of_corner.next_edge_index,
+      value: capture_attribute_2.selection,
+      index: edges_of_corner.next_edge_index,
       domain: EDGE,
       data_type: BOOLEAN)
     field_at_index_4 = FieldAtIndex(
-      capture_attribute_2.selection,
-      edges_of_corner.previous_edge_index,
+      value: capture_attribute_2.selection,
+      index: edges_of_corner.previous_edge_index,
       domain: EDGE,
       data_type: BOOLEAN)
     boolean_math = field_at_index_3 and field_at_index_4 @ hide
@@ -163,63 +167,72 @@ geometry graph ".Bevel Edge Width Clamped v1"(
   }
   {
     field_at_index_5 = FieldAtIndex(
-      capture_attribute.bisector,
-      offset_corner_in_face_2,
+      value: capture_attribute.bisector,
+      index: offset_corner_in_face_2,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     vector_math_16 = field_at_index_5 * 999.0 @ hide
     vector_math_15 = field_at_index_6 + vector_math_16 @ hide
     vector_math_18 = capture_attribute.bisector * 999.0 @ hide
     vector_math_17 = position_7 + vector_math_18 @ hide
-    vector_math_20 = closest_edge_edge_pair(position_7, vector_math_17, field_at_index_6, vector_math_15).p - position_6 @ hide
+    vector_math_20 = closest_edge_edge_pair(edge1_p1: position_7, edge1_p2: vector_math_17, edge2_q1: field_at_index_6, edge2_q2: vector_math_15).p - position_6 @ hide
     vector_math_19 = capture_attribute.perpendicular_prev ⋅ vector_math_20 @ hide
     vector_math_26 = capture_attribute.perpendicular_next ⋅ vector_math_25 @ hide
   }
   {
     field_at_index_7 = FieldAtIndex(
-      field_at_index_3,
-      offset_corner_in_face,
+      value: field_at_index_3,
+      index: offset_corner_in_face,
       domain: CORNER,
       data_type: BOOLEAN) @ hide
     field_at_index_8 = FieldAtIndex(
-      field_at_index_4,
-      offset_corner_in_face_2,
+      value: field_at_index_4,
+      index: offset_corner_in_face_2,
       domain: CORNER,
       data_type: BOOLEAN) @ hide
   }
   {
-    field_at_index_9 = FieldAtIndex(vector_math_24, offset_corner_in_face, domain: CORNER) @ hide
-    field_at_index_10 = FieldAtIndex(vector_math_26, offset_corner_in_face_2, domain: CORNER) @ hide
+    field_at_index_9 = FieldAtIndex(
+      value: vector_math_24,
+      index: offset_corner_in_face,
+      domain: CORNER) @ hide
+    field_at_index_10 = FieldAtIndex(
+      value: vector_math_26,
+      index: offset_corner_in_face_2,
+      domain: CORNER) @ hide
     math_4 = min(field_at_index_9, vector_math_26) @ hide
     math_5 = min(vector_math_24, field_at_index_10) @ hide
   }
   {
-    switch = Switch(field_at_index_7, math_4, vector_math_12) @ hide
-    switch_2 = Switch(field_at_index_8, math_5, vector_math_19) @ hide
+    switch = Switch(switch: field_at_index_7, false_: math_4, true_: vector_math_12) @ hide
+    switch_2 = Switch(switch: field_at_index_8, false_: math_5, true_: vector_math_19) @ hide
     math_3 = min(switch, switch_2) @ hide
-    switch_4 = Switch(field_at_index_3, math_5, math_4) @ hide
-    switch_3 = Switch(boolean_math, Switch(boolean_math_2, 999.0, switch_4), math_3) @ hide
+    switch_4 = Switch(switch: field_at_index_3, false_: math_5, true_: math_4) @ hide
+    switch_3 = Switch(
+      switch: boolean_math,
+      false_: Switch(switch: boolean_math_2, false_: 999.0, true_: switch_4),
+      true_: math_3) @ hide
   }
   {
     field_at_index_11 = FieldAtIndex(
-      capture_attribute_2.selection,
-      EdgesOfCorner(corners_of_edge.corner_index).previous_edge_index,
+      value: capture_attribute_2.selection,
+      index: EdgesOfCorner(corner_index: corners_of_edge.corner_index).previous_edge_index,
       domain: EDGE,
       data_type: BOOLEAN)
     field_at_index_12 = FieldAtIndex(
-      capture_attribute_2.selection,
-      EdgesOfCorner(offset_corner_in_face_3).next_edge_index,
+      value: capture_attribute_2.selection,
+      index: EdgesOfCorner(corner_index: offset_corner_in_face_3).next_edge_index,
       domain: EDGE,
       data_type: BOOLEAN)
     field_at_index_13 = FieldAtIndex(
-      capture_attribute_2.selection,
-      EdgesOfCorner(corners_of_edge_2.corner_index).previous_edge_index,
+      value: capture_attribute_2.selection,
+      index: EdgesOfCorner(corner_index: corners_of_edge_2.corner_index).previous_edge_index,
       domain: EDGE,
       data_type: BOOLEAN)
     boolean_math_3 = field_at_index_13 or field_at_index_12 @ hide
     field_at_index_14 = FieldAtIndex(
-      capture_attribute_2.selection,
-      EdgesOfCorner(offset_corner_in_face_4).next_edge_index,
+      value: capture_attribute_2.selection,
+      index: EdgesOfCorner(corner_index: offset_corner_in_face_4).next_edge_index,
       domain: EDGE,
       data_type: BOOLEAN)
     boolean_math_5 = field_at_index_11 or field_at_index_14 @ hide
@@ -228,35 +241,35 @@ geometry graph ".Bevel Edge Width Clamped v1"(
   }
   {
     field_at_index_16 = FieldAtIndex(
-      capture_attribute.perpendicular_prev,
-      corners_of_edge.corner_index,
+      value: capture_attribute.perpendicular_prev,
+      index: corners_of_edge.corner_index,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     vector_math_28 = vector_math_27 ⋅ field_at_index_16 @ hide
     field_at_index_18 = FieldAtIndex(
-      capture_attribute.perpendicular_prev,
-      corners_of_edge_2.corner_index,
+      value: capture_attribute.perpendicular_prev,
+      index: corners_of_edge_2.corner_index,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     vector_math_30 = vector_math_29 ⋅ field_at_index_18 @ hide
     field_at_index_20 = FieldAtIndex(
-      capture_attribute.perpendicular_next,
-      offset_corner_in_face_4,
+      value: capture_attribute.perpendicular_next,
+      index: offset_corner_in_face_4,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     vector_math_32 = vector_math_31 ⋅ field_at_index_20 @ hide
     field_at_index_22 = FieldAtIndex(
-      capture_attribute.perpendicular_next,
-      offset_corner_in_face_3,
+      value: capture_attribute.perpendicular_next,
+      index: offset_corner_in_face_3,
       domain: CORNER,
       data_type: FLOAT_VECTOR) @ hide
     vector_math_34 = vector_math_33 ⋅ field_at_index_22 @ hide
     math_7 = min(
-      Switch(field_at_index_11, 999.0, vector_math_28),
-      Switch(field_at_index_14, 999.0, vector_math_32)) @ hide
+      Switch(switch: field_at_index_11, false_: 999.0, true_: vector_math_28),
+      Switch(switch: field_at_index_14, false_: 999.0, true_: vector_math_32)) @ hide
     math_8 = min(
-      Switch(field_at_index_13, 999.0, vector_math_30),
-      Switch(field_at_index_12, 999.0, vector_math_34)) @ hide
+      Switch(switch: field_at_index_13, false_: 999.0, true_: vector_math_30),
+      Switch(switch: field_at_index_12, false_: 999.0, true_: vector_math_34)) @ hide
     math_9 = min(math_7, math_8) @ hide
   }
   capture_attribute_3 = CaptureAttribute(
@@ -265,17 +278,17 @@ geometry graph ".Bevel Edge Width Clamped v1"(
     domain: CORNER)
   {
     math_2 = min(
-      FieldAtIndex(capture_attribute_3.distance, corners_of_edge.corner_index, domain: CORNER),
-      FieldAtIndex(capture_attribute_3.distance, corners_of_edge_2.corner_index, domain: CORNER)) @ hide
+      FieldAtIndex(value: capture_attribute_3.distance, index: corners_of_edge.corner_index, domain: CORNER),
+      FieldAtIndex(value: capture_attribute_3.distance, index: corners_of_edge_2.corner_index, domain: CORNER)) @ hide
   }
   "edge min width " {
     math_6 = min(math_2, math_9) @ hide
-    switch_5 = Switch(boolean_math_4, math_2, math_6) @ hide
-    field_on_domain = FieldOnDomain(switch_5, domain: EDGE)
-    math = min(Width, FieldMinAndMax(field_on_domain, domain: EDGE).min) @ hide
+    switch_5 = Switch(switch: boolean_math_4, false_: math_2, true_: math_6) @ hide
+    field_on_domain = FieldOnDomain(value: switch_5, domain: EDGE)
+    math = min(Width, FieldMinAndMax(value: field_on_domain, domain: EDGE).min) @ hide
     math_10 = min(
       Width,
-      FieldMinAndMax(field_on_domain, MeshIsland().island_index, domain: EDGE).min) @ hide
+      FieldMinAndMax(value: field_on_domain, group_id: MeshIsland().island_index, domain: EDGE).min) @ hide
   }
   return (
     Geometry: IndexSwitch(off_min_min_per_island, Geometry, capture_attribute_3.geometry, capture_attribute_3.geometry),
@@ -319,10 +332,10 @@ geometry graph "Bevel Mesh Basic"(
   }
   "harden normal by adjacent faces" {
     index = Index() @ hide
-    field_on_domain_2 = FieldOnDomain(index, data_type: INT)
+    field_on_domain_2 = FieldOnDomain(value: index, data_type: INT)
   }
   "clamp mode" {
-    menu_switch = MenuSwitch(Clamp, Off: 0, Minimum: 1, "Minimum per Island": 2)
+    menu_switch = MenuSwitch(menu: Clamp, Off: 0, Minimum: 1, "Minimum per Island": 2)
   }
   "vertex midpoint (selection accounted) (4 limit)" {
     "other vertices" {
@@ -332,20 +345,20 @@ geometry graph "Bevel Mesh Basic"(
       closure_output = closure("Sort Index": Int) -> (Value: Float) {
         edges_of_vertex = EdgesOfVertex(sort_index: sort_index)
         field_at_index = FieldAtIndex(
-          mesh_edge_vertices.vertex_index_1,
-          edges_of_vertex.edge_index,
+          value: mesh_edge_vertices.vertex_index_1,
+          index: edges_of_vertex.edge_index,
           domain: EDGE,
           data_type: INT)
         compare_2 = index_2 == field_at_index @ hide
         switch_2 = Switch(
-          compare_2,
-          field_at_index,
-          FieldAtIndex(mesh_edge_vertices.vertex_index_2, edges_of_vertex.edge_index, domain: EDGE, data_type: INT),
+          switch: compare_2,
+          false_: field_at_index,
+          true_: FieldAtIndex(value: mesh_edge_vertices.vertex_index_2, index: edges_of_vertex.edge_index, domain: EDGE, data_type: INT),
           input_type: INT) @ hide
         vector_math_4 = distance(
-          FieldAtIndex(position, switch_2, data_type: FLOAT_VECTOR),
+          FieldAtIndex(value: position, index: switch_2, data_type: FLOAT_VECTOR),
           position) @ hide
-        return vector_math_4 / Switch(FieldAtIndex(Selection, switch_2, data_type: BOOLEAN), 1.0, 2.0)
+        return vector_math_4 / Switch(switch: FieldAtIndex(value: Selection, index: switch_2, data_type: BOOLEAN), false_: 1.0, true_: 2.0)
       }
     }
     math = min(closure_output(), closure_output("Sort Index": 1)) @ hide
@@ -353,18 +366,22 @@ geometry graph "Bevel Mesh Basic"(
     math_3 = min(math, math_2) @ hide
   }
   "vertices or edges mode" {
-    menu_switch_2 = MenuSwitch(affect_kind, Vertices: 0, Edges: 1)
+    menu_switch_2 = MenuSwitch(menu: affect_kind, Vertices: 0, Edges: 1)
   }
   "width" {
     math_6 = Width * Factor @ hide
   }
   "edge clamp" {
-    group = bevel_edge_width_clamped_v1(Mesh, menu_switch.output, boolean_math, math_6)
+    group = bevel_edge_width_clamped_v1(
+      Mesh,
+      off_min_min_per_island: menu_switch.output,
+      selection: boolean_math,
+      width: math_6)
   }
   "edges" {
     mesh_bevel = MeshBevel(
       group.geometry,
-      group.selection,
+      selection: group.selection,
       start_left_offset: group.width,
       start_right_offset: group.width,
       end_left_offset: group.width,
@@ -382,15 +399,15 @@ geometry graph "Bevel Mesh Basic"(
       "Mid Edge": mesh_bevel.mid_edge)
   }
   "vertex clamp" {
-    math_4 = min(math_6, FieldMinAndMax(math_3).min) @ hide
-    math_5 = min(math_6, FieldMinAndMax(math_3, MeshIsland().island_index).min) @ hide
+    math_4 = min(math_6, FieldMinAndMax(value: math_3).min) @ hide
+    math_5 = min(math_6, FieldMinAndMax(value: math_3, group_id: MeshIsland().island_index).min) @ hide
     index_switch = IndexSwitch(menu_switch.output, math_6, math_4, math_5)
   }
   "vertices" {
     mesh_bevel_2 = MeshBevel(
       Mesh,
-      boolean_math,
-      Vertices,
+      selection: boolean_math,
+      affect_kind: Vertices,
       end_right_offset: 1.0,
       offset: index_switch,
       miter: Miter,
@@ -411,23 +428,26 @@ geometry graph "Bevel Mesh Basic"(
       index_switch_2) -> (Mesh: Geometry, "Vertex Face": Bool, "Edge Face": Bool, "Outer Edge": Bool, "Mid Edge": Bool)
     {
       boolean_math_4 = separate_bundle.vertex_face or separate_bundle.edge_face @ hide
-      field_on_domain = FieldOnDomain(boolean_math_4, domain: FACE, data_type: BOOLEAN)
+      field_on_domain = FieldOnDomain(value: boolean_math_4, domain: FACE, data_type: BOOLEAN)
       boolean_math_3 = not field_on_domain @ hide
-      boolean_math_2 = boolean_math_3 and FieldOnDomain(field_on_domain, data_type: BOOLEAN) @ hide
-      field_on_domain_3 = FieldOnDomain(boolean_math_2, domain: CORNER, data_type: BOOLEAN)
+      boolean_math_2 = boolean_math_3 and FieldOnDomain(value: field_on_domain, data_type: BOOLEAN) @ hide
+      field_on_domain_3 = FieldOnDomain(value: boolean_math_2, domain: CORNER, data_type: BOOLEAN)
     }
     vector_math_2 = Normal().true_normal * field_on_domain_3 @ hide
-    vector_math = AccumulateField(FieldOnDomain(vector_math_2, domain: CORNER, data_type: FLOAT_VECTOR), field_on_domain_2, data_type: FLOAT_VECTOR, domain: CORNER).total / AccumulateField(field_on_domain_3, field_on_domain_2, domain: CORNER).total @ hide
+    vector_math = AccumulateField(value: FieldOnDomain(value: vector_math_2, domain: CORNER, data_type: FLOAT_VECTOR), group_id: field_on_domain_2, data_type: FLOAT_VECTOR, domain: CORNER).total / AccumulateField(value: field_on_domain_3, group_id: field_on_domain_2, domain: CORNER).total @ hide
     vector_math_3 = normalize(vector_math) @ hide
     switch = Switch(
-      harden_normals,
-      separate_bundle.mesh,
-      SetMeshNormal(separate_bundle.mesh, Switch(FieldOnDomain(separate_bundle.outer_edge, data_type: BOOLEAN), Normal().normal, vector_math_3, input_type: VECTOR), mode: TANGENT_SPACE),
+      switch: harden_normals,
+      false_: separate_bundle.mesh,
+      true_: SetMeshNormal(separate_bundle.mesh, custom_normal: Switch(switch: FieldOnDomain(value: separate_bundle.outer_edge, data_type: BOOLEAN), false_: Normal().normal, true_: vector_math_3, input_type: VECTOR), mode: TANGENT_SPACE),
       input_type: GEOMETRY) @ hide
   }
   "material index" {
     boolean_math_5 = boolean_math_4 and material_index != -1 @ hide
-    set_material_index = SetMaterialIndex(switch, boolean_math_5, material_index)
+    set_material_index = SetMaterialIndex(
+      switch,
+      selection: boolean_math_5,
+      material_index: material_index)
   }
   separate_bundle_2 = SeparateBundle(
     index_switch_2) -> (Mesh: Geometry, "Vertex Face": Bool, "Edge Face": Bool, "Outer Edge": Bool, "Mid Edge": Bool)

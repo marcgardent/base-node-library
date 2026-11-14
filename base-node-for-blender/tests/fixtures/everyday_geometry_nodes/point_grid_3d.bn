@@ -16,18 +16,18 @@ geometry graph "Point Grid 3D"(
     "Center Cell": Bool
 ) -> (Points: Geometry, UVW: Vector, "XYZ Index": Vector) {
   position = Position() @ hide
-  vector_math = position + Switch(center_cell, true_: (0.5, 0.5, 0.5), input_type: VECTOR) @ hide
+  vector_math = position + Switch(switch: center_cell, true_: (0.5, 0.5, 0.5), input_type: VECTOR) @ hide
   vector_math_2 = Increment * vector_math @ hide
   index = Index() @ hide
   combine_xyz_3 = CombineXYZ(z: index) @ hide
-  duplicate_elements = Points(z_amount, combine_xyz_3, Radius) |> DuplicateElements(amount: y_amount)
+  duplicate_elements = Points(count: z_amount, position: combine_xyz_3, radius: Radius) |> DuplicateElements(amount: y_amount)
   combine_xyz = CombineXYZ(y: duplicate_elements.duplicate_index) @ hide
   set_position = SetPosition(duplicate_elements.geometry, offset: combine_xyz) @ hide
   duplicate_elements_2 = DuplicateElements(set_position, amount: x_amount)
-  combine_xyz_2 = CombineXYZ(duplicate_elements_2.duplicate_index) @ hide
+  combine_xyz_2 = CombineXYZ(x: duplicate_elements_2.duplicate_index) @ hide
   set_position_2 = SetPosition(duplicate_elements_2.geometry, offset: combine_xyz_2) @ hide
   position_2 = Position() @ hide
-  combine_xyz_4 = CombineXYZ(x_amount, y_amount, z_amount) @ hide
+  combine_xyz_4 = CombineXYZ(x: x_amount, y: y_amount, z: z_amount) @ hide
   capture_attribute_2 = CaptureAttribute(set_position_2, Value: position_2) @ hide
   vector_math_3 = capture_attribute_2.value / combine_xyz_4 @ hide
   capture_attribute = CaptureAttribute(capture_attribute_2.geometry, Value: vector_math_3) @ hide

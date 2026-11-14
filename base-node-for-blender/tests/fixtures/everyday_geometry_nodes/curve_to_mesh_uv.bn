@@ -19,7 +19,7 @@ geometry(is_modifier: false) graph "Curve to Mesh UV"(
 ) -> (Mesh: Geometry, UV: Vector) {
   spline_length = SplineLength()
   spline_parameter = SplineParameter()
-  curve_endpoint_selection = CurveEndpointSelection(0, SplineCyclic())
+  curve_endpoint_selection = CurveEndpointSelection(start_size: 0, end_size: SplineCyclic())
   "Capture on Point" {
     capture_attribute_2 = CaptureAttribute(Curve, Value: Float = curve_endpoint_selection) @ hide
     capture_attribute = CaptureAttribute(
@@ -38,23 +38,23 @@ geometry(is_modifier: false) graph "Curve to Mesh UV"(
   }
   "End Seam Selection" {
     compare = capture_attribute_3.value <= 0.0 @ hide
-    boolean_math = compare and FieldOnDomain(capture_attribute_4.value, domain: FACE, data_type: BOOLEAN) @ hide
-    switch = Switch(boolean_math, capture_attribute_3.value, 1.0)
+    boolean_math = compare and FieldOnDomain(value: capture_attribute_4.value, domain: FACE, data_type: BOOLEAN) @ hide
+    switch = Switch(switch: boolean_math, false_: capture_attribute_3.value, true_: 1.0)
     math_2 = switch * capture_attribute_6.value @ hide
-    switch_4 = Switch(use_length_y, switch, math_2) @ hide
+    switch_4 = Switch(switch: use_length_y, false_: switch, true_: math_2) @ hide
   }
   "End Seam Selection" {
     compare_2 = capture_attribute.value <= 0.0 @ hide
-    boolean_math_2 = compare_2 and FieldOnDomain(capture_attribute_2.value, domain: FACE, data_type: BOOLEAN) @ hide
-    switch_2 = Switch(boolean_math_2, capture_attribute.value, 1.0)
+    boolean_math_2 = compare_2 and FieldOnDomain(value: capture_attribute_2.value, domain: FACE, data_type: BOOLEAN) @ hide
+    switch_2 = Switch(switch: boolean_math_2, false_: capture_attribute.value, true_: 1.0)
     math = switch_2 * capture_attribute_5.value @ hide
-    switch_3 = Switch(use_length_x, switch_2, math) @ hide
+    switch_3 = Switch(switch: use_length_x, false_: switch_2, true_: math) @ hide
   }
   "UV" {
-    combine_xyz = CombineXYZ(switch_3, switch_4) @ hide
-    named_attribute = NamedAttribute("radius")
+    combine_xyz = CombineXYZ(x: switch_3, y: switch_4) @ hide
+    named_attribute = NamedAttribute(name: "radius")
     return (
-      Mesh: capture_attribute_5.geometry |> CurveToMesh(capture_attribute_6.geometry, Switch(named_attribute.exists, 1.0, named_attribute.attribute), fill_caps) |> StoreNamedAttribute(name: Name, value: combine_xyz, data_type: FLOAT2, domain: CORNER),
-      UV: NamedAttribute(Name, data_type: FLOAT_VECTOR).attribute)
+      Mesh: capture_attribute_5.geometry |> CurveToMesh(profile_curve: capture_attribute_6.geometry, scale: Switch(switch: named_attribute.exists, false_: 1.0, true_: named_attribute.attribute), fill_caps: fill_caps) |> StoreNamedAttribute(name: Name, value: combine_xyz, data_type: FLOAT2, domain: CORNER),
+      UV: NamedAttribute(name: Name, data_type: FLOAT_VECTOR).attribute)
   }
 }

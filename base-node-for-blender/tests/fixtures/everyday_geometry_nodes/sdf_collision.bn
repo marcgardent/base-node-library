@@ -16,8 +16,8 @@ geometry(is_modifier: false) graph "SDF Collision"(
     Bounce: Float(subtype: FACTOR) = 0.5 in 0.0..1.0,
     Friction: Float(subtype: FACTOR) = 0.5 in 0.0..1.0
 ) -> (">": Geometry, "Is Hit": Bool, "Hit Normal": Vector) {
-  mix = Mix(Bounce, -1.0, -2.0)
-  named_attribute = NamedAttribute(__string, data_type: FLOAT_VECTOR)
+  mix = Mix(factor: Bounce, a: -1.0, b: -2.0)
+  named_attribute = NamedAttribute(name: __string, data_type: FLOAT_VECTOR)
   capture_attribute_2 = CaptureAttribute(_, Value: signed_distance)
   capture_attribute = CaptureAttribute(capture_attribute_2.geometry, Value: Normal)
   "Normal Impulse" {
@@ -33,8 +33,8 @@ geometry(is_modifier: false) graph "SDF Collision"(
   }
   "Tangent" {
     vector_math_9 = VectorMath(
-      named_attribute.attribute,
-      capture_attribute.value,
+      Vector: named_attribute.attribute,
+      Vector_001: capture_attribute.value,
       operation: PROJECT) @ hide
     vector_math_4 = named_attribute.attribute - vector_math_9 @ hide
     vector_math_5 = normalize(vector_math_4) @ hide
@@ -52,7 +52,7 @@ geometry(is_modifier: false) graph "SDF Collision"(
   math_4 = 0.0 - capture_attribute_2.value @ hide
   vector_math_10 = capture_attribute.value * math_4 @ hide
   return (
-    ">": capture_attribute.geometry |> SetPosition(boolean_math, offset: vector_math_10) |> StoreNamedAttribute(boolean_math, __string, vector_math_8, data_type: FLOAT_VECTOR),
+    ">": capture_attribute.geometry |> SetPosition(selection: boolean_math, offset: vector_math_10) |> StoreNamedAttribute(selection: boolean_math, name: __string, value: vector_math_8, data_type: FLOAT_VECTOR),
     "Is Hit": boolean_math,
     "Hit Normal": capture_attribute.value)
 }
