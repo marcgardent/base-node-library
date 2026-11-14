@@ -188,3 +188,17 @@ def test_signature_of_the_call_the_cursor_is_in(schema):
     assert s.inputs[0][2] == "given"  # the pipe gives the first input
     assert sig(HEAD + "  return SetPosition(geometry)", schema) is None
     assert sig(HEAD + "  x = 1.0", schema) is None
+
+
+def test_a_comment_line_offers_the_profiles(schema):
+    start, items = at_end("//", schema)
+    assert [i.label for i in items][:3] == ['@profile "core"', '@profile "sdf2d"', '@profile "vector2d"']
+    assert (start, items[0].insert) == (3, ' @profile "core"')  # right after `//`
+    start, items = at_end('  // @profile "vec', schema)
+    assert [i.insert for i in items] == [' @profile "vector2d"'] and start == 5
+    assert labels("// @pro", schema)[-1] == '@profile "blender-geometry"'
+
+
+def test_an_ordinary_comment_offers_nothing(schema):
+    assert labels("// a note", schema) == []
+    assert labels("a = 1 // @pro", schema) == []

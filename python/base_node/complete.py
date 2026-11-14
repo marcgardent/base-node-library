@@ -4,10 +4,12 @@ The text around the cursor is half typed, so only tokens are read, never
 the parse tree: what comes just before the cursor says what may follow.
 """
 
+import re
 from dataclasses import dataclass
 
 from .colors import CSS
 from .lexer import tokenize
+from .profiles import BUILTIN_PROFILES
 from .schema import TREE_KINDS, TYPES, key, snake
 from .sugar import COMPONENTS, FUNCS, VECTOR, WORDS
 
@@ -62,6 +64,9 @@ def complete(source, line, col, schema, load=None, asked=False):
         if not asked:
             return start, []
         prefix, start = "", col  # the number is a value: what may follow it
+    header = profiles(typed, col)
+    if header is not None:
+        return header
     tokens = tokenize("\n".join(lines[:line - 1] + [typed[:len(typed) - len(prefix)]]), strict=False)[:-1]
     if tokens and tokens[-1].kind in ("COMMENT", "OPEN_STRING"):
         return start, []
@@ -69,6 +74,21 @@ def complete(source, line, col, schema, load=None, asked=False):
         return start, matching([Item(name, name, "#" + code, "color") for name, code in CSS.items()], prefix)
     items = context(source, line, tokens, schema, load).items(asked)
     return start, matching(items, prefix)
+
+
+# A comment line so far: `//`, `// @pro`, `// @profile "vec`
+PROFILE_LINE = re.compile(r'\s*//(\s*(?:@\w*(?:\s+"?[\w-]*)?)?)')
+
+
+def profiles(typed, col):
+    """(start, items) for the profile line `// @profile "name"`, or None when the line is not one."""
+    m = PROFILE_LINE.fullmatch(typed)
+    if m is None:
+        return None
+    rest = m.group(1).strip().replace('"', "")
+    items = [Item(f'@profile "{name}"', f' @profile "{name}"', p.get("description", ""), "keyword")
+             for name, p in BUILTIN_PROFILES.items()]
+    return col - len(m.group(1)), [i for i in items if i.label.replace('"', "").startswith(rest)]
 
 
 def signature(source, line, col, schema, load=None):
