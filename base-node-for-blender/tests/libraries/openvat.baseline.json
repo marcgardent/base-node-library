@@ -1,0 +1,34 @@
+{
+ "library": "OpenVAT",
+ "version": "43b5196",
+ "sha256": "8291679b701642123fd7c99d1e5aa79eb98816e8eae24c76de1e7021309f407b",
+ "blender": "5.3.0",
+ "summary": "5 ok, 1 build_error",
+ "groups": {
+  "ov_calculate-position-vs": {
+   "status": "ok",
+   "text": "22f246461ef565dc"
+  },
+  "ov_generated-pos": {
+   "status": "ok",
+   "text": "e439fdecbd000b74"
+  },
+  "ov_makeSampleVolume": {
+   "status": "ok",
+   "text": "508271f380579dd8"
+  },
+  "ov_reconstruct_collection": {
+   "status": "ok",
+   "text": "b2bcc1512471eac8"
+  },
+  "ov_sdf": {
+   "status": "ok",
+   "text": "0a9b288943db5503"
+  },
+  "ov_vat-decoder-vs": {
+   "status": "build_error",
+   "text": "3797dce7f7cdd749",
+   "error": "'ImageTexture.color' is already an output (Color); '.x' does not exist"
+  }
+ }
+}

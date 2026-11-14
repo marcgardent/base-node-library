@@ -9,6 +9,7 @@ What happens to each group is kept in `<name>.baseline.json`; the test fails whe
 | [Molecular Nodes](https://github.com/BradyAJohnston/MolecularNodes) | v520.2.0 | Brady Johnston and contributors | GPL-3.0-or-later | see `molecularnodes.baseline.json` |
 | [Bioxel Nodes](https://github.com/OmooLab/BioxelNodes) | v2.0.4 | OmooLab | GPL-3.0-or-later | see `bioxelnodes.baseline.json` |
 | [H-Style RBD Nodes](https://github.com/excifroge/H-Style-RBD-Nodes) | d9a22d0 (1.0.2) | Excifroge | GPL-3.0-or-later | see `hstylerbd.baseline.json`, `hstylerbd_bricks.baseline.json` |
+| [OpenVAT](https://github.com/sharpen3d/openvat) | 43b5196 (1.1.2) | Luke Stilson | GPL-3.0-or-later | see `openvat.baseline.json` |
 
 The `.blend` files are not in this repository: each is fetched once at its fixed version, checked by its
 `sha256` and kept in the cache (`$BASE_NODE_CACHE`, `~/.cache/base-node` by default). A library under a license

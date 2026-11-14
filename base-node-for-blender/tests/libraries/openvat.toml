@@ -1,0 +1,11 @@
+# OpenVAT: the node groups its add-on appends (Development/openvat/vat_node_groups.blend), committed in
+# its repository; it has no GitHub release, so the file is pinned at a commit (add-on version 1.1.2).
+name = "OpenVAT"
+author = "Luke Stilson"
+homepage = "https://github.com/sharpen3d/openvat"
+license = "GPL-3.0-or-later"
+# Compatible with base-node-for-blender (GPL-3.0-or-later), but fetched at test time rather than
+# committed: a new version is one line here. The baseline keeps names, statuses and hashes.
+version = "43b5196"
+url = "https://raw.githubusercontent.com/sharpen3d/openvat/43b519620c710c9081a72eba253222d6fe6f931f/Development/openvat/vat_node_groups.blend"
+sha256 = "8291679b701642123fd7c99d1e5aa79eb98816e8eae24c76de1e7021309f407b"
