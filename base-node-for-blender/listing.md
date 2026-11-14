@@ -15,6 +15,7 @@ Base Node writes and reads Geometry Nodes trees as text. A tree becomes a `.bn` 
 
 - Suggestions for nodes, sockets and the graphs of used modules (**Alt+Space**, can be changed in the preferences), opening by themselves after `(`, `.` and `:`.
 - Syntax highlighting, with modes that tell the standard library from your own graphs, or point out nodes that are not portable to a chosen target profile.
+- The pipe `|>` is shown as one symbol, ▷, except on the lines you are editing (can be turned off in the preferences). The text keeps `|>`.
 - **Format** rewrites a text in the canonical layout, keeping its comments.
 - Errors are listed in the sidebar; a click puts the cursor on the line.
 

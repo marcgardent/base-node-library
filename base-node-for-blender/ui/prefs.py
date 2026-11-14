@@ -28,7 +28,7 @@ HIGHLIGHT_MODES = (
 
 # When the add-on runs from the sources (tests), it has no preferences entry
 DEFAULTS = SimpleNamespace(
-    complete_key="ALT", auto_complete=True, signature=True, highlight=True, module_folder="",
+    complete_key="ALT", auto_complete=True, signature=True, highlight=True, pipe_symbol=True, module_folder="",
     target_profile="auto", highlight_mode="standard",
     color_stdlib=(0.0, 0.78, 0.65), color_local=(0.95, 0.75, 0.20), color_warning=(0.95, 0.30, 0.25)
 )
@@ -70,6 +70,10 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
     highlight: bpy.props.BoolProperty(
         name="Highlight", default=True,
         description="Highlight keywords, nodes, types, and values in .bn text files")
+    pipe_symbol: bpy.props.BoolProperty(
+        name="Show |> as ▷", default=True,
+        description="Draw the pipe as one symbol, except on the lines the cursor or the selection is on. "
+                    "The text keeps |>")
 
     # Syntax Highlighting & Portability Profiles
     target_profile: bpy.props.EnumProperty(
@@ -98,6 +102,7 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
         box_edit.prop(self, "auto_complete")
         box_edit.prop(self, "signature")
         box_edit.prop(self, "highlight")
+        box_edit.prop(self, "pipe_symbol")
 
         box_color = layout.box()
         box_color.label(text="Syntax Coloring & Portability Profiles", icon="COLOR")

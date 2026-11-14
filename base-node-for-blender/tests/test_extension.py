@@ -224,6 +224,30 @@ geometry graph spiral(r: Float = 1.0) -> Geometry {
     print("   ✓ Profile ascent and highlighter linter verified")
 
 
+def test_pipe_symbol():
+    """The pipes drawn as ▷: real ones only, and not on the lines being edited."""
+    print("-> Test: Pipe symbol...")
+    from base_node.lang.lexer import tokenize
+    from base_node.ui import pipes, prefs
+
+    line = '  return g |> F(s: "a |> b") |> G()  // c |> d'
+    assert pipes.columns(tokenize(line, strict=False)) == [11, 29], "only the pipes outside strings and comments"
+    assert pipes.columns(tokenize("a |>", strict=False)) == [2]
+
+    text = bpy.data.texts.new("pipes.bn")
+    text.from_string("a\nb |> F()\nc |> G()\nd |> H()\n")
+    text.cursor_set(1)
+    assert list(pipes.raw_lines(text)) == [1], "the cursor's line keeps |>"
+    text.cursor_set(3)
+    text.select_set(3, 0, 1, 2)  # a selection made upward still covers its lines
+    assert list(pipes.raw_lines(text)) == [1, 2, 3]
+    bpy.data.texts.remove(text)
+
+    assert prefs.DEFAULTS.pipe_symbol is True, "on by default"
+    assert pipes.mono_font() >= 0
+    print("   ✓ Pipe symbol verified")
+
+
 def test_text_view():
     """5. A tree shown as text is written back into it, and the text goes away."""
     print("-> Test 5: Text view of a tree...")
@@ -568,6 +592,7 @@ def main():
         test_build_and_round_trip,
         test_named_constants,
         test_profile_ascent_and_linter,
+        test_pipe_symbol,
         test_text_view,
         test_import_files,
         test_zones_read_back,
