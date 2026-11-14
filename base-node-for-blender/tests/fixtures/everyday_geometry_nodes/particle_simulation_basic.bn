@@ -9,7 +9,7 @@
 
 geometry graph ".Particle Rotation"(
     Geometry: Geometry,
-    "Delta Time": Float = 0.04166667 in -10000.0..10000.0,
+    "Delta Time": Float = 0.041666668 in -10000.0..10000.0,
     "Rotation" {
         Rotation: Rotation(hide_value: true),
         "Set Rotation": Bool
@@ -180,7 +180,7 @@ geometry graph "SDF Mesh Field"(
 }
 
 geometry graph "Velocity Step"(
-    "Delta Time": Float(hide_value: true) = 0.04166667,
+    "Delta Time": Float(hide_value: true) = 0.041666668,
     ">": Geometry,
     Selection: Bool(hide_value: true) = true,
     "" as __string: String = "velocity",

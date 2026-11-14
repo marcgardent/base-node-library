@@ -666,7 +666,8 @@ def fingerprint(obj):
 
 def evaluate(group, kind):
     """Fingerprints of `group` as a modifier on a fresh mesh or curves object, over a few frames."""
-    for o in list(bpy.data.objects):
+    # The objects of the scene go; those a group uses, appended with it, out of any scene, stay
+    for o in [o for o in bpy.data.objects if o.users_scene]:
         bpy.data.objects.remove(o)
     scene = bpy.context.scene
     scene.frame_set(1)

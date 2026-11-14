@@ -8,7 +8,9 @@ around their statements, reroutes are followed. What text cannot hold
 yet is reported as warnings, never as a failed export.
 """
 
+import math
 import re
+import struct
 from collections import Counter
 
 import bpy
@@ -497,6 +499,27 @@ class GraphReader:
                             inside.add(src.name)
                             stack.append(src)
             members[rout] = inside
+        # A node whose output goes nowhere is in the zone whose input it depends on, short of
+        # its output: Blender keeps it there
+        used = {src.name for ins in self.incoming.values() for links in ins.values() for src, _s in links}
+        ends = {name for name, rin in self.pairs.items()}
+        within = {}
+
+        def short_of(n, rin, rout):
+            k = (n.name, rin.name)
+            if k not in within:
+                within[k] = False
+                within[k] = any(src == rin or (src.name != rout and short_of(src, rin, rout))
+                                for links in self.incoming.get(n.name, {}).values() for src, _s in links)
+            return within[k]
+
+        for n in reached:
+            if n.name in used or n.name in ends or any(n.name in m for m in members.values()) \
+                    or n in self.pairs.values():
+                continue
+            for rout, rin in self.pairs.items():
+                if rout in names and short_of(n, rin, rout):
+                    members[rout].add(n.name)
         zone_of = {}
         for rout, inside in sorted(members.items(), key=lambda kv: len(kv[1])):
             for name in inside:
@@ -547,7 +570,8 @@ class GraphReader:
         if node.bl_idname == "FunctionNodeInputBool":
             return ast.Bool(bool(value), 0, 0)
         if node.bl_idname == "FunctionNodeInputString":
-            return None if '"' in value or "\n" in value else ast.String(value, 0, 0)
+            # Written as its rebuilt node will be read back: a string has no quotes nor newlines in text
+            return self.string(value, node, node.outputs[0])
         return ast.Tuple([number(v) for v in value], 0, 0)
 
     def spec(self, node):
@@ -738,16 +762,18 @@ class GraphReader:
     def states(self, zout):
         """{state name: key} of the states of a repeat or simulate whose key is taken: by a name
         of the zone (`"Delta Time"` beside the elapsed time) or by an earlier state. They are
-        written `"Delta Time" as delta_time_2: …` and go by that key."""
+        written `"Delta Time" as delta_time_2: …` and go by that key. So is a state named like a
+        group input the body reads, which it would hide: `Geometry as geometry_2: …`."""
         if zout.name not in self.state_keys:
             zin = self.pairs.get(zout.name)
             items = zout.repeat_items if zout.bl_idname == REPEAT_OUTPUT else zout.state_items
             own = set(BODY_NAMES[zin.bl_idname].values()) | set(HEAD_NAMES[zin.bl_idname]) if zin else set()
-            taken = own | {key(i.name) for i in items}
+            read = self.inputs_read(zout)
+            taken = own | read | set(self.param_keys) | {key(i.name) for i in items}
             seen, keys = set(), {}
             for i in items:
                 k = key(i.name)
-                if k in own or k in seen:
+                if k in own or k in seen or k in read:
                     keys[i.name] = unique(k, taken)
                 seen.add(k)
             self.state_keys[zout.name] = keys
@@ -763,15 +789,16 @@ class GraphReader:
                       f"({', '.join(sorted(own))}), not yet supported in text")
         # In the body an item, or a name of the zone, hides the group input of the same name
         hidden = (set(keys) | set(BODY_NAMES[zin.bl_idname].values())) & set(self.param_keys)
+        for k in sorted(self.inputs_read(zout) & hidden):
+            self.warn(f"{word} '{zout.name}': body reads input '{k}', shadowed by state of same name; "
+                      "not yet supported in text")
+
+    def inputs_read(self, zout):
+        """The keys of the group inputs the body of a zone reads."""
         inside = [n for n, z in self.zone_of.items() if z == zout.name] + [zout.name]
         gin = [s for n in inside for links in self.incoming.get(n, {}).values() for s in links
                if s[0].bl_idname == "NodeGroupInput"]
-        for src, sock in gin:
-            k = self.param_keys[self.items(src.outputs).index(sock)]
-            if k in hidden:
-                self.warn(f"{word} '{zout.name}': body reads input '{k}', shadowed by state of same name; "
-                          "not yet supported in text")
-                hidden.discard(k)
+        return {self.param_keys[self.items(src.outputs).index(sock)] for src, sock in gin}
 
     def closure(self, cout):
         """`closure(x: Float, …) -> (r: Float, …) { … return … }` for a Closure zone."""
@@ -1039,6 +1066,9 @@ class GraphReader:
             for sock in items:
                 links = incoming.get(sock.identifier)
                 t = SOCKET_TYPES.get(links[0][1].type) if links else literal_type(snapshot(sock), sock)
+                if t == "Menu" and not links:
+                    given = None  # a menu item's name tells no type: data_type: MENU is written
+                    break
                 if t is not None:
                     given = t
                     break
@@ -1464,7 +1494,17 @@ def bounded(value, fresh):
 
 
 def number(v):
-    return ast.Number(float(f"{float(v):.7g}"), False, 0, 0)
+    """A float as few digits as give Blender's float32 back: 7, up to 9 when 7 would not."""
+    v = float(v)
+    for digits in (7, 8, 9):
+        written = float(f"{v:.{digits}g}")
+        if math.isfinite(v) and float32(written) == float32(v):
+            break
+    return ast.Number(written, False, 0, 0)
+
+
+def float32(v):
+    return struct.unpack("f", struct.pack("f", v))[0]
 
 
 def enum_literal(value):

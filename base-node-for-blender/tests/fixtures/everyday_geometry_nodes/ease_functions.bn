@@ -48,7 +48,7 @@ geometry graph "Ease Functions"(
     math = sqrt(1.0 - pow(switch - 1.0, 2.0))
   }
   "Elastic" {
-    math_3 = sin((switch * 10.0 - 0.75) * 2.094397) @ hide
+    math_3 = sin((switch * 10.0 - 0.75) * 2.0943966) @ hide
     math_2 = pow(2.0, switch * -10.0) * math_3 @ hide
     math_4 = math_2 + 1.0
   }
