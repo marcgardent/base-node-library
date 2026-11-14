@@ -653,7 +653,9 @@ def fingerprint(obj):
                 if isinstance(v, float):
                     values.append(round(v, 4) + 0.0)
                 elif hasattr(v, "__len__"):
-                    values.extend(round(x, 4) + 0.0 for x in v)
+                    # A matrix is rows of floats
+                    flat = [y for x in v for y in x] if v and hasattr(v[0], "__len__") else v
+                    values.extend(round(x, 4) + 0.0 for x in flat)
                 elif v is not None:
                     values.append(v)
             found[f"{component}:{a.domain}:{a.name}:{a.data_type}"] = (len(a.data), hash(tuple(values)))
