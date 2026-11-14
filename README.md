@@ -139,6 +139,7 @@ Add-on for Blender 5.2+ (`id = "base_node"`). The node tree is the only data: it
 | Show the edited tree as `.bn` text, in the same area | Node Editor, sidebar *Text > Edit as Text* | ``Ctrl+` `` |
 | Write the text into the tree and return to the nodes (the text is removed) | Text Editor, sidebar *Nodes > Back to Nodes* | ``Ctrl+` `` |
 | Write the text into the tree and keep editing | Text Editor, *Apply to Tree* | `Ctrl+Enter` |
+| Rewrite the text in the canonical layout, keeping its comments | Text Editor, sidebar *Format* | `Ctrl+Shift+A` |
 | Suggestions | Text Editor | `Alt+Space` (set in the preferences) |
 | Build the graphs of one or more `.bn` files | *File > Import > Base Node (.bn)* | |
 

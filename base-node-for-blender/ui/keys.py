@@ -1,5 +1,7 @@
 """Shortcuts of the Text and Node Editors; the operators' polls let other texts and trees through."""
 
+import sys
+
 import bpy
 
 from . import prefs
@@ -20,6 +22,9 @@ def bind():
                                            alt=mod == "ALT", shift=mod == "SHIFT", ctrl=mod == "CTRL")))
     # Ctrl+` flips an area between a tree and its text; free in both editors
     _items.append((km, km.keymap_items.new("base_node.toggle_view", "ACCENT_GRAVE", "PRESS", ctrl=True)))
+    # Ctrl+Shift+A formats the text (Cmd+Shift+A on macOS); free in the Text Editor
+    mac = sys.platform == "darwin"
+    _items.append((km, km.keymap_items.new("base_node.format", "A", "PRESS", shift=True, ctrl=not mac, oskey=mac)))
     km = kc.keymaps.new("Node Editor", space_type="NODE_EDITOR")
     _items.append((km, km.keymap_items.new("base_node.toggle_view", "ACCENT_GRAVE", "PRESS", ctrl=True)))
 
