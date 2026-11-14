@@ -29,6 +29,9 @@ from ..lang.parser import parse
 
 KEY = "base_node_comment"
 
+# The nodes no statement of the text stands for: their comments cannot be written back
+UNWRITTEN = ("NodeGroupInput", "NodeReroute", *ir.ZONE_INPUTS)
+
 # The comments of a node shown above it, and below it
 ABOVE = ("before", "after", "return_before", "return_after")
 BELOW = ("end", "end_after")

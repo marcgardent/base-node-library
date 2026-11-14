@@ -227,8 +227,6 @@ class BASE_NODE_OT_arrange(bpy.types.Operator):
 
 # A comment the dialog shows: its lines so far, then an empty one to write the next
 MAX_LINES = 24
-UNCOMMENTED = {"NodeGroupInput", "NodeReroute", "GeometryNodeRepeatInput", "GeometryNodeSimulationInput",
-               "GeometryNodeForeachGeometryElementInput", "NodeClosureInput"}
 
 
 class BaseNodeCommentLine(bpy.types.PropertyGroup):
@@ -248,7 +246,7 @@ class BASE_NODE_OT_edit_comment(bpy.types.Operator):
     def poll(cls, context):
         tree = edit_tree(context)
         node = tree.nodes.active if tree is not None else None
-        if node is None or node.bl_idname in UNCOMMENTED:
+        if node is None or node.bl_idname in comments.UNWRITTEN:
             cls.poll_message_set("Select a node that has a statement in the text: "
                                  "not a Group Input, a reroute or a zone's input")
             return False

@@ -175,10 +175,7 @@ def fit_frames(name, shown):
         f[FIT] = True
         f.location_absolute = (x, top)
         f.width, f.height = width, height
-    for win in bpy.context.window_manager.windows:
-        for area in win.screen.areas:
-            if area.type == "NODE_EDITOR":
-                area.tag_redraw()
+    prefs.redraw_nodes()
     return None
 
 

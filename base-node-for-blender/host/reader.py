@@ -317,7 +317,7 @@ class GraphReader:
             counts["color"] += n.use_custom_color
             counts["collapsed"] += n.hide
         lost = [n.name for n in self.tree.nodes if comments.KEY in n
-                and n.bl_idname in ("NodeGroupInput", "NodeReroute", *ZONE_INPUTS)]
+                and n.bl_idname in comments.UNWRITTEN]
         if lost:
             self.warn(f"comments not exported, their nodes have no statement: {', '.join(sorted(lost))}")
         for what, counts in looks.items():
