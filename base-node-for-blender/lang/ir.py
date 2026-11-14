@@ -44,6 +44,7 @@ class Node:
     name: str | None = None  # the text name bound to it, kept as the Blender node name
     props: dict = field(default_factory=dict)
     values: dict = field(default_factory=dict)  # input identifier -> literal
+    out_values: dict = field(default_factory=dict)  # output identifier -> literal: a Value node's
     links: list = field(default_factory=list)   # (input identifier, Link); a multi-input may repeat
     group: str | None = None  # called graph, for a group node
     n_inputs: int = 0

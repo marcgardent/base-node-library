@@ -286,6 +286,12 @@ class Builder:
                     sock.default_value = self.coerce(n, sock, value)
                 except (TypeError, ValueError) as e:
                     self.fail(n, f"{ident}: {e}")
+            for ident, value in n.out_values.items():
+                sock = self.socket(g, n, node, ident, "outputs")
+                try:
+                    sock.default_value = self.coerce(n, sock, value)
+                except (TypeError, ValueError) as e:
+                    self.fail(n, f"{ident}: {e}")
 
         refused = []
         for n in g.nodes:

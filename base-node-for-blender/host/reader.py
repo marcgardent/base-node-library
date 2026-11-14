@@ -43,6 +43,12 @@ ALWAYS = {"operation"}
 
 JOIN = "GeometryNodeJoinGeometry"
 
+# Input nodes that hold a constant: read as `size = 10`, always a statement of its own.
+# The Blender property holding the value, or None when the node's output holds it
+CONST_NODES = {"ShaderNodeValue": None, "FunctionNodeInputInt": "integer", "FunctionNodeInputBool": "boolean",
+               "FunctionNodeInputVector": "vector", "FunctionNodeInputColor": "value",
+               "FunctionNodeInputString": "string"}
+
 # Outputs of a zone's input node that its body reads by a name of their own
 BODY_NAMES = {REPEAT_INPUT: {"Iteration": "iteration"}, SIMULATION_INPUT: {"Delta Time": "delta_time"},
               FOREACH_INPUT: {"Index": "index", "Element": "element"}, CLOSURE_INPUT: {}}
@@ -191,7 +197,7 @@ class GraphReader:
             nested = used_by is not None and self.joins(n) and self.joins(used_by)
             # A node shown otherwise than a new one carries its look on a statement
             if uses.get(n.name, 0) > 1 or self.hand_named(n) or framed_apart or nested or n in self.roots \
-                    or self.look(n):
+                    or self.look(n) or self.constant(n) is not None:
                 self.bound[n.name] = unique(self.binding_name(n), taken)
 
         body = []
@@ -505,6 +511,23 @@ class GraphReader:
         base = spec.name if spec else text_name(node.bl_idname)
         return snake(re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", base))
 
+    def constant(self, node):
+        """The literal a constant input node holds (`10`, `(1.0, 0.0, 0.0)`), else None."""
+        if node.bl_idname not in CONST_NODES or node.bl_idname == "FunctionNodeInputVector" \
+                and getattr(node, "vector_dimensions", 3) != 3:
+            return None
+        prop = CONST_NODES[node.bl_idname]
+        value = node.outputs[0].default_value if prop is None else getattr(node, prop)
+        if node.bl_idname == "ShaderNodeValue":
+            return number(value)
+        if node.bl_idname == "FunctionNodeInputInt":
+            return ast.Number(int(value), True, 0, 0)
+        if node.bl_idname == "FunctionNodeInputBool":
+            return ast.Bool(bool(value), 0, 0)
+        if node.bl_idname == "FunctionNodeInputString":
+            return None if '"' in value or "\n" in value else ast.String(value, 0, 0)
+        return ast.Tuple([number(v) for v in value], 0, 0)
+
     def spec(self, node):
         return self.schema.node(self.kind, node.bl_idname)
 
@@ -557,6 +580,8 @@ class GraphReader:
                 self.exprs[node.name] = self.state_zone(node)
             elif node.bl_idname in SIGNATURE_READ:
                 self.exprs[node.name] = self.signature(node)
+            elif self.constant(node) is not None:
+                self.exprs[node.name] = self.constant(node)
             else:
                 self.exprs[node.name] = self.call(node)
         return self.exprs[node.name]

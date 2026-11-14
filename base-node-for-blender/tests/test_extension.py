@@ -139,6 +139,52 @@ geometry graph wave(geometry: Geometry, frequency: Float = 2.0, amplitude: Float
     print("   ✓ Tree -> Text -> Tree round-trip verified")
 
 
+def test_named_constants():
+    """A literal bound to a name is a node of its own: the tree keeps `size = 10`."""
+    print("-> Test: named constants survive Text -> Tree -> Text...")
+    from base_node.host import build_source, export_tree
+
+    src = """
+geometry graph box() -> Geometry {
+  size = 10
+  scale = 2.5
+  offset = (1.0, 2.0, 3.0)
+  on = true
+  tint = (1.0, 0.5, 0.0, 1.0)
+  g = MeshCube(CombineXYZ(size, scale, -size), size)
+  return SetPosition(g.mesh, on, offset: offset)
+}
+"""
+    tree = build_source(src, filename="box.bn")[0]
+    kinds = {n.name: n.bl_idname for n in tree.nodes}
+    assert kinds["size"] == "FunctionNodeInputInt" and tree.nodes["size"].integer == 10, kinds
+    assert kinds["scale"] == "ShaderNodeValue" and tree.nodes["scale"].outputs[0].default_value == 2.5, kinds
+    assert kinds["offset"] == "FunctionNodeInputVector", kinds
+    assert kinds["on"] == "FunctionNodeInputBool", kinds
+    assert kinds["tint"] == "FunctionNodeInputColor", kinds
+
+    exported, warnings = export_tree(tree)
+    assert not warnings, warnings
+    for line in ("size = 10", "scale = 2.5", "offset = (1.0, 2.0, 3.0)", "on = true",
+                 "tint = (1.0, 0.5, 0.0, 1.0)", "CombineXYZ(x: size, y: scale, z: -size)"):
+        assert line in exported, f"'{line}' lost:\n{exported}"
+    again, _ = export_tree(build_source(exported, filename="box2.bn")[0])
+    assert again == exported, f"not stable:\n{again}"
+
+    # A Value node made in Blender reads back with its value, not as Value()
+    tree = bpy.data.node_groups.new("made_by_hand", "GeometryNodeTree")
+    tree.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    out = tree.nodes.new("NodeGroupOutput")
+    value = tree.nodes.new("ShaderNodeValue")
+    value.outputs[0].default_value = 10.0
+    cube = tree.nodes.new("GeometryNodeMeshCube")
+    tree.links.new(value.outputs[0], cube.inputs["Vertices X"])
+    tree.links.new(cube.outputs[0], out.inputs[0])
+    exported, _ = export_tree(tree)
+    assert "value = 10.0" in exported, exported
+    print("   ✓ Named constants kept")
+
+
 def test_profile_ascent_and_linter():
     """4. Verify profile ascent detection on exported tree and highlighter linter."""
     print("-> Test 4: Verifying profile ascent solver & highlighter linter...")
@@ -517,6 +563,7 @@ def main():
         test_import_and_registration,
         test_check_profile_stdlib,
         test_build_and_round_trip,
+        test_named_constants,
         test_profile_ascent_and_linter,
         test_text_view,
         test_import_files,

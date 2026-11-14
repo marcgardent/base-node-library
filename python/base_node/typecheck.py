@@ -40,6 +40,19 @@ class Lit:
 
 
 @dataclass
+class Const(Out):
+    """A literal bound to a name: `size = 10`. Its own input node, so the tree keeps the name;
+    where only a literal fits (a tuple, a node setting, a menu), its value."""
+    lit: Lit = None
+
+
+# The input node a named literal makes, by its type: (text name, Blender property holding the
+# value, or None when the node's output holds it)
+CONST_NODES = {"Float": ("Value", None), "Int": ("Int", "integer"), "Bool": ("Bool", "boolean"),
+               "Vector": ("Vector", "vector"), "Color": ("Color", "value"), "String": ("String", "string")}
+
+
+@dataclass
 class Empty:
     """A zone item with no value, written by its type alone: `cache: Bundle`."""
     type: str
@@ -562,6 +575,8 @@ class GraphChecker:
             value = self.closure(stmt.value, stmt.name)
         else:
             value = self.eval(stmt.value)
+            if isinstance(value, Lit):
+                value = self.const(stmt, value)
         if value is None:
             # Keep the name known, so later uses do not report it again
             self.env[stmt.name] = None
@@ -575,6 +590,27 @@ class GraphChecker:
         elif stmt.look is not None:
             self.error(stmt.look, f"@: '{stmt.name}' does not produce its own node")
         self.env[stmt.name] = value
+
+    def const(self, stmt, lit):
+        """`size = 10`: a Value, Int, Bool… node named `size`, or the literal alone when none fits."""
+        made = CONST_NODES.get(lit.type)
+        if made is None or lit.type == "Vector" and len(lit.value) != 3:
+            return lit
+        spec = self.schema.node(self.g.kind, made[0])
+        if spec is None:
+            return lit
+        inputs, outputs = self.schema.sockets(self.g.kind, spec, {})
+        if len(outputs) != 1:
+            return lit
+        node = ir.Node(f"n{len(self.nodes)}", spec.bl_idname, n_inputs=len(inputs), n_outputs=len(outputs),
+                       line=stmt.line, col=stmt.col)
+        value = float(lit.value) if lit.type == "Float" else lit.value
+        if made[1] is None:
+            node.out_values[outputs[0].identifier] = value
+        else:
+            node.props[made[1]] = value
+        self.nodes.append(node)
+        return Const(node.id, outputs, None, stmt.name, lit)
 
     def look(self, node, look):
         """`@ "Label" #color hide mute`: the Blender properties of how a node is shown."""
@@ -1136,6 +1172,8 @@ class GraphChecker:
         values = []
         for item in e.items:
             v = self.eval(item)
+            if isinstance(v, Const):
+                v = v.lit
             if not (isinstance(v, Lit) and v.type in ("Int", "Float")):
                 self.error(item, "a tuple contains only numbers")
                 return None
@@ -1480,6 +1518,8 @@ class GraphChecker:
                 [Socket(o.name, o.key, o.type) for o in callee.outputs])
 
     def prop(self, node, prop, v, a):
+        if isinstance(v, Const):
+            v = v.lit
         if prop.kind == "ENUM":
             value = v.name if isinstance(v, Sym) else v.value if v.type == "String" else None
             if value is None:
@@ -1511,6 +1551,8 @@ class GraphChecker:
             self.error(at, f"{label}: a bare type ({v.type}) only applies to an item")
             return
         where = f"{label}.{sock.key}" if label != "return" else f"output '{sock.name}'"
+        if isinstance(v, Const) and not can_link(v.socket.type, sock.type):
+            v = v.lit
         if isinstance(v, Out):
             src = v.socket
             if src is None:

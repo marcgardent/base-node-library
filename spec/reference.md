@@ -100,6 +100,7 @@ geometry graph scatter(
 | Syntax | Meaning |
 |---|---|
 | `x = expr` | Bind expression output |
+| `size = 10` | Named constant: an input node of its own (`Value`, `Int`, `Bool`, `Vector`, `Color`, `String`) named `size`; a tuple, a node setting or a menu takes its value |
 | `return expr` | Single output return |
 | `return (A: e1, B: e2)` | Multi-output return |
 | `"Title" #color { ... }` | Visual frame (`#e73` or named color `#teal`) |
