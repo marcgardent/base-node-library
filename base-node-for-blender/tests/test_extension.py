@@ -264,6 +264,35 @@ geometry graph relief(geometry: Geometry, height: Float = 0.4) -> Geometry {  //
     again, _ = export_tree(build_source(exported, filename="terrain2.bn")[-1])
     assert again == exported, f"not stable:\n{again}"
 
+    # Written from the nodes: the text gives it back before the node's statement, a statement of its own
+    from base_node.host.comments import set_comment, room
+    from base_node.host.arrange import _box
+    tree = build_source(src, filename="terrain.bn")[-1]
+    length = next(n for n in tree.nodes if n.bl_idname == "ShaderNodeVectorMath")
+    set_comment(length, "before", ["written in the graph", "", "after a blank"])
+    exported, _ = export_tree(tree)
+    assert "  // written in the graph\n  //\n  // after a blank\n  vector_math = length(Position())" in exported, \
+        exported
+    set_comment(length, "before", [])
+    assert KEY not in length, "an empty comment stays"
+    set_comment(tree.nodes["h"], "before", [])
+    assert tree.nodes["h"][KEY].to_dict() == {"after": "// after the code"}, "the other slots stay"
+
+    # A new tree leaves room over its commented nodes: no other node in their comment's box
+    tree = build_source(src.replace("relief", "relief_fresh"), filename="fresh.bn")[-1]
+    boxes = {n.name: _box(n, 1.0) for n in tree.nodes if n.bl_idname != "NodeFrame"}
+    for n in tree.nodes:
+        above = room(n)[0]
+        if not above or n.bl_idname == "NodeFrame":
+            continue
+        x, top = n.location_absolute
+        for other, b in boxes.items():
+            hit = b.x < x + n.width and x < b.x + b.width and b.y - b.height < top + above and top < b.y
+            assert other == n.name or not hit, f"'{other}' lies in the comment of '{n.name}'"
+    # A note grows to hold what it says
+    note = tree.nodes["Note"]
+    assert note.height >= room(note)[1], (note.height, room(note))
+
     # Built again without them, the tree drops them
     tree = build_source("""geometry graph relief(geometry: Geometry) -> Geometry {
   return geometry

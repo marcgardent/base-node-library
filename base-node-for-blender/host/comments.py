@@ -21,14 +21,24 @@ its comments, as the formatter places them.
 
 from collections import defaultdict
 
+import blf
+
 from ..lang import ast, ir, printer
 from ..lang.lexer import tokenize
 from ..lang.parser import parse
 
 KEY = "base_node_comment"
 
-OPEN = ("before", "after")
-CLOSE = ("end", "end_after")
+# The comments of a node shown above it, and below it
+ABOVE = ("before", "after", "return_before", "return_after")
+BELOW = ("end", "end_after")
+
+# The boxes the Node Editor draws them in, in node units: on screen, times the UI scale and the zoom
+SIZE = 11   # font size
+PAD = 4     # around the text
+GAP = 6     # between a box and its node
+BAR = 2     # the edge on its left
+LINE = 1.3  # line height, in font sizes
 
 
 def is_profile(text):
@@ -150,6 +160,9 @@ def keep(source, filename, graphs, built, made):
         written = {slot: "\n".join(texts) for slot, texts in slots.items() if texts}
         if written:
             holders[i][KEY] = written
+            if getattr(holders[i], "bl_idname", None) == "NodeFrame" and not any(
+                    n.parent == holders[i] for n in holders[i].id_data.nodes):
+                fit_note(holders[i])
 
 
 def resolve(obj, g, tree, made):
@@ -176,6 +189,76 @@ def resolve(obj, g, tree, made):
 
 
 # Tree -> text
+
+
+def plain(comment):
+    """`// text` -> `text`: the comment as it reads."""
+    body = comment.lstrip()
+    body = body[2:] if body.startswith("//") else body
+    return body[1:] if body.startswith(" ") else body
+
+
+def lines_of(notes, slots):
+    return [plain(c) for slot in slots for c in notes.get(slot, [])]
+
+
+def wrap(lines, width, fid=0):
+    """Lines cut at spaces to fit `width` pixels at the font size set; a longer word stays whole."""
+    out = []
+    for line in lines:
+        current = ""
+        for word in line.split(" "):
+            tried = f"{current} {word}" if current else word
+            if current and blf.dimensions(fid, tried)[0] > width:
+                out.append(current)
+                current = word
+            else:
+                current = tried
+        out.append(current)
+    return out
+
+
+def box_height(lines, width):
+    """Height of the box of these lines, `width` wide, in node units; 0 for no line."""
+    if not lines:
+        return 0.0
+    blf.size(0, SIZE)
+    shown = wrap(lines, width - BAR - 2 * PAD)
+    return len(shown) * round(SIZE * LINE) + 2 * PAD
+
+
+def room(node):
+    """(above, below): the room its comments take over and under a node, gaps included, in node units."""
+    notes = notes_of(node)
+    if not notes:
+        return 0.0, 0.0
+    width = node.width
+    above, below = box_height(lines_of(notes, ABOVE), width), box_height(lines_of(notes, BELOW), width)
+    return above + GAP * bool(above), below + GAP * bool(below)
+
+
+def set_comment(holder, slot, lines):
+    """Write `lines`, plain text, as the comments of a slot: none removes them."""
+    notes = holder.get(KEY)
+    notes = notes.to_dict() if notes is not None else {}
+    if lines:
+        notes[slot] = "\n".join("// " + line if line else "//" for line in lines)
+    else:
+        notes.pop(slot, None)
+    if notes:
+        holder[KEY] = notes
+    else:
+        holder.pop(KEY, None)
+
+
+def fit_note(frame):
+    """Make a note, an empty frame, tall enough for the comments it shows inside."""
+    lines = lines_of(notes_of(frame), BELOW)
+    if not lines:
+        return
+    label = frame.label_size * 1.5 if frame.label else 0.0
+    inner = frame.width - 2 * GAP
+    frame.height = max(frame.height, label + 2 * GAP + box_height(lines, inner))
 
 
 def notes_of(holder):

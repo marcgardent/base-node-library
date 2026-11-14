@@ -43,6 +43,7 @@ class Frame:
     id: object
     parent: object = None
     label: float = 0.0  # room of the title over the content
+    foot: float = 0.0   # room under the frame
 
 
 def arrange(boxes, links, frames=(), spacing=(50, 50), padding=30, iterations=24):
@@ -139,7 +140,7 @@ def arrange(boxes, links, frames=(), spacing=(50, 50), padding=30, iterations=24
         if level is None:
             return {bid: (x - left, -(y - top)) for bid, (x, y) in flat.items()}
         head = padding + max(0.0, fr[level].label)
-        placed[level] = (right - left + 2 * padding, bottom - top + padding + head,
+        placed[level] = (right - left + 2 * padding, bottom - top + padding + head + max(0.0, fr[level].foot),
                          {bid: (x - left + padding, y - top + head) for bid, (x, y) in flat.items()})
     return {}
 
