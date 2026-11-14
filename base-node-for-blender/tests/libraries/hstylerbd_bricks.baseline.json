@@ -1,0 +1,38 @@
+{
+ "library": "H-Style RBD Nodes",
+ "version": "d9a22d0",
+ "sha256": "2a27fbb092a8a16069e09047be6eb8856f784a07f1a194de83cae8ba5df4164d",
+ "blender": "5.3.0",
+ "summary": "6 ok, 1 build_error",
+ "groups": {
+  "RBD Assemble": {
+   "status": "ok",
+   "text": "5f4a9e1507ea6a0a"
+  },
+  "RBD Bricks": {
+   "status": "build_error",
+   "text": "7da0e527eed3fbc1",
+   "error": "Object 'RBD Cache.Bricks' not found in file"
+  },
+  "RBD Bullet Solver": {
+   "status": "ok",
+   "text": "0de7da24068ae4f7"
+  },
+  "RBD Configure": {
+   "status": "ok",
+   "text": "0311e639174c1926"
+  },
+  "RBD Constraints From Rules": {
+   "status": "ok",
+   "text": "e59341e511670684"
+  },
+  "RBD Playback": {
+   "status": "ok",
+   "text": "8991d2e6bca8aa47"
+  },
+  "RBD Select": {
+   "status": "ok",
+   "text": "d100a7dc2aa31703"
+  }
+ }
+}

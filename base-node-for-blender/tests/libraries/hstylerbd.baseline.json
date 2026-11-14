@@ -1,0 +1,43 @@
+{
+ "library": "H-Style RBD Nodes",
+ "version": "d9a22d0",
+ "sha256": "7e0928ad6227d1043950b2101d02eccb75e1167aaa6f6e567fdf090f1841ea48",
+ "blender": "5.3.0",
+ "summary": "6 ok, 2 build_error",
+ "groups": {
+  "RBD Bullet Solver": {
+   "status": "ok",
+   "text": "0de7da24068ae4f7"
+  },
+  "RBD Cluster": {
+   "status": "build_error",
+   "text": "c726ddf72f95a1f8",
+   "error": "'TexVoronoi.color' is already an output (Color); '.x' does not exist"
+  },
+  "RBD Configure": {
+   "status": "ok",
+   "text": "0311e639174c1926"
+  },
+  "RBD Fracture": {
+   "status": "ok",
+   "text": "d9fd67330c3dd581"
+  },
+  "RBD Material Fracture": {
+   "status": "ok",
+   "text": "50dbb229d0343d04"
+  },
+  "RBD Playback": {
+   "status": "ok",
+   "text": "8991d2e6bca8aa47"
+  },
+  "RBD Select": {
+   "status": "ok",
+   "text": "d100a7dc2aa31703"
+  },
+  "RBD Wall": {
+   "status": "build_error",
+   "text": "5ff9cc2e999868a5",
+   "error": "'TexVoronoi.color' is already an output (Color); '.x' does not exist"
+  }
+ }
+}

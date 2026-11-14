@@ -1,0 +1,13 @@
+# H-Style RBD Nodes: its add-on builds its node groups from Python (nodes_*.py) and ships no .blend;
+# they are read from an example scene of its repository, Examples/06_brick_wall.blend, at a commit
+# (add-on version 1.0.2). This one is the brick-wall scene: its 3 brick groups (RBD
+# Assemble, RBD Bricks, RBD Constraints From Rules) and 4 shared with hstylerbd.
+name = "H-Style RBD Nodes"
+author = "Excifroge"
+homepage = "https://github.com/excifroge/H-Style-RBD-Nodes"
+license = "GPL-3.0-or-later"
+# Compatible with base-node-for-blender (GPL-3.0-or-later), but fetched at test time rather than
+# committed: a new version is one line here. The baseline keeps names, statuses and hashes.
+version = "d9a22d0"
+url = "https://raw.githubusercontent.com/excifroge/H-Style-RBD-Nodes/d9a22d0728af799fe7350a2cb3a6b6a54683ff83/Examples/06_brick_wall.blend"
+sha256 = "2a27fbb092a8a16069e09047be6eb8856f784a07f1a194de83cae8ba5df4164d"
