@@ -1,6 +1,6 @@
 import pytest
 
-from base_node.complete import complete, product_sign
+from base_node.complete import complete, product_sign, signature
 
 from fake_schema import MATH_OPS
 
@@ -153,3 +153,38 @@ def test_graphs_of_a_use_and_groups_of_the_file(schema):
     src += "bosse("
     _, items = complete(src, len(lines), len(lines[-1]) + len("bosse(") + 1, schema, load)
     assert [i.label for i in items[:2]] == ["x", "centre"]
+
+
+def test_asked_after_a_value_gives_the_next_inputs(schema):
+    src = HEAD + "  return SetPosition(geometry, offset: Position()"
+    lines = src.split("\n")
+    assert complete(src, len(lines), len(lines[-1]) + 1, schema)[1] == []  # not by itself
+    start, items = complete(src, len(lines), len(lines[-1]) + 1, schema, asked=True)
+    assert [i.insert for i in items][:2] == [", geometry: ", ", selection: "], items
+    assert "offset" not in [i.label for i in items]
+    assert start == len(lines[-1]) + 1  # nothing replaced
+    # After a number too, which is not a word being typed
+    src = HEAD + "  return SetPosition(geometry, offset: 10"
+    lines = src.split("\n")
+    assert complete(src, len(lines), len(lines[-1]) + 1, schema, asked=True)[1]
+
+
+def sig(source, schema):
+    lines = source.split("\n")
+    return signature(source, len(lines), len(lines[-1]) + 1, schema)
+
+
+def test_signature_of_the_call_the_cursor_is_in(schema):
+    s = sig(HEAD + "  return SetPosition(geometry, offset: v, ", schema)
+    assert s.name == "SetPosition"
+    assert [(k, st) for k, _t, st in s.inputs] == [
+        ("geometry", "given"), ("selection", ""), ("position", ""), ("offset", "given")]
+    assert s.outputs == (("geometry", "Geometry"),)
+    s = sig(HEAD + "  return SetPosition(geometry, offset: Position(", schema)
+    assert s.name == "Position"
+    s = sig(HEAD + "  return SetPosition(geometry, offset: ", schema)
+    assert dict((k, st) for k, _t, st in s.inputs)["offset"] == "current"
+    s = sig(HEAD + "  return geometry |> SetPosition(", schema)
+    assert s.inputs[0][2] == "given"  # the pipe gives the first input
+    assert sig(HEAD + "  return SetPosition(geometry)", schema) is None
+    assert sig(HEAD + "  x = 1.0", schema) is None

@@ -12,7 +12,7 @@ from .schema import TREE_KINDS, TYPES, key, snake
 from .sugar import COMPONENTS, FUNCS, VECTOR, WORDS
 
 # Typing one of these opens the suggestions by itself
-OPENERS = ("(", ".", ":", "#")
+OPENERS = ("(", ",", ".", ":", "#")
 
 # Keywords that a value follows
 KEYWORDS = ("return", "and", "or", "xor", "not")
@@ -37,10 +37,21 @@ class Outline:
     body: int      # index of `{` in the token list, or None
 
 
-def complete(source, line, col, schema, load=None):
+@dataclass(frozen=True)
+class Signature:
+    """The prototype of the call the cursor is in."""
+    name: str
+    inputs: tuple   # (key, type, state): state is "given", "current" or ""
+    outputs: tuple  # (key, type)
+    col: int = 0    # 1-based column of the call's name
+
+
+def complete(source, line, col, schema, load=None, asked=False):
     """(start column, items) at a 1-based cursor; an item replaces line[start:col].
 
-    With `load` (see typecheck.check), the graphs of the `use` lines are suggested too."""
+    With `load` (see typecheck.check), the graphs of the `use` lines are suggested too.
+    `asked` is a request of the user, not a key that opens the suggestions by itself:
+    after a value in a call, the inputs left come with their comma."""
     lines = source.split("\n")
     if not 1 <= line <= len(lines):
         return col, []
@@ -48,18 +59,35 @@ def complete(source, line, col, schema, load=None):
     prefix = typed[len(typed.rstrip("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")):]
     start = col - len(prefix)
     if prefix[:1].isdigit():
-        return start, []
+        if not asked:
+            return start, []
+        prefix, start = "", col  # the number is a value: what may follow it
     tokens = tokenize("\n".join(lines[:line - 1] + [typed[:len(typed) - len(prefix)]]), strict=False)[:-1]
     if tokens and tokens[-1].kind in ("COMMENT", "OPEN_STRING"):
         return start, []
     if tokens and tokens[-1].kind == "COLOR":
         return start, matching([Item(name, name, "#" + code, "color") for name, code in CSS.items()], prefix)
+    items = context(source, line, tokens, schema, load).items(asked)
+    return start, matching(items, prefix)
+
+
+def signature(source, line, col, schema, load=None):
+    """The Signature of the innermost call open at a 1-based cursor, or None."""
+    lines = source.split("\n")
+    if not 1 <= line <= len(lines):
+        return None
+    tokens = tokenize("\n".join(lines[:line - 1] + [lines[line - 1][:col - 1]]), strict=False)[:-1]
+    if not tokens or tokens[-1].kind in ("COMMENT", "OPEN_STRING"):
+        return None
+    return context(source, line, tokens, schema, load).signature()
+
+
+def context(source, line, tokens, schema, load):
     tokens = [t for t in tokens if t.kind != "COMMENT"]
     everything = [t for t in tokenize(source, strict=False) if t.kind != "COMMENT"]
     # The file's own graphs last: they win over a group or a module graph of the same key
     graphs = existing(schema) + imported(everything, load) + outlines(everything)
-    items = Context(tokens, line, graphs, schema).items()
-    return start, matching(items, prefix)
+    return Context(tokens, line, graphs, schema)
 
 
 def product_sign(typed):
@@ -233,20 +261,29 @@ class Context:
 
     # Where the cursor is
 
-    def items(self):
+    def body(self):
+        """Index of the `{` of the graph body the cursor is in, or None."""
+        if self.head is None:
+            return None
+        _params, _outputs, body = header(self.t, self.head)
+        if body is None:
+            return None
+        depth = 0
+        for tok in self.t[body:]:
+            depth += {"{": 1, "}": -1}.get(tok.kind, 0)
+        return body if depth > 0 else None
+
+    def items(self, asked=False):
         t = self.t
         if self.head is None:
             return self.top_level()
-        _params, _outputs, body = header(t, self.head)
-        if body is None:
+        if header(t, self.head)[2] is None:
             # In the header: only types are ours to suggest
             return self.types() if t[-1].kind in (":", "->") else []
-        depth = 0
-        for tok in t[body:]:
-            depth += {"{": 1, "}": -1}.get(tok.kind, 0)
-        if depth <= 0:
+        body = self.body()
+        if body is None:
             return self.top_level()
-        return self.in_body(body)
+        return self.in_body(body, asked)
 
     def top_level(self):
         t = self.t
@@ -256,7 +293,7 @@ class Context:
             return []
         return [Item(k, k + " graph ", "tree", "keyword") for k in TREE_KINDS]
 
-    def in_body(self, body):
+    def in_body(self, body, asked=False):
         t = self.t
         last = t[-1]
         new_line = last.line < self.line
@@ -275,7 +312,50 @@ class Context:
             return self.values(body)
         if (new_line or last.kind == "{") and self.depth(body) == 0:
             return self.values(body) + [Item("return", "return ", kind="keyword")]
+        if asked and call is not None and ends_value(last):
+            # After a value: the next input, its comma written
+            return [Item(i.label, ", " + i.insert, i.detail, i.kind) for i in self.args(call)]
         return []
+
+    def signature(self):
+        body = self.body()
+        call = self.open_call(body) if body is not None else None
+        if call is None:
+            return None
+        t, name = self.t, self.t[call].text
+        # What the call says so far: its named inputs, how many by position, the one being written
+        named, current, positional = set(), None, 1 if call and t[call - 1].kind == "|>" else 0
+        depth, starts = 0, True
+        for i in range(call + 1, len(t)):
+            k = t[i].kind
+            if k in ("(", "{"):
+                depth += 1
+            elif k in (")", "}"):
+                depth -= 1
+            if depth != 1 or k == "(":
+                continue
+            if k == ",":
+                current, starts = None, True
+            elif starts and k == "IDENT" and i + 1 < len(t) and t[i + 1].kind == ":":
+                named.add(t[i].text)
+                current, starts = t[i].text, False
+            elif starts and k != ":":
+                positional, starts = positional + 1, False
+        if key(name) in self.graphs:
+            graph = self.graphs[key(name)]
+            inputs = [(snake(n), ty) for n, ty in graph.params]
+            outputs = [(snake(n), ty) for n, ty in graph.outputs]
+        else:
+            spec, props, _ = self.call_props(call)
+            if spec is None:
+                return None
+            ins, outs = self.schema.sockets(self.kind, spec, props)
+            inputs = [(k, s.type) for k, s in keyed(ins)]
+            inputs += [(p.name, p.kind.lower()) for p in spec.props.values()]
+            outputs = [(k, s.type) for k, s in keyed(outs)]
+        by_position = [k for k, _ty in inputs if k not in named][:positional]
+        state = lambda k: "current" if k == current else "given" if k in named or k in by_position else ""
+        return Signature(name, tuple((k, ty, state(k)) for k, ty in inputs), tuple(outputs), t[call].col)
 
     def depth(self, body):
         d = 0
@@ -425,6 +505,11 @@ class Context:
 
     def types(self):
         return [Item(ty, ty, kind="type") for ty in TYPES]
+
+
+def ends_value(tok):
+    """True when a value may end with the token: a name, a literal, a closed call."""
+    return tok.kind in ("IDENT", "NUMBER", "STRING", ")") or tok.text in ("true", "false")
 
 
 def keyed(sockets):
