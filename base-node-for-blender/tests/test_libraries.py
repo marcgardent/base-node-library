@@ -164,7 +164,7 @@ def round_trip(blend):
                 differs.append(f"{kind}: {first_error(e)}")
         if differs:
             r.update(status="evaluates_otherwise", on=differs)
-    for o in list(bpy.data.objects):
+    for o in [o for o in bpy.data.objects if o.users_scene]:
         bpy.data.objects.remove(o)
     return records, texts
 

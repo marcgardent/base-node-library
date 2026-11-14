@@ -162,7 +162,7 @@ RESERVED = {"graph", "return", "true", "false", "and", "or", "xor", "not", "dot"
 
 
 # Links Blender converts although one side is strict
-CONVERSIONS = {("Rotation", "Matrix")}
+CONVERSIONS = {("Rotation", "Matrix"), ("Matrix", "Rotation")}
 
 
 def can_link(src, dst):

@@ -3,7 +3,7 @@
  "version": "v520.2.0",
  "sha256": "905e255ddadad7ccf81c8d05063f5df0a227b6b0324afeb3b72143c7003c0644",
  "blender": "5.3.0",
- "summary": "369 ok, 20 build_error, 8 unstable, 6 evaluates_otherwise",
+ "summary": "402 ok, 1 evaluates_otherwise",
  "groups": {
   ".Accumulate Domain Transform": {
    "status": "ok",
@@ -21,7 +21,7 @@
   },
   ".CA to helix": {
    "status": "ok",
-   "text": "3088fb297b353f91",
+   "text": "348694df602501ce",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -35,7 +35,7 @@
   },
   ".CA to sheet": {
    "status": "ok",
-   "text": "0701d9842a011596",
+   "text": "4c6d4b11eb32d8e2",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -191,12 +191,11 @@
    "text": "b7e18e7f73cf976e"
   },
   ".MN_topo_assign_backbone": {
-   "status": "build_error",
-   "text": "c5b96b106b348b23",
+   "status": "ok",
+   "text": "496b0113433fcb7b",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "menu_residue_mask.atom_name expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   ".MN_topo_calc_helix": {
    "status": "ok",
@@ -227,38 +226,32 @@
    ]
   },
   ".MN_utils_rotate_res": {
-   "status": "evaluates_otherwise",
-   "text": "e3da21d3c989de60",
+   "status": "ok",
+   "text": "02d3e700631a421f",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "on": [
-    "mesh caller fed"
    ]
   },
   ".MN_utils_style_cartoon": {
-   "status": "build_error",
-   "text": "2a8c9203bd7b768c",
+   "status": "ok",
+   "text": "77b9145fa8eca6c7",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "menu_residue_mask.atom_name expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   ".MN_utils_style_ribbon_nucleic": {
-   "status": "build_error",
-   "text": "8c6974ee0918ff1b",
+   "status": "ok",
+   "text": "918291f734f14b23",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "False: bpy_struct: item.attr = val: enum \"Custom Profile\" not found in ()"
+   ]
   },
   ".MN_utils_style_ribbon_peptide": {
-   "status": "build_error",
-   "text": "93fb2670eb3078d7",
+   "status": "ok",
+   "text": "6fc239c4b247b193",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "menu_residue_mask.atom_name expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   ".MN_utils_style_spheres_icosphere": {
    "status": "ok",
@@ -276,7 +269,7 @@
   },
   ".MN_utils_style_sticks": {
    "status": "ok",
-   "text": "703297301070374f",
+   "text": "eccb1d03a8106c7e",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -301,7 +294,7 @@
   },
   ".OKLab Matrices": {
    "status": "ok",
-   "text": "33a824e60a03f4e1"
+   "text": "e7a55941259be787"
   },
   ".Profile Type Picker": {
    "status": "ok",
@@ -439,12 +432,11 @@
    ]
   },
   "Animate Dihedrals": {
-   "status": "build_error",
-   "text": "bd30dd333d06b837",
+   "status": "ok",
+   "text": "1c1c05c4c7372675",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "backbone_c.method expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Animate Fraction": {
    "status": "ok",
@@ -462,7 +454,7 @@
   },
   "Animate Peptide to Curve": {
    "status": "ok",
-   "text": "057f6d0a91705e8b",
+   "text": "997f0b58fde65ebc",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -483,7 +475,7 @@
   },
   "Animate Wiggle": {
    "status": "ok",
-   "text": "555bf4cef35ea025",
+   "text": "d6fc6a80419b905f",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -538,12 +530,11 @@
    ]
   },
   "Atoms to CA Curves": {
-   "status": "build_error",
-   "text": "36b7cf131a2304dc",
+   "status": "ok",
+   "text": "b347eba76903ed8b",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "menu_residue_mask.atom_name expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Atoms to Curves": {
    "status": "ok",
@@ -609,28 +600,25 @@
    ]
   },
   "Backbone Positions": {
-   "status": "build_error",
-   "text": "0e268a8e048ec4a0",
+   "status": "ok",
+   "text": "925425ac65449b77",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "backbone_o.method expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Backbone Vector List": {
-   "status": "build_error",
-   "text": "55cbe278c7fed89a",
+   "status": "ok",
+   "text": "3c75befbc87334b8",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "backbone_o.method expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Backbone Vectors": {
-   "status": "build_error",
-   "text": "b3028f8701238108",
+   "status": "ok",
+   "text": "1bfdfcc8cfbcf7e5",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "backbone_o.method expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Between Float": {
    "status": "ok",
@@ -704,10 +692,10 @@
    ]
   },
   "Break Bonds": {
-   "status": "unstable",
-   "text": "d57fd98fb7112072",
+   "status": "ok",
+   "text": "c140f58053fc8acf",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
+    "'String.String': quotes and newlines replaced",
     "appearance of Group Input not exported: label"
    ]
   },
@@ -822,14 +810,14 @@
   },
   "Color Attribute Map": {
    "status": "ok",
-   "text": "6488c4c1c79f8f7e",
+   "text": "4a71aa76c70f3385",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
   },
   "Color Attribute Random": {
    "status": "ok",
-   "text": "3adb56624b7733ef",
+   "text": "a39d3ff811dc44dc",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -843,84 +831,81 @@
   },
   "Color Common": {
    "status": "ok",
-   "text": "63909946a1a823b5",
+   "text": "9d29e68de8a3cf12",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
   },
   "Color Element": {
    "status": "ok",
-   "text": "0f8ab1ba35b54f2c",
+   "text": "0ba3b483a3707040",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
   },
   "Color Goodsell": {
    "status": "ok",
-   "text": "61e9e4b5c9adffe1",
+   "text": "47bb8011e1595d9a",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
   },
   "Color Mix Intermediate": {
    "status": "ok",
-   "text": "016ebc29e7bf8c03",
+   "text": "fcb7791bdb396a1a",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
   },
   "Color OKLab Mix": {
    "status": "ok",
-   "text": "d86d8c835abec76a",
+   "text": "eaa348375bf14550",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
   },
   "Color OKLab Offset": {
-   "status": "evaluates_otherwise",
-   "text": "f0306b7d50aaa270",
+   "status": "ok",
+   "text": "58dc4a7fc77a7240",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "on": [
-    "mesh caller fed"
    ]
   },
   "Color Rainbow": {
    "status": "ok",
-   "text": "df846d24d34485be",
+   "text": "f1309dfad88916d0",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
   },
   "Color Res Name": {
    "status": "ok",
-   "text": "8f6089a3a0b1584b",
+   "text": "38bb6243923505fd",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
   },
   "Color Secondary Structure": {
    "status": "ok",
-   "text": "f00efbb86f49e99d",
+   "text": "d0a55c1f7f7807a2",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
   },
   "Color pLDDT": {
    "status": "ok",
-   "text": "5542c6b0ab9e49b1",
+   "text": "8e716de361ec0c44",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
   },
   "Color to LCh": {
    "status": "ok",
-   "text": "20ecb3c69cda9c71"
+   "text": "ec8af700f942a20b"
   },
   "Color to OKLab": {
    "status": "ok",
-   "text": "cf6cdfb77d935258"
+   "text": "e1fc48ab492fcbc0"
   },
   "Constraint Distance": {
    "status": "ok",
@@ -977,7 +962,7 @@
   },
   "Curve Offset Dot": {
    "status": "ok",
-   "text": "b8a95120116bb28f",
+   "text": "51b254877438a1d5",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -1007,7 +992,7 @@
   },
   "Curve Visualize": {
    "status": "ok",
-   "text": "864872c1f1e8ae2e",
+   "text": "68bc7ad05120864c",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -1032,7 +1017,7 @@
   },
   "DNA From Curve": {
    "status": "ok",
-   "text": "3906257b1ad67072",
+   "text": "7828d5a1cf783303",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -1061,7 +1046,7 @@
   },
   "Density Style Wire": {
    "status": "ok",
-   "text": "b3af2742735a58b0",
+   "text": "afe0a8197d28a7bf",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -1088,20 +1073,18 @@
    ]
   },
   "Dihedral Phi": {
-   "status": "build_error",
-   "text": "e7d565b068018fad",
+   "status": "ok",
+   "text": "bb52fbe2c36f7d3e",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "backbone_c.method expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Dihedral Psi": {
-   "status": "build_error",
-   "text": "2a39a6b8423e6817",
+   "status": "ok",
+   "text": "c491e96c2e416f4e",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "backbone_n.method expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Domain Switch Matrix": {
    "status": "ok",
@@ -1126,12 +1109,11 @@
    "text": "1d8590a956affb08"
   },
   "Ensemble Instance": {
-   "status": "build_error",
+   "status": "ok",
    "text": "45ead888df690952",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "InstanceOnPoints.rotation expects Rotation, receives Matrix (NamedAttribute.attribute)"
+   ]
   },
   "Entity ID": {
    "status": "ok",
@@ -1169,32 +1151,25 @@
    ]
   },
   "Evaluate Per Group": {
-   "status": "evaluates_otherwise",
-   "text": "6df032c6e3455881",
+   "status": "ok",
+   "text": "90ed02f0c2b015a3",
    "warnings": [
-    "appearance of Group Input not exported: label",
-    "repeat 'Repeat Output': body reads input 'Geometry', shadowed by state of same name; not yet supported in text"
-   ],
-   "on": [
-    "mesh",
-    "mesh caller",
-    "mesh caller fed"
+    "appearance of Group Input not exported: label"
    ]
   },
   "Evaluate on Atoms": {
-   "status": "unstable",
-   "text": "c678d5c7e64844d8",
+   "status": "ok",
+   "text": "4c7027424125a4af",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
+    "'String.String': quotes and newlines replaced",
     "appearance of Group Input not exported: label"
    ]
   },
   "Evaluate on Instances": {
    "status": "ok",
-   "text": "82915b8a2143e1a9",
+   "text": "c715e466d901a09b",
    "warnings": [
-    "appearance of Group Input not exported: label",
-    "repeat 'Repeat Output': body reads input 'Geometry', shadowed by state of same name; not yet supported in text"
+    "appearance of Group Input not exported: label"
    ]
   },
   "Evluate While Planar": {
@@ -1220,7 +1195,7 @@
   },
   "Fallback Color": {
    "status": "ok",
-   "text": "be17f36bad96a2c8",
+   "text": "f4ba8f9ef3d7bfa1",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -1282,10 +1257,10 @@
    ]
   },
   "Find Bonds": {
-   "status": "unstable",
-   "text": "cc283c2749a25ae7",
+   "status": "ok",
+   "text": "1aa5918fcb8d412f",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
+    "'String.String': quotes and newlines replaced",
     "appearance of Group Input not exported: label"
    ]
   },
@@ -1598,7 +1573,7 @@
   },
   "LCh to Color": {
    "status": "ok",
-   "text": "ff4884398227fcac",
+   "text": "6e01caf2be365c0c",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -1643,13 +1618,10 @@
    "text": "d40865d5af969163"
   },
   "MN_animate_noise_repeat": {
-   "status": "evaluates_otherwise",
-   "text": "6fabe211698893bb",
+   "status": "ok",
+   "text": "38ff80f32dfe06c9",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "on": [
-    "mesh caller fed"
    ]
   },
   "Mass": {
@@ -1716,11 +1688,8 @@
    ]
   },
   "OKLab to Color": {
-   "status": "evaluates_otherwise",
-   "text": "cdbeee06efbc2c99",
-   "on": [
-    "mesh caller fed"
-   ]
+   "status": "ok",
+   "text": "66d7a106f61fde0a"
   },
   "OKLab to LCh": {
    "status": "ok",
@@ -1878,7 +1847,7 @@
   },
   "Primitive Gimbal": {
    "status": "ok",
-   "text": "f9e87c537b5542e2",
+   "text": "7a893a97c08f8972",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -1892,7 +1861,7 @@
   },
   "Random Color": {
    "status": "ok",
-   "text": "4b010f43aa41f2a8",
+   "text": "ed2864a2a5ed5c5d",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -2081,12 +2050,11 @@
    ]
   },
   "Select Cube": {
-   "status": "build_error",
+   "status": "ok",
    "text": "fccfa0c72ce3011e",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "'Object': Object 'select_cube' not found in file"
+   ]
   },
   "Select Element": {
    "status": "ok",
@@ -2145,12 +2113,11 @@
    ]
   },
   "Select Sphere": {
-   "status": "build_error",
+   "status": "ok",
    "text": "bdf7c49278b68d41",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "'Object': Object 'select_sphere' not found in file"
+   ]
   },
   "Selected Instances": {
    "status": "ok",
@@ -2160,10 +2127,10 @@
    ]
   },
   "Separate Atoms": {
-   "status": "unstable",
-   "text": "18e9a3d81a193bac",
+   "status": "ok",
+   "text": "a5a550e53a79b6ec",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
+    "'String.String': quotes and newlines replaced",
     "appearance of Group Input not exported: label"
    ]
   },
@@ -2239,12 +2206,11 @@
    ]
   },
   "Set Phi Psi Angle": {
-   "status": "build_error",
-   "text": "fc5252bd09de4124",
+   "status": "ok",
+   "text": "fb995a49fcf71d9e",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "backbone_c.method expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Set Previous World Items": {
    "status": "ok",
@@ -2318,7 +2284,7 @@
   },
   "Smooth by Angle": {
    "status": "ok",
-   "text": "8b9208644beca7df",
+   "text": "14ccea64a79934b8",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]
@@ -2335,12 +2301,11 @@
    ]
   },
   "Split Curves": {
-   "status": "build_error",
-   "text": "f6b4e989ffcfc4cd",
+   "status": "ok",
+   "text": "bdb37441a380a29f",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "backbone_c.method expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Split to Centred Instances": {
    "status": "ok",
@@ -2350,12 +2315,11 @@
    ]
   },
   "Starfile Instances": {
-   "status": "build_error",
-   "text": "4d77f356d1414b73",
+   "status": "ok",
+   "text": "3c6ccdcb3c4e1743",
    "warnings": [
     "appearance of Group Input not exported: label"
-   ],
-   "error": "InstanceOnPoints.rotation expects Rotation, receives Matrix (fallback_matrix)"
+   ]
   },
   "Store Bend Rotation": {
    "status": "ok",
@@ -2388,54 +2352,51 @@
    ]
   },
   "Style Ball and Stick": {
-   "status": "unstable",
-   "text": "a2195fff4196f4cf",
+   "status": "ok",
+   "text": "ad07b68773a9c0c6",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
+    "'String.String': quotes and newlines replaced",
     "appearance of Group Input not exported: label"
    ]
   },
   "Style Cartoon": {
-   "status": "build_error",
-   "text": "7bd22400aada8b6d",
+   "status": "ok",
+   "text": "3e944511aec94ef4",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
+    "'String.String': quotes and newlines replaced",
     "appearance of Group Input not exported: label"
-   ],
-   "error": "menu_residue_mask.atom_name expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Style Ribbon": {
-   "status": "build_error",
-   "text": "0151d77c8f736a5b",
+   "status": "ok",
+   "text": "13dd02d960fba2db",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
+    "'String.String': quotes and newlines replaced",
     "appearance of Group Input not exported: label"
-   ],
-   "error": "menu_residue_mask.atom_name expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Style Spheres": {
-   "status": "unstable",
-   "text": "98d5047bd85b9273",
+   "status": "ok",
+   "text": "66584c069e0f96f8",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
+    "'String.String': quotes and newlines replaced",
     "appearance of Group Input not exported: label"
    ]
   },
   "Style Sticks": {
-   "status": "unstable",
-   "text": "c2e1b305f62e307e",
+   "status": "ok",
+   "text": "fc73d74e95490a7e",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
+    "'String.String': quotes and newlines replaced",
     "appearance of Group Input not exported: label"
    ]
   },
   "Style Surface": {
-   "status": "unstable",
-   "text": "a5e69662b3932114",
+   "status": "ok",
+   "text": "7f8fb9f17a74b985",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
-    "appearance of Group Input not exported: label",
-    "repeat 'Repeat Output': body reads input 'Geometry', shadowed by state of same name; not yet supported in text"
+    "'String.String': quotes and newlines replaced",
+    "appearance of Group Input not exported: label"
    ]
   },
   "Sub Group Info": {
@@ -2474,13 +2435,12 @@
    ]
   },
   "Topology DSSP": {
-   "status": "build_error",
-   "text": "a52c47f4c7c7a00b",
+   "status": "ok",
+   "text": "5273d9d1832ce1df",
    "warnings": [
-    "'String.string': quotes and newlines replaced",
+    "'String.String': quotes and newlines replaced",
     "appearance of Group Input not exported: label"
-   ],
-   "error": "menu_residue_mask.atom_name expects Menu, receives Float (IndexSwitch)"
+   ]
   },
   "Transform Accumulate": {
    "status": "ok",
@@ -2706,7 +2666,7 @@
   },
   "oxDNA Style Ribbon": {
    "status": "ok",
-   "text": "e9269a41f110f81c",
+   "text": "eca7b26d5777a716",
    "warnings": [
     "appearance of Group Input not exported: label"
    ]

@@ -275,6 +275,7 @@ class Builder:
                 for attr, shape in signature_items(n.bl_idname):
                     self.item_list(nodes[n.id], n, shape, getattr(n, attr) or [], attr)
 
+        menus = []
         for n in g.nodes:
             node = nodes[n.id]
             name = n.name or FIXED_NAMES.get(n.id)
@@ -282,6 +283,9 @@ class Builder:
 
             for ident, value in n.values.items():
                 sock = self.socket(g, n, node, ident, "inputs")
+                if sock.type == "MENU":
+                    menus.append((n, ident, sock, value))
+                    continue
                 try:
                     sock.default_value = self.coerce(n, sock, value)
                 except (TypeError, ValueError) as e:
@@ -309,6 +313,17 @@ class Builder:
         for n, made, src, dst in refused:
             if not made.is_valid:
                 self.fail(n, f"Blender rejected link {src.name} ({src.type}) → {dst.name} ({dst.type})")
+        # A menu input only has its items once linked to the menu it feeds, and the tree updated
+        updated = False
+        for n, ident, sock, value in menus:
+            if not updated and value not in {i.identifier for i in sock.bl_rna.properties["default_value"].enum_items}:
+                tree.update_tag()
+                bpy.context.view_layer.update()
+                updated = True
+            try:
+                sock.default_value = self.coerce(n, sock, value)
+            except (TypeError, ValueError) as e:
+                self.fail(n, f"{ident}: {e}")
         # Once linked: an item set to remove itself goes at once while nothing feeds it
         for item, option, value in self.late:
             setattr(item, option, value)
