@@ -151,8 +151,9 @@ geometry graph box() -> Geometry {
   offset = (1.0, 2.0, 3.0)
   on = true
   tint = (1.0, 0.5, 0.0, 1.0)
+  flat = (0.5, 0.25)
   g = MeshCube(CombineXYZ(size, scale, -size), size)
-  return SetPosition(g.mesh, on, offset: offset)
+  return SetPosition(g.mesh, on, offset: offset + flat)
 }
 """
     tree = build_source(src, filename="box.bn")[0]
@@ -162,11 +163,13 @@ geometry graph box() -> Geometry {
     assert kinds["offset"] == "FunctionNodeInputVector", kinds
     assert kinds["on"] == "FunctionNodeInputBool", kinds
     assert kinds["tint"] == "FunctionNodeInputColor", kinds
+    # Two numbers: a Vector node in 2D, whose link gives z = 0 to a 3D input
+    assert kinds["flat"] == "FunctionNodeInputVector" and tree.nodes["flat"].vector_dimensions == 2, kinds
 
     exported, warnings = export_tree(tree)
     assert not warnings, warnings
     for line in ("size = 10", "scale = 2.5", "offset = (1.0, 2.0, 3.0)", "on = true",
-                 "tint = (1.0, 0.5, 0.0, 1.0)", "CombineXYZ(x: size, y: scale, z: -size)"):
+                 "tint = (1.0, 0.5, 0.0, 1.0)", "flat = (0.5, 0.25)", "-size", "offset + flat"):
         assert line in exported, f"'{line}' lost:\n{exported}"
     again, _ = export_tree(build_source(exported, filename="box2.bn")[0])
     assert again == exported, f"not stable:\n{again}"

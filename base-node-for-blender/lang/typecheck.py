@@ -594,7 +594,7 @@ class GraphChecker:
     def const(self, stmt, lit):
         """`size = 10`: a Value, Int, Bool… node named `size`, or the literal alone when none fits."""
         made = CONST_NODES.get(lit.type)
-        if made is None or lit.type == "Vector" and len(lit.value) != 3:
+        if made is None:
             return lit
         spec = self.schema.node(self.g.kind, made[0])
         if spec is None:
@@ -608,6 +608,9 @@ class GraphChecker:
         if made[1] is None:
             node.out_values[outputs[0].identifier] = value
         else:
+            if lit.type == "Vector" and len(value) == 2:
+                # A 2D vector: the node takes two numbers once its dimensions say so
+                node.props["vector_dimensions"] = 2
             node.props[made[1]] = value
         self.nodes.append(node)
         return Const(node.id, outputs, None, stmt.name, lit)

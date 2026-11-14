@@ -513,8 +513,9 @@ class GraphReader:
 
     def constant(self, node):
         """The literal a constant input node holds (`10`, `(1.0, 0.0, 0.0)`), else None."""
+        # A 4D vector would read as a color
         if node.bl_idname not in CONST_NODES or node.bl_idname == "FunctionNodeInputVector" \
-                and getattr(node, "vector_dimensions", 3) != 3:
+                and getattr(node, "vector_dimensions", 3) not in (2, 3):
             return None
         prop = CONST_NODES[node.bl_idname]
         value = node.outputs[0].default_value if prop is None else getattr(node, prop)
