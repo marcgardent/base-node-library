@@ -21,15 +21,12 @@ def bind():
     mod = prefs.get().complete_key
     _items.append((km, km.keymap_items.new("base_node.complete", "SPACE", "PRESS",
                                            alt=mod == "ALT", shift=mod == "SHIFT", ctrl=mod == "CTRL")))
-    # Ctrl+Tab flips an area between a tree and its text, on every keyboard layout (Ctrl+` was ² on AZERTY)
-    _items.append((km, km.keymap_items.new("base_node.toggle_view", "TAB", "PRESS", ctrl=True)))
+    # Alt+Z flips an area between a tree and its text: Blender's users know it, and it is free here
+    _items.append((km, km.keymap_items.new("base_node.toggle_view", "Z", "PRESS", alt=True)))
     # Ctrl+Shift+A formats the text (Cmd+Shift+A on macOS); free in the Text Editor
     _items.append((km, km.keymap_items.new("base_node.format", "A", "PRESS", shift=True, ctrl=not mac, oskey=mac)))
     km = kc.keymaps.new("Node Editor", space_type="NODE_EDITOR")
-    # Inside a group, Ctrl+Tab still leaves it; from the top tree, it goes on to the text
-    kmi = km.keymap_items.new("base_node.toggle_view", "TAB", "PRESS", ctrl=True)
-    kmi.properties.leave_groups = True
-    _items.append((km, kmi))
+    _items.append((km, km.keymap_items.new("base_node.toggle_view", "Z", "PRESS", alt=True)))
     # Ctrl+Shift+A arranges the nodes, as Node Arrange did; the same keys format a text
     _items.append((km, km.keymap_items.new("base_node.arrange", "A", "PRESS", shift=True, ctrl=not mac, oskey=mac)))
 

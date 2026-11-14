@@ -114,7 +114,7 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
             col.prop(self, "color_local")
             col.prop(self, "color_warning")
 
-        layout.label(text="Ctrl+Tab switches an area between a tree and its text; Alt+P applies the text.",
+        layout.label(text="Alt+Z switches an area between a tree and its text; Alt+P applies the text.",
                      icon="INFO")
 
 

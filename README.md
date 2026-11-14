@@ -136,8 +136,8 @@ Add-on for Blender 5.2+ (`id = "base_node"`). The node tree is the only data: it
 
 | Action | Where | Shortcut |
 |---|---|---|
-| Show the edited tree as `.bn` text, in the same area (inside a group, `Ctrl+Tab` first leaves it, as in Blender) | Node Editor, sidebar *Text > Edit as Text* | `Ctrl+Tab` |
-| Write the text into the tree and return to the nodes (the text is removed) | Text Editor, sidebar *Nodes > Back to Nodes* | `Ctrl+Tab` |
+| Show the edited tree as `.bn` text, in the same area | Node Editor, sidebar *Text > Edit as Text* | `Alt+Z` |
+| Write the text into the tree and return to the nodes (the text is removed) | Text Editor, sidebar *Nodes > Back to Nodes* | `Alt+Z` |
 | Write the text into the tree and keep editing | Text Editor, *Apply to Tree* | `Alt+P` |
 | Rewrite the text in the canonical layout, keeping its comments | Text Editor, sidebar *Format* | `Ctrl+Shift+A` |
 | Suggestions | Text Editor | `Alt+Space` (set in the preferences) |

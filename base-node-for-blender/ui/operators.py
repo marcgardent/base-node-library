@@ -34,7 +34,7 @@ class BASE_NODE_OT_apply_view(bpy.types.Operator):
     def execute(self, context):
         text = context.space_data.text
         if not actions.is_view(text):
-            self.report({"WARNING"}, "Not the text of a tree: Ctrl+Tab in a Node Editor shows one")
+            self.report({"WARNING"}, "Not the text of a tree: Alt+Z in a Node Editor shows one")
             return {"CANCELLED"}
         try:
             tree = actions.apply_view(text)
@@ -76,22 +76,12 @@ class BASE_NODE_OT_toggle_view(bpy.types.Operator):
     bl_label = "Nodes ↔ Text"
     bl_options = {"REGISTER", "UNDO"}
 
-    leave_groups: bpy.props.BoolProperty(
-        name="Leave Groups First", default=False, options={"HIDDEN", "SKIP_SAVE"},
-        description="Inside a group, let Blender leave it instead: the text shows from the top tree")
-
     @classmethod
     def poll(cls, context):
         space = context.space_data
         if space and space.type == "TEXT_EDITOR":
             return actions.is_view(space.text)
         return edit_tree(context) is not None
-
-    def invoke(self, context, event):
-        space = context.space_data
-        if self.leave_groups and space.type == "NODE_EDITOR" and len(space.path) > 1:
-            return {"PASS_THROUGH"}  # to Blender's Ctrl+Tab, which leaves the group
-        return self.execute(context)
 
     def execute(self, context):
         area = context.area
