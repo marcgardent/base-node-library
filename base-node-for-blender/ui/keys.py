@@ -15,15 +15,15 @@ def bind():
     if kc is None:
         return  # no add-on keyconfig in background mode
     km = kc.keymaps.new("Text", space_type="TEXT_EDITOR")
-    # Ctrl+Enter applies the text to its tree; Alt+P stays Python's
-    _items.append((km, km.keymap_items.new("base_node.apply_view", "RET", "PRESS", ctrl=True)))
+    mac = sys.platform == "darwin"
+    # Ctrl+P applies the text to its tree (Cmd+P on macOS); Alt+P stays Python's
+    _items.append((km, km.keymap_items.new("base_node.apply_view", "P", "PRESS", ctrl=not mac, oskey=mac)))
     mod = prefs.get().complete_key
     _items.append((km, km.keymap_items.new("base_node.complete", "SPACE", "PRESS",
                                            alt=mod == "ALT", shift=mod == "SHIFT", ctrl=mod == "CTRL")))
     # Ctrl+Tab flips an area between a tree and its text, on every keyboard layout (Ctrl+` was ² on AZERTY)
     _items.append((km, km.keymap_items.new("base_node.toggle_view", "TAB", "PRESS", ctrl=True)))
     # Ctrl+Shift+A formats the text (Cmd+Shift+A on macOS); free in the Text Editor
-    mac = sys.platform == "darwin"
     _items.append((km, km.keymap_items.new("base_node.format", "A", "PRESS", shift=True, ctrl=not mac, oskey=mac)))
     km = kc.keymaps.new("Node Editor", space_type="NODE_EDITOR")
     # Inside a group, Ctrl+Tab still leaves it; from the top tree, it goes on to the text
