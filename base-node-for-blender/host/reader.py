@@ -230,7 +230,8 @@ class GraphReader:
             value = fields[0][1]
         else:
             value = ast.Record([ast.Arg(n, v, 0, 0) for n, v in fields], 0, 0)
-        body.append((out, ast.Return(value, 0, 0, self.looked(out))))
+        # A tree without a Group Output node still returns: nothing, with no look
+        body.append((out, ast.Return(value, 0, 0, self.looked(out) if out is not None else None)))
         body = self.framed(body)
         self.continuations(body)
         self.frame_comments(body)

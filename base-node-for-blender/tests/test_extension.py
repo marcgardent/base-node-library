@@ -405,6 +405,22 @@ def test_live_apply():
     print("   ✓ Live apply verified")
 
 
+def test_tree_without_output():
+    """A tree with no Group Output node reads as a graph that returns nothing, and builds again."""
+    print("-> Test: Tree without output...")
+    from base_node.host import build_source, export_tree
+
+    tree = bpy.data.node_groups.new("NoOutput", "GeometryNodeTree")
+    tree.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+    tree.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    tree.nodes.new("NodeGroupInput")
+    source, _ = export_tree(tree)
+    assert "return ()" in source, source
+    build_source(source, "no_output.bn")
+    bpy.data.node_groups.remove(tree)
+    print("   ✓ Tree without output verified")
+
+
 def test_text_view():
     """5. A tree shown as text is written back into it, and the text goes away."""
     print("-> Test 5: Text view of a tree...")
@@ -796,6 +812,7 @@ def main():
         test_profile_ascent_and_linter,
         test_pipe_symbol,
         test_live_apply,
+        test_tree_without_output,
         test_text_view,
         test_import_files,
         test_zones_read_back,
