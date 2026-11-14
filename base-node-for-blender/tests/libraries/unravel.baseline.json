@@ -1,0 +1,25 @@
+{
+ "library": "Unravel",
+ "version": "v1.0.0",
+ "sha256": "1498281fae9bad25a63de06633b9029225bcde1762986fe2d24189bf1ef53d40",
+ "blender": "5.3.0",
+ "summary": "4 ok",
+ "groups": {
+  "Unravel Strand": {
+   "status": "ok",
+   "text": "abeccaaf5f4ce2d4"
+  },
+  "Unravel Tears": {
+   "status": "ok",
+   "text": "1d0bbae3fac7cb5f"
+  },
+  "Unravel Thread Mesh": {
+   "status": "ok",
+   "text": "b737d9a53191655a"
+  },
+  "Unravel Threads": {
+   "status": "ok",
+   "text": "115d2badf0a5d8dd"
+  }
+ }
+}

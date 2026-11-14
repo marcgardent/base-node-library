@@ -1,0 +1,11 @@
+# Unravel: the node groups its add-on appends (assets/unravel_nodes.blend), shipped in its release zip.
+name = "Unravel"
+author = "Paraminder Dhiman"
+homepage = "https://github.com/paraminder-dhiman/unravel"
+license = "GPL-3.0-or-later"
+# Compatible with base-node-for-blender (GPL-3.0-or-later), but fetched at test time rather than
+# committed: a new version is one line here. The baseline keeps names, statuses and hashes.
+version = "v1.0.0"
+url = "https://github.com/paraminder-dhiman/unravel/releases/download/v1.0.0/unravel-1.0.0.zip"
+member = "assets/unravel_nodes.blend"
+sha256 = "1498281fae9bad25a63de06633b9029225bcde1762986fe2d24189bf1ef53d40"
