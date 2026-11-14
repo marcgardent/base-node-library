@@ -1,6 +1,6 @@
 [package]
 name = "base-node"
-version = "0.9.0"
+version = "0.10.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Base Node (.bn) parser, formatter, and profile validator (wasm32 compatible)"

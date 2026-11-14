@@ -160,7 +160,7 @@ blender --command extension build --source-dir base-node-for-blender --output-di
 ```
 
 ```bash
-blender --command extension install-file -r user_default -e dist/base_node-0.9.0.zip
+blender --command extension install-file -r user_default -e dist/base_node-0.10.0.zip
 ```
 
 Run headless Blender tests:

@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "stdlib_version": "0.9.0",
+  "stdlib_version": "0.10.0",
   "edition": "2026",
   "description": "Standard Library for the Base Node (.bn) language",
   "modules": {
     "math": {
       "name": "math",
-      "version": "0.9.0",
+      "version": "0.10.0",
       "edition": "2026",
       "profile": "core",
       "file": "math.bn",
@@ -15,7 +15,7 @@
     },
     "sdf2d": {
       "name": "sdf2d",
-      "version": "0.9.0",
+      "version": "0.10.0",
       "edition": "2026",
       "profile": "sdf2d",
       "file": "sdf2d.bn",
@@ -26,7 +26,7 @@
     },
     "curves2d": {
       "name": "curves2d",
-      "version": "0.9.0",
+      "version": "0.10.0",
       "edition": "2026",
       "profile": "vector2d",
       "file": "curves2d.bn",
@@ -37,7 +37,7 @@
     },
     "patterns2d": {
       "name": "patterns2d",
-      "version": "0.9.0",
+      "version": "0.10.0",
       "edition": "2026",
       "profile": "vector2d",
       "file": "patterns2d.bn",
@@ -49,7 +49,7 @@
     },
     "ink2d": {
       "name": "ink2d",
-      "version": "0.9.0",
+      "version": "0.10.0",
       "edition": "2026",
       "profile": "ink2d",
       "file": "ink2d.bn",
@@ -60,7 +60,7 @@
     },
     "planar2d": {
       "name": "planar2d",
-      "version": "0.9.0",
+      "version": "0.10.0",
       "edition": "2026",
       "profile": "vector2d",
       "file": "planar2d.bn",
@@ -71,7 +71,7 @@
     },
     "fillet2d": {
       "name": "fillet2d",
-      "version": "0.9.0",
+      "version": "0.10.0",
       "edition": "2026",
       "profile": "vector2d",
       "file": "fillet2d.bn",
@@ -82,7 +82,7 @@
     },
     "hachures2d": {
       "name": "hachures2d",
-      "version": "0.9.0",
+      "version": "0.10.0",
       "edition": "2026",
       "profile": "vector2d",
       "file": "hachures2d.bn",
@@ -93,7 +93,7 @@
     },
     "deform2d": {
       "name": "deform2d",
-      "version": "0.9.0",
+      "version": "0.10.0",
       "edition": "2026",
       "profile": "vector2d",
       "file": "deform2d.bn",
