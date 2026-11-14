@@ -14,7 +14,7 @@ from ..lang.errors import BnError, Diagnostic
 from ..lang.layout import layout
 from ..lang.schema import ITEM_NODES, SIGNATURE_NODES, TYPES, key, option_key, signature_items
 from ..lang.typecheck import REPEAT_ITEMS
-from . import modules
+from . import comments, modules
 from .schema import (ALIASES, PANEL_OPTIONS, TREE_FLAGS, TREE_TYPES, BlenderSchema, fresh_item, fresh_options,
                      item_option_names, new_item, root_panel, same_option, socket_keys)
 
@@ -61,6 +61,7 @@ def build_source(source, filename="<text>", load=None):
     for g in graphs:
         tree = built[g.name] = builder.build(g, target(g), built)
         mark(tree, g.module)
+    comments.keep(source, filename, graphs, built, builder.made)
     return [built[g.name] for g in graphs if g.module is None]
 
 
@@ -95,6 +96,7 @@ class Builder:
         # Only the graphs nobody calls are offered as modifiers
         self.called = {n.group for g in graphs for n in g.nodes if n.group}
         self.late = []  # (item, option, value) to set once the links are made
+        self.made = {}  # graph name -> (nodes, frames): ir id -> the Blender node made for it
 
     def fail(self, node, message):
         raise BnError([Diagnostic(self.filename, node.line, node.col, message)])
@@ -237,6 +239,7 @@ class Builder:
                 frame.width = max(frame.width, 12 * len(f.label or ""))
 
         nodes = {}
+        self.made[g.name] = (nodes, frames)
         for n in g.nodes:
             node = tree.nodes.new(n.bl_idname)
             nodes[n.id] = node
