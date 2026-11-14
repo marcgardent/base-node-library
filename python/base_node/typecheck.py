@@ -1468,6 +1468,12 @@ class GraphChecker:
                 items.append((name, None))
                 keys.append(alias)
                 continue
+            if isinstance(v, Sym) and not shape.typed and node.props.get("data_type") == "MENU":
+                # A menu item's name: IndexSwitch(i, Read, Compute, data_type: MENU)
+                items.append((name, "Menu"))
+                keys.append(alias)
+                values.append((alias or name, v, a))
+                continue
             if isinstance(v, Sym):
                 self.error(a, f"unknown name '{v.name}'")
                 continue
