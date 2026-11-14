@@ -6,9 +6,10 @@ import bpy
 ROOT = __package__.rpartition(".")[0]
 
 KEYS = (
+    ("CTRL", "Ctrl+Space", "The developers' standard. In .bn texts only, in place of Blender's Maximize Area: "
+                           "Ctrl+Alt+Space still shows the area full screen"),
     ("ALT", "Alt+Space", "Free in Blender; KDE sometimes uses it for KRunner"),
     ("SHIFT", "Shift+Space", "Always free, less convenient"),
-    ("CTRL", "Ctrl+Space", "Used by Blender to toggle area: only replaces it in .bn text editors"),
 )
 
 PROFILES = (
@@ -28,7 +29,7 @@ HIGHLIGHT_MODES = (
 
 # When the add-on runs from the sources (tests), it has no preferences entry
 DEFAULTS = SimpleNamespace(
-    complete_key="ALT", auto_complete=True, signature=True, highlight=True, pipe_symbol=True, module_folder="",
+    complete_key="CTRL", auto_complete=True, signature=True, highlight=True, pipe_symbol=True, module_folder="",
     target_profile="auto", highlight_mode="standard",
     color_stdlib=(0.0, 0.78, 0.65), color_local=(0.95, 0.75, 0.20), color_warning=(0.95, 0.30, 0.25)
 )
@@ -55,7 +56,7 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
     bl_idname = ROOT
 
     complete_key: bpy.props.EnumProperty(
-        name="Suggestions", items=KEYS, default="ALT", update=update_keys,
+        name="Suggestions", items=KEYS, default="CTRL", update=update_keys,
         description="Shortcut that opens suggestions in a .bn text editor")
     module_folder: bpy.props.StringProperty(
         name="Module Folder", subtype="DIR_PATH", update=apply_folders,
@@ -99,6 +100,8 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
         box_edit = layout.box()
         box_edit.label(text="Editor & Suggestions", icon="TEXT")
         box_edit.prop(self, "complete_key")
+        if self.complete_key == "CTRL":
+            box_edit.label(text="In .bn texts, Ctrl+Alt+Space still shows the area full screen", icon="INFO")
         box_edit.prop(self, "auto_complete")
         box_edit.prop(self, "signature")
         box_edit.prop(self, "highlight")

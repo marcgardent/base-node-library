@@ -14,7 +14,7 @@ Base Node writes and reads Geometry Nodes trees as text. A tree becomes a `.bn` 
 
 ## Writing `.bn`
 
-- Suggestions for nodes, sockets and the graphs of used modules (**Alt+Space**, can be changed in the preferences), opening by themselves after `(`, `.` and `:`.
+- Suggestions for nodes, sockets and the graphs of used modules: **Ctrl+Space**, the developers' standard. In `.bn` texts only, it takes the place of Blender's *Maximize Area*: **Ctrl+Alt+Space** still shows the area full screen. Alt+Space or Shift+Space can be chosen instead in the preferences. Optionally, suggestions open by themselves after `(`, `.` and `:`.
 - Syntax highlighting, with modes that tell the standard library from your own graphs, or point out nodes that are not portable to a chosen target profile.
 - The pipe `|>` is shown as one symbol, ▷, except on the lines you are editing (can be turned off in the preferences). The text keeps `|>`.
 - **Format** (**Ctrl+Shift+A**) rewrites a text in the canonical layout, keeping its comments.
