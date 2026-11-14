@@ -1,9 +1,13 @@
 ---
-name: gn-library-tnr
+name: add-tnr
+argument-hint: <github-url> [version]
 description: Add a third-party Geometry Nodes library, given by a GitHub URL, to Base Node's non-regression tests (TNR) - check its license, find its .blend, pin it by version and sha256, write tests/libraries/<name>.toml, run the round-trip and write its baseline, sort what it finds into Base Node bugs, then open a PR with the CI. Use when Marc gives a GitHub repo of node groups (an add-on, an asset library) and asks to "test it", "add it as TNR / regression corpus", "intégrer une lib GN en TNR", or to bump such a library to a new version.
 ---
 
 # A Geometry Nodes library from GitHub as non-regression test
+
+`/add-tnr <github-url> [version]`: the URL is the library's repository; without a version, take its latest
+release (or, with no release, the default branch's last commit) and say which.
 
 The goal: every Geometry Nodes group of a real library goes `tree -> .bn -> tree -> .bn` and is evaluated
 beside its original, at a fixed version, in CI, so that a change of the reader, the builder or the language
