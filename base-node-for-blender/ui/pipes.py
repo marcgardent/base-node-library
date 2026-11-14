@@ -42,24 +42,12 @@ def mono_font():
     return _fonts[path]
 
 
-def draw_pipes():
-    space = bpy.context.space_data
+def cells(space, region):
+    """(x0, y0, x1) of the two cells of each pipe to draw as a symbol."""
     text = space.text
-    if not actions.is_bn(text) or not prefs.get().pipe_symbol:
-        return
-    region = bpy.context.region
-    lh = draw.line_height(space)
-    theme = bpy.context.preferences.themes[0].text_editor
     keep = raw_lines(text)
-
-    cells = []  # (x0, y0, x1) of each pipe's two cells
-    first = 0 if space.show_word_wrap else max(0, space.top - 1)
-    for row in range(first, len(text.lines)):
-        _, y = draw.char_box(space, row, 0)
-        if y > region.height + lh:
-            continue
-        if y < -lh:
-            break
+    out = []
+    for row in draw.visible_rows(space, region):
         if row in keep or "|>" not in text.lines[row].body:
             continue
         for col in columns(tokenize(text.lines[row].body, strict=False)):
@@ -67,11 +55,21 @@ def draw_pipes():
             x1, y1 = draw.char_box(space, row, col + 2)
             if y1 != y0 or x0 < body_left(space, (x1 - x0) / 2):
                 continue  # wrapped between `|` and `>`, or scrolled under the line numbers
-            cells.append((x0, y0, x1))
-    if not cells:
-        return
+            out.append((x0, y0, x1))
+    return out
 
-    draw.rects([(x0, y0, x1, y0 + lh) for x0, y0, x1 in cells], (*theme.space.back, 1.0))
+
+def draw_pipes():
+    space = bpy.context.space_data
+    if not actions.is_bn(space.text) or not prefs.get().pipe_symbol:
+        return
+    pipes = cells(space, bpy.context.region)
+    if not pipes:
+        return
+    lh = draw.line_height(space)
+    theme = bpy.context.preferences.themes[0].text_editor
+
+    draw.rects([(x0, y0, x1, y0 + lh) for x0, y0, x1 in pipes], (*theme.space.back, 1.0))
 
     fid = mono_font()
     size = round(space.font_size * bpy.context.preferences.system.ui_scale)
@@ -81,7 +79,7 @@ def draw_pipes():
     # Centered between the two cells, and on the middle of `>` from the Text Editor's baseline
     _, gh = blf.dimensions(fid, ">")
     _, sh = blf.dimensions(fid, SYMBOL)
-    for x0, y0, x1 in cells:
+    for x0, y0, x1 in pipes:
         blf.position(fid, round((x0 + x1 - w) / 2), y0 + baseline(lh, size) + round((gh - sh) / 2), 0)
         blf.draw(fid, SYMBOL)
 

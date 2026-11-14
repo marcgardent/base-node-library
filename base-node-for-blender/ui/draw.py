@@ -10,6 +10,20 @@ def line_height(space):
     return round(space.font_size * bpy.context.preferences.system.ui_scale * 1.3)
 
 
+def visible_rows(space, region):
+    """The 0-based lines of the text shown in the region, top to bottom."""
+    lh = line_height(space)
+    # With word wrap, `top` counts screen rows, which are at least as many as lines
+    first = 0 if space.show_word_wrap else max(0, space.top - 1)
+    for row in range(first, len(space.text.lines)):
+        _, y = char_box(space, row, 0)
+        if y > region.height + lh:
+            continue
+        if y < -lh:
+            break
+        yield row
+
+
 def char_box(space, line, col):
     """(x, bottom y) in region pixels of the character at a 0-based line and column."""
     return space.region_location_from_cursor(line, col)

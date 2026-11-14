@@ -121,7 +121,6 @@ def draw_highlight():
     if not actions.is_bn(text) or not prefs.get().highlight:
         return
     region = bpy.context.region
-    lh = draw.line_height(space)
     found = {}
 
     p = prefs.get()
@@ -167,14 +166,7 @@ def draw_highlight():
         "allowed_types": allowed_types,
     }
 
-    # With word wrap, `top` counts screen rows, which are at least as many as lines
-    first = 0 if space.show_word_wrap else max(0, space.top - 1)
-    for row in range(first, len(text.lines)):
-        _, y = draw.char_box(space, row, 0)
-        if y > region.height + lh:
-            continue
-        if y < -lh:
-            break
+    for row in draw.visible_rows(space, region):
         tokens = tokenize(text.lines[row].body, strict=False)[:-1]
         for color, rects in boxes(space, row, tokens, context).items():
             found.setdefault(color, []).extend(rects)
