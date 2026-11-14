@@ -29,7 +29,7 @@ HIGHLIGHT_MODES = (
 
 # When the add-on runs from the sources (tests), it has no preferences entry
 DEFAULTS = SimpleNamespace(
-    complete_key="CTRL", auto_complete=True, signature=True, highlight=True, pipe_symbol=True, module_folder="",
+    complete_key="CTRL", auto_complete=False, signature=True, highlight=True, pipe_symbol=True, module_folder="",
     target_profile="auto", highlight_mode="standard",
     color_stdlib=(0.0, 0.78, 0.65), color_local=(0.95, 0.75, 0.20), color_warning=(0.95, 0.30, 0.25)
 )
@@ -63,7 +63,7 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
         description="Where `use name` finds name.bn when the .blend has no text of that name, "
                     "before the standard library bundled with the add-on")
     auto_complete: bpy.props.BoolProperty(
-        name="Open after ( , . :", default=True,
+        name="Open after ( , . :", default=False,
         description="Suggestions open automatically after a parenthesis, comma, period, or colon")
     signature: bpy.props.BoolProperty(
         name="Show the call's inputs", default=True,

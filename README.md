@@ -145,7 +145,7 @@ Add-on for Blender 5.2+ (`id = "base_node"`). The node tree is the only data: it
 | Build the graphs of one or more `.bn` files | *File > Import > Base Node (.bn)* | |
 | Arrange the selected nodes (all of them if none is): links left to right, in line with their sockets, frames kept together | Node Editor, *Node > Arrange Nodes*, sidebar *Text* | `Ctrl+Shift+A` |
 
-The keys follow Blender's habits: `Alt+P` runs a text, `Alt+Z` toggles a view, and `Ctrl+Tab` still leaves a group. `Ctrl+Space`, the developers' standard for suggestions, takes the place of Blender's *Maximize Area* in `.bn` texts only; `Ctrl+Alt+Space` still shows the area full screen there, and every other text and editor keeps `Ctrl+Space`. The sidebar panels show each shortcut next to its button. Suggestions that open by themselves after `(`, `.` and `:` can be turned off in the preferences.
+The keys follow Blender's habits: `Alt+P` runs a text, `Alt+Z` toggles a view, and `Ctrl+Tab` still leaves a group. `Ctrl+Space`, the developers' standard for suggestions, takes the place of Blender's *Maximize Area* in `.bn` texts only; `Ctrl+Alt+Space` still shows the area full screen there, and every other text and editor keeps `Ctrl+Space`. The sidebar panels show each shortcut next to its button. Suggestions can also open by themselves after `(`, `.` and `:`: off by default, to turn on in the preferences.
 
 An unchanged text leaves the tree as it is, node layout included; a text with errors stays open with its diagnostics until it builds.
 
