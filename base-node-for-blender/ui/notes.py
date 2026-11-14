@@ -7,17 +7,23 @@ under it those of its end; a note, which has nothing else, shows them inside. Th
 comments are in a corner of the editor. The boxes follow the view: they zoom with the nodes, and
 vanish when the text gets too small. Their sizes are the ones Arrange Nodes leaves room for:
 see host.comments.
+
+A frame holding comments would cover them with its title: Blender shrinks it to its nodes. Such
+a frame is sized by the add-on instead, comments included, each time the editor shows it otherwise;
+it shrinks again once it has none, or once the comments are hidden.
 """
 
 import blf
 import bpy
 
-from ..host.comments import ABOVE, BAR, BELOW, GAP, KEY, LINE, PAD, SIZE, lines_of, notes_of, wrap
+from ..host.arrange import frame_fits
+from ..host.comments import ABOVE, BAR, BELOW, GAP, KEY, LINE, PAD, SIZE, lines_of, notes_of, room, wrap
 from . import draw, prefs
 
 MIN_SIZE = 6  # under this font size in pixels, nothing is drawn
 TREE = ("head", "file", "before", "after", "end", "below")
 CORNER = 360  # width of the box of the tree's comments, at UI scale 1
+FIT = "base_node_fit"  # on a frame the add-on sizes, in place of Blender's shrinking
 
 
 class View:
@@ -90,7 +96,11 @@ def draw_notes():
     context = bpy.context
     space = context.space_data
     tree = getattr(space, "edit_tree", None)
-    if tree is None or not prefs.get().show_comments:
+    if tree is None:
+        return
+    shown = prefs.get().show_comments
+    check_frames(tree, shown)
+    if not shown:
         return
     view = View(context)
     theme = context.preferences.themes[0]
@@ -123,6 +133,53 @@ def draw_notes():
         margin = 12 * view.ui
         width = min(CORNER * view.ui, view.region.width - 2 * margin)
         Painter(view, theme, view.ui).box(lines, margin, margin, width, upward=True)
+
+
+# Frames
+
+_waiting = set()  # names of the trees whose frames are to be sized, once the drawing is over
+
+
+def check_frames(tree, shown):
+    """Ask for the frames of the tree to be sized when they are not as their comments want."""
+    if tree.name in _waiting or tree.library is not None:
+        return
+    fits = frame_fits(tree, room) if shown else {}
+    if fits is None:
+        return  # a node not drawn yet: next time
+    if any(f.get(FIT) and f.name not in fits for f in tree.nodes) or any(
+            not same(tree.nodes[name], fit) for name, fit in fits.items()):
+        _waiting.add(tree.name)
+        # Data cannot change while the editor draws
+        bpy.app.timers.register(lambda: fit_frames(tree.name, shown), first_interval=0.0)
+
+
+def same(frame, fit):
+    have = (*frame.location_absolute, frame.width, frame.height)
+    return not frame.shrink and all(abs(a - b) < 0.5 for a, b in zip(have, fit))
+
+
+def fit_frames(name, shown):
+    _waiting.discard(name)
+    tree = bpy.data.node_groups.get(name)
+    fits = frame_fits(tree, room) if tree is not None and shown else {}
+    if tree is None or fits is None:
+        return None
+    for f in tree.nodes:
+        if f.get(FIT) and f.name not in fits:
+            f.shrink = True
+            del f[FIT]
+    for frame_name, (x, top, width, height) in fits.items():
+        f = tree.nodes[frame_name]
+        f.shrink = False
+        f[FIT] = True
+        f.location_absolute = (x, top)
+        f.width, f.height = width, height
+    for win in bpy.context.window_manager.windows:
+        for area in win.screen.areas:
+            if area.type == "NODE_EDITOR":
+                area.tag_redraw()
+    return None
 
 
 _handler = None
