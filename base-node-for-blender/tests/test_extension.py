@@ -188,6 +188,120 @@ geometry graph box() -> Geometry {
     print("   ✓ Named constants kept")
 
 
+def test_comments():
+    """Comments are kept in the tree, on the nodes they go with, and written back in their places."""
+    print("-> Test: comments survive Text -> Tree -> Text...")
+    from base_node.host import build_source, export_tree
+    from base_node.host.comments import KEY
+    from base_node.lang import format_source
+
+    src = """// Above the profile line
+// @profile "vector2d"
+
+// Before the uses
+use math (bump)
+
+geometry graph lift(geometry: Geometry) -> Geometry {
+  // a callee
+  return SetPosition(geometry, offset: CombineXYZ(z: 1.0))
+}
+
+// The terrain
+geometry graph relief(geometry: Geometry, height: Float = 0.4) -> Geometry {  // its header
+  "Displaces vertices"
+  // the height
+  // on two lines
+  h = bump(length(Position()) / 3.0, 0.5, 0.2) * height  // after the code
+  // goes on to the next statement: a name is no node
+  hh = h
+  "Block" #teal {
+    // in the frame
+    k = hh * 2.0
+    // end of the frame
+  }  // after its brace
+  "Note" {
+    // a note
+  }
+  r = repeat(3, g: geometry) {
+    // in the zone
+    g2 = SetPosition(g, offset: CombineXYZ(z: h + k))
+    // the zone's return
+    return (g: g2)  // its end
+  }
+  // the return
+  return lift(r.g)
+  // end of the graph
+}
+// below the graph
+"""
+    tree = build_source(src, filename="terrain.bn")[-1]
+    notes = {n.name: n[KEY].to_dict() for n in tree.nodes if KEY in n}
+    assert tree[KEY].to_dict() == {
+        "head": "// Above the profile line", "file": "// Before the uses", "before": "// The terrain",
+        "after": "// its header", "end": "// end of the graph", "below": "// below the graph"}, tree[KEY].to_dict()
+    assert notes["h"] == {"before": "// the height\n// on two lines", "after": "// after the code"}, notes
+    # `hh = h` makes no node: its comment goes with the next statement, the frame
+    assert notes["k"] == {"before": "// in the frame"}, notes
+    assert notes["Block"] == {"before": "// goes on to the next statement: a name is no node",
+                              "end": "// end of the frame", "end_after": "// after its brace"}, notes
+    assert notes["Note"] == {"end": "// a note"}, notes
+    assert notes["r"] == {"return_before": "// the zone's return", "return_after": "// its end"}, notes
+    assert notes["Group Output"] == {"before": "// the return"}, notes
+    # In the callee too: before its return, with its Group Output
+    assert bpy.data.node_groups["lift"].nodes["Group Output"][KEY].to_dict() == {"before": "// a callee"}
+
+    exported, warnings = export_tree(tree)
+    assert not warnings, warnings
+    lines = [line.strip() for line in exported.split("\n")]
+    for comment in src.split("\n"):
+        if "//" in comment and "@profile" not in comment:
+            assert comment.strip()[comment.strip().index("//"):] in exported, f"'{comment}' lost:\n{exported}"
+    assert lines[0] == "// Above the profile line" and lines[2].startswith("// @profile"), exported
+    assert any(line.startswith("h = bump(") and line.endswith(" * height  // after the code") for line in lines), \
+        exported
+    assert "}  // after its brace" in lines and "return g2  // its end" in lines, exported
+    assert format_source(exported) == exported, "not in the canonical layout"
+    again, _ = export_tree(build_source(exported, filename="terrain2.bn")[-1])
+    assert again == exported, f"not stable:\n{again}"
+
+    # Written from the nodes: the text gives it back before the node's statement, a statement of its own
+    from base_node.host.comments import set_comment, room
+    from base_node.host.arrange import _box
+    tree = build_source(src, filename="terrain.bn")[-1]
+    length = next(n for n in tree.nodes if n.bl_idname == "ShaderNodeVectorMath")
+    set_comment(length, "before", ["written in the graph", "", "after a blank"])
+    exported, _ = export_tree(tree)
+    assert "  // written in the graph\n  //\n  // after a blank\n  vector_math = length(Position())" in exported, \
+        exported
+    set_comment(length, "before", [])
+    assert KEY not in length, "an empty comment stays"
+    set_comment(tree.nodes["h"], "before", [])
+    assert tree.nodes["h"][KEY].to_dict() == {"after": "// after the code"}, "the other slots stay"
+
+    # A new tree leaves room over its commented nodes: no other node in their comment's box
+    tree = build_source(src.replace("relief", "relief_fresh"), filename="fresh.bn")[-1]
+    boxes = {n.name: _box(n, 1.0) for n in tree.nodes if n.bl_idname != "NodeFrame"}
+    for n in tree.nodes:
+        above = room(n)[0]
+        if not above or n.bl_idname == "NodeFrame":
+            continue
+        x, top = n.location_absolute
+        for other, b in boxes.items():
+            hit = b.x < x + n.width and x < b.x + b.width and b.y - b.height < top + above and top < b.y
+            assert other == n.name or not hit, f"'{other}' lies in the comment of '{n.name}'"
+    # A note grows to hold what it says
+    note = tree.nodes["Note"]
+    assert note.height >= room(note)[1], (note.height, room(note))
+
+    # Built again without them, the tree drops them
+    tree = build_source("""geometry graph relief(geometry: Geometry) -> Geometry {
+  return geometry
+}
+""", filename="terrain.bn")[-1]
+    assert KEY not in tree and not any(KEY in n for n in tree.nodes), "comments left behind"
+    print("   ✓ Comments kept on their nodes")
+
+
 def test_profile_ascent_and_linter():
     """4. Verify profile ascent detection on exported tree and highlighter linter."""
     print("-> Test 4: Verifying profile ascent solver & highlighter linter...")
@@ -655,12 +769,12 @@ def test_real_world_assets():
         g.name = f"original {name}"
         originals[name] = g
 
-    # Built from the files themselves, their credits included
+    # Built from the files themselves: the tree keeps their credits, and gives the file back
     for name, text in texts.items():
         tree = build_source(files[name], filename=f"{key(name)}.bn")[-1]
         assert tree.name == name, tree.name
         again, _ = export_tree(tree)
-        assert again == text, f"{name}: Tree -> Text is not stable"
+        assert again == files[name], f"{name}: Tree -> Text is not stable"
     for name in texts:
         for kind in ("mesh", "curves", "mesh caller", "mesh caller fed"):
             want = evaluate(originals[name], kind)
@@ -678,6 +792,7 @@ def main():
         test_check_profile_stdlib,
         test_build_and_round_trip,
         test_named_constants,
+        test_comments,
         test_profile_ascent_and_linter,
         test_pipe_symbol,
         test_live_apply,

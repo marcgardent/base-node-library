@@ -29,7 +29,7 @@ HIGHLIGHT_MODES = (
 
 # When the add-on runs from the sources (tests), it has no preferences entry
 DEFAULTS = SimpleNamespace(
-    complete_key="CTRL", auto_complete=False, live_apply=True, signature=True, highlight=True, pipe_symbol=True, module_folder="",
+    complete_key="CTRL", auto_complete=False, live_apply=True, show_comments=True, signature=True, highlight=True, pipe_symbol=True, module_folder="",
     target_profile="auto", highlight_mode="standard",
     color_stdlib=(0.0, 0.78, 0.65), color_local=(0.95, 0.75, 0.20), color_warning=(0.95, 0.30, 0.25)
 )
@@ -45,6 +45,13 @@ def apply_folders(self=None, context=None):
     from ..host import modules
     folder = get().module_folder
     modules.FOLDERS[:] = ([folder] if folder else []) + [modules.STDLIB]
+
+
+def redraw_nodes():
+    for win in bpy.context.window_manager.windows:
+        for area in win.screen.areas:
+            if area.type == "NODE_EDITOR":
+                area.tag_redraw()
 
 
 def update_keys(self, context):
@@ -69,6 +76,9 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
         name="Apply while typing", default=True,
         description="In the text of a tree, the tree follows the text as soon as it is valid. "
                     "Otherwise Alt+P applies it")
+    show_comments: bpy.props.BoolProperty(
+        name="Show comments in the nodes", default=True, update=lambda self, context: redraw_nodes(),
+        description="Draw the comments of the text above the nodes that keep them, in the Node Editor")
     signature: bpy.props.BoolProperty(
         name="Show the call's inputs", default=True,
         description="Under the line, the inputs and outputs of the call the cursor is in")
@@ -108,6 +118,7 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
             box_edit.label(text="In .bn texts, Ctrl+Alt+Space still shows the area full screen", icon="INFO")
         box_edit.prop(self, "auto_complete")
         box_edit.prop(self, "live_apply")
+        box_edit.prop(self, "show_comments")
         box_edit.prop(self, "signature")
         box_edit.prop(self, "highlight")
         box_edit.prop(self, "pipe_symbol")

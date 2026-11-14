@@ -3,9 +3,10 @@ import os
 import bpy
 from bpy_extras.io_utils import ImportHelper
 
+from ..host import comments
 from ..host.arrange import arrange_nodes
 from ..lang import BnError
-from . import actions
+from . import actions, prefs
 
 
 def edit_tree(context):
@@ -215,16 +216,80 @@ class BASE_NODE_OT_arrange(bpy.types.Operator):
         # A node never drawn has no size yet: draw once, so that the layout uses the real ones
         if context.window and any(not n.dimensions.y for n in nodes if n.bl_idname not in {"NodeFrame", "NodeReroute"}):
             bpy.ops.wm.redraw_timer(type="DRAW", iterations=0)
-        count = arrange_nodes(tree, nodes, spacing=self.spacing)
+        # Room for the comments drawn over the nodes, when they are
+        room = comments.room if prefs.get().show_comments else None
+        count = arrange_nodes(tree, nodes, spacing=self.spacing, room=room)
         if not count:
             self.report({"WARNING"}, "no node to arrange")
             return {"CANCELLED"}
         return {"FINISHED"}
 
 
+# A comment the dialog shows: its lines so far, then an empty one to write the next
+MAX_LINES = 24
+UNCOMMENTED = {"NodeGroupInput", "NodeReroute", "GeometryNodeRepeatInput", "GeometryNodeSimulationInput",
+               "GeometryNodeForeachGeometryElementInput", "NodeClosureInput"}
+
+
+class BaseNodeCommentLine(bpy.types.PropertyGroup):
+    body: bpy.props.StringProperty(name="Line", description="One line of the comment")
+
+
+class BASE_NODE_OT_edit_comment(bpy.types.Operator):
+    """Write the comment shown over the active node. The text gives it back as `//` lines before
+    the node's statement"""
+    bl_idname = "base_node.edit_comment"
+    bl_label = "Edit Comment"
+    bl_options = {"REGISTER", "UNDO"}
+
+    lines: bpy.props.CollectionProperty(type=BaseNodeCommentLine)
+
+    @classmethod
+    def poll(cls, context):
+        tree = edit_tree(context)
+        node = tree.nodes.active if tree is not None else None
+        if node is None or node.bl_idname in UNCOMMENTED:
+            cls.poll_message_set("Select a node that has a statement in the text: "
+                                 "not a Group Input, a reroute or a zone's input")
+            return False
+        return True
+
+    def invoke(self, context, event):
+        node = edit_tree(context).nodes.active
+        written = comments.lines_of(comments.notes_of(node), ("before",))
+        self.lines.clear()
+        for i in range(MAX_LINES):
+            self.lines.add().body = written[i] if i < len(written) else ""
+        return context.window_manager.invoke_props_dialog(self, width=420, title=f"Comment on {node.name}")
+
+    def draw(self, context):
+        col = self.layout.column(align=True)
+        last = max((i for i, line in enumerate(self.lines) if line.body), default=-1)
+        for line in list(self.lines)[:min(last + 2, MAX_LINES)]:
+            col.prop(line, "body", text="")
+        after = comments.lines_of(comments.notes_of(edit_tree(context).nodes.active), ("after",))
+        if after:
+            self.layout.label(text=f"On its line: {' '.join(after)}", icon="INFO")
+
+    def execute(self, context):
+        node = edit_tree(context).nodes.active
+        lines = [line.body for line in self.lines]
+        while lines and not lines[-1].strip():
+            lines.pop()
+        comments.set_comment(node, "before", lines)
+        context.area.tag_redraw()
+        return {"FINISHED"}
+
+
 def menu_arrange(self, context):
     self.layout.separator()
     self.layout.operator(BASE_NODE_OT_arrange.bl_idname, icon="SNAP_GRID")
+    self.layout.operator(BASE_NODE_OT_edit_comment.bl_idname, icon="TEXT")
+
+
+def menu_comment(self, context):
+    self.layout.separator()
+    self.layout.operator(BASE_NODE_OT_edit_comment.bl_idname, icon="TEXT")
 
 
 def menu_import(self, context):
@@ -232,4 +297,4 @@ def menu_import(self, context):
 
 
 classes = (BASE_NODE_OT_import, BASE_NODE_OT_apply_view, BASE_NODE_OT_format, BASE_NODE_OT_toggle_view, BASE_NODE_OT_goto,
-           BASE_NODE_OT_add_modifier, BASE_NODE_OT_arrange)
+           BASE_NODE_OT_add_modifier, BASE_NODE_OT_arrange, BaseNodeCommentLine, BASE_NODE_OT_edit_comment)

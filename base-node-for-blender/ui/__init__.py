@@ -1,6 +1,6 @@
 import bpy
 
-from . import completion, highlight, keys, live, operators, panels, pipes, prefs
+from . import completion, highlight, keys, live, notes, operators, panels, pipes, prefs
 
 classes = prefs.classes + operators.classes + completion.classes + panels.classes
 
@@ -15,8 +15,10 @@ def register():
     prefs.apply_folders()
     bpy.types.TOPBAR_MT_file_import.append(operators.menu_import)
     bpy.types.NODE_MT_node.append(operators.menu_arrange)
+    bpy.types.NODE_MT_context_menu.append(operators.menu_comment)
     highlight.register()  # first, so that the popup draws over it
     pipes.register()
+    notes.register()
     live.register()
     completion.register()
 
@@ -24,11 +26,13 @@ def register():
 def unregister():
     completion.unregister()
     live.unregister()
+    notes.unregister()
     pipes.unregister()
     highlight.unregister()
     keys.unbind()
     bpy.types.TOPBAR_MT_file_import.remove(operators.menu_import)
     bpy.types.NODE_MT_node.remove(operators.menu_arrange)
+    bpy.types.NODE_MT_context_menu.remove(operators.menu_comment)
     if hasattr(bpy.types.NodeTree, "base_node_text"):
         del bpy.types.NodeTree.base_node_text
     for cls in reversed(classes):

@@ -3,6 +3,9 @@
 Sizes and sockets are where the editor last drew them. A node never drawn (in background
 mode, or just built) gets an estimate instead: its sockets counted in rows, outputs from the
 top and inputs from the bottom, so that its links can bend a little.
+
+`room(node)` gives the room to leave over and under a node or a frame: the comments the Node
+Editor draws there.
 """
 
 from statistics import fmean
@@ -28,7 +31,7 @@ def _rows(s):
     return 4 if s.type in TALL and not s.is_linked and not s.hide_value else 1
 
 
-def _box(node, scale):
+def _box(node, scale, above=0.0, below=0.0):
     ins, outs = list(node.inputs), list(node.outputs)
     if node.bl_idname == "NodeReroute":
         w = h = REROUTE
@@ -60,8 +63,9 @@ def _box(node, scale):
                     real = drawn_y(s, scale, x, top, w, h)
                     if real is not None:
                         offs[i] = top - real
-    return Box(node.name, w, h, offs_in, offs_out,
-               frame=node.parent.name if node.parent else None, x=x, y=top)
+    # The room of its comments is part of its box: over it, under it
+    return Box(node.name, w, h + above + below, [o + above for o in offs_in], [o + above for o in offs_out],
+               frame=node.parent.name if node.parent else None, x=x, y=top + above)
 
 
 def _top(node, y, h):
@@ -71,24 +75,90 @@ def _top(node, y, h):
     return y + h / 2 - HIDDEN_TOP if node.hide else y
 
 
-def arrange_nodes(tree, nodes=None, spacing=(50, 50), iterations=24):
+def _padding(system, scale):
+    """The margin Blender leaves around the nodes of a frame, in node units."""
+    return 1.5 * (int(20 * scale) + 2 * (system.pixel_size or 1.0)) / scale
+
+
+def _label(frame, padding):
+    """The room of a frame's title over its nodes, past its margin."""
+    return frame.label_size * 1.25 - padding / 2 if frame.label else 0.0
+
+
+def frame_fits(tree, room):
+    """{frame name: (x, top, width, height)}: the frames that must hold more than their nodes, and where.
+
+    Blender shrinks a frame to its nodes; the comments drawn over a node, or over and under a
+    frame in it, would stick out of it, over its title. Such a frame is sized here instead,
+    from the sizes the editor last drew, deepest first. None when a node has not been drawn yet.
+    """
+    system = bpy.context.preferences.system
+    scale = system.ui_scale or 1.0
+    padding = _padding(system, scale)
+    children = {}
+    for n in tree.nodes:
+        if n.parent is not None:
+            children.setdefault(n.parent.name, []).append(n)
+    fits = {}
+
+    def rect(n):
+        """(left, bottom, right, top) of a node or a frame and its comments; None if not drawn."""
+        above, below = room(n)
+        if n.bl_idname == "NodeFrame":
+            if n.name in fits:
+                x, top, w, h = fits[n.name]
+            elif n.dimensions.x:
+                (x, top), w, h = n.location_absolute, n.dimensions.x / scale, n.dimensions.y / scale
+            else:
+                return None
+            return x, top - h - below, x + w, top + above
+        if n.bl_idname != "NodeReroute" and not n.dimensions.y:
+            return None
+        b = _box(n, scale, above, below)
+        return b.x, b.y - b.height, b.x + b.width, b.y
+
+    def depth(f):
+        d = 0
+        while f.parent is not None:
+            f, d = f.parent, d + 1
+        return d
+
+    frames = sorted((n for n in tree.nodes if n.bl_idname == "NodeFrame" and n.name in children), key=depth,
+                    reverse=True)
+    for f in frames:
+        inner = children[f.name]
+        if not any(room(n) != (0.0, 0.0) or n.name in fits for n in inner):
+            continue
+        rects = [rect(n) for n in inner]
+        if None in rects:
+            return None
+        left, bottom = min(r[0] for r in rects), min(r[1] for r in rects)
+        right, top = max(r[2] for r in rects), max(r[3] for r in rects)
+        head = padding + max(0.0, _label(f, padding))
+        fits[f.name] = (left - padding, top + head, right - left + 2 * padding, top - bottom + head + padding)
+    return fits
+
+
+def arrange_nodes(tree, nodes=None, spacing=(50, 50), iterations=24, room=None):
     """Lay out `nodes` of `tree` (all of them by default) where they were; the number moved."""
     nodes = [n for n in (tree.nodes if nodes is None else nodes) if n.bl_idname != "NodeFrame"]
     if not nodes:
         return 0
     system = bpy.context.preferences.system
     scale = system.ui_scale or 1.0  # 0 in background mode
-    boxes = [_box(n, scale) for n in nodes]
+    rooms = {n.name: room(n) if room else (0.0, 0.0) for n in nodes}
+    boxes = [_box(n, scale, *rooms[n.name]) for n in nodes]
     names = {n.name for n in nodes}
 
     frames, seen = [], set()
-    padding = 1.5 * (int(20 * scale) + 2 * (system.pixel_size or 1.0)) / scale
+    padding = _padding(system, scale)
     for n in nodes:
         f = n.parent
         while f is not None and f.name not in seen:
             seen.add(f.name)
-            label = f.label_size * 1.25 - padding / 2 if f.label else 0.0
-            frames.append(Frame(f.name, f.parent.name if f.parent else None, label))
+            label = _label(f, padding)
+            above, below = room(f) if room else (0.0, 0.0)
+            frames.append(Frame(f.name, f.parent.name if f.parent else None, label + above, below))
             f = f.parent
 
     index = {}
@@ -108,7 +178,9 @@ def arrange_nodes(tree, nodes=None, spacing=(50, 50), iterations=24):
     dy = fmean(b.y for b in boxes) - fmean(pos[b.id][1] for b in boxes)
     for n, b in zip(nodes, boxes):
         x, top = pos[b.id]
-        x, top = x + dx, top + dy
+        above, below = rooms[n.name]
+        x, top = x + dx, top + dy - above
+        b.height -= above + below
         if n.bl_idname == "NodeReroute":
             n.location_absolute = (x + REROUTE / 2, top - REROUTE / 2)
         elif n.hide:

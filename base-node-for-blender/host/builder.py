@@ -14,7 +14,8 @@ from ..lang.errors import BnError, Diagnostic
 from ..lang.layout import layout
 from ..lang.schema import ITEM_NODES, SIGNATURE_NODES, TYPES, key, option_key, signature_items
 from ..lang.typecheck import REPEAT_ITEMS
-from . import modules
+from . import comments, modules
+from .arrange import arrange_nodes
 from .schema import (ALIASES, PANEL_OPTIONS, TREE_FLAGS, TREE_TYPES, BlenderSchema, fresh_item, fresh_options,
                      item_option_names, new_item, root_panel, same_option, socket_keys)
 
@@ -61,6 +62,12 @@ def build_source(source, filename="<text>", load=None):
     for g in graphs:
         tree = built[g.name] = builder.build(g, target(g), built)
         mark(tree, g.module)
+    comments.keep(source, filename, graphs, built, builder.made)
+    for g in graphs:
+        tree = built[g.name]
+        # A new tree is laid out by the text; once commented, it leaves room for its comments
+        if g.module is None and g.name in builder.fresh and any(comments.KEY in n for n in tree.nodes):
+            arrange_nodes(tree, room=comments.room)
     return [built[g.name] for g in graphs if g.module is None]
 
 
@@ -95,6 +102,8 @@ class Builder:
         # Only the graphs nobody calls are offered as modifiers
         self.called = {n.group for g in graphs for n in g.nodes if n.group}
         self.late = []  # (item, option, value) to set once the links are made
+        self.made = {}  # graph name -> (nodes, frames): ir id -> the Blender node made for it
+        self.fresh = set()  # names of the graphs whose tree had no node to keep the place of
 
     def fail(self, node, message):
         raise BnError([Diagnostic(self.filename, node.line, node.col, message)])
@@ -102,6 +111,10 @@ class Builder:
     def build(self, g, tree, built):
         # Named nodes keep their place across rebuilds
         kept = {n.name: n.location_absolute.copy() for n in tree.nodes}
+        if kept:
+            self.fresh.discard(g.name)
+        else:
+            self.fresh.add(g.name)
         tree.nodes.clear()
         self.ids = sync_interface(tree, g)
         self.aliases(tree, g)
@@ -237,6 +250,7 @@ class Builder:
                 frame.width = max(frame.width, 12 * len(f.label or ""))
 
         nodes = {}
+        self.made[g.name] = (nodes, frames)
         for n in g.nodes:
             node = tree.nodes.new(n.bl_idname)
             nodes[n.id] = node

@@ -157,10 +157,15 @@ class NODE_PT_base_node(bpy.types.Panel):
         col = layout.column(align=True)
         rows = Shortcuts(context, "Node Editor", {
             "base_node.toggle_view": ("Edit as Text", "TEXT"),
-            "base_node.arrange": ("Arrange Nodes", "SNAP_GRID")})
+            "base_node.arrange": ("Arrange Nodes", "SNAP_GRID"),
+            "base_node.edit_comment": ("Edit Comment", "TEXT")})
         rows.button(col, "base_node.toggle_view")
         rows.button(col, "base_node.arrange")
+        rows.button(col, "base_node.edit_comment")
         rows.legend(layout)
+        options = prefs.get()
+        if isinstance(options, bpy.types.AddonPreferences):
+            layout.prop(options, "show_comments", text="Comments", toggle=True, icon="TEXT")
 
 
 classes = (TEXT_PT_base_node, NODE_PT_base_node)

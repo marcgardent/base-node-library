@@ -19,6 +19,7 @@ from ..lang.ir import (CLOSURE_INPUT, CLOSURE_OUTPUT, FOREACH_INPUT, FOREACH_OUT
                        SIMULATION_INPUT, SIMULATION_OUTPUT, ZONE_INPUTS, ZONE_OUTPUTS)
 from ..lang.schema import (CLOSURE_TO_LIST, COMBINE_BUNDLE, EVALUATE_CLOSURE, FIELD_TYPES, IMPLICIT, ITEM_NODES, ITEM_TYPES, NO_VALUE,
                            RESERVED, SEPARATE_BUNDLE, SIGNATURE_ITEMS, SIGNATURE_NODES, TYPES, key, snake)
+from . import comments
 from .modules import module_of
 from .schema import (PANEL_OPTIONS, SOCKET_TYPES, TREE_FLAGS, TREE_TYPES, BlenderSchema, fresh_item,
                      fresh_item_options, fresh_item_value, fresh_options, item_option_names, option_names, root_panel,
@@ -68,15 +69,23 @@ SIGNATURE_READ = {COMBINE_BUNDLE: ("bundle_items", None), SEPARATE_BUNDLE: (None
 
 def export_tree(tree):
     """(text, warnings) for a node group and every group it calls, callees first."""
+    holders = {}
     with BlenderSchema() as schema:
-        file, warnings = read_tree(tree, schema)
+        file, warnings = read_tree(tree, schema, holders)
     from ..lang.profiles import solve_minimal_profile
     min_profile = solve_minimal_profile(file)
     header = f'// @profile "{min_profile}"\n\n'
-    return header + to_source(file), warnings
+    notes = comments.notes_of(tree)
+    head = "".join(line + "\n" for line in notes.get("head", []))
+    uses = "".join(line + "\n" for line in notes.get("file", []))
+    return (head + "\n" if head else "") + header + uses + comments.write(to_source(file), file, holders), warnings
 
 
-def read_tree(tree, schema):
+def read_tree(tree, schema, holders=None):
+    """(ast.File, warnings) for a node group and the groups it calls.
+
+    `holders`, when given, is filled with what holds the comments of each statement: see comments.write.
+    """
     warnings = []
     graphs = {}
     order = []
@@ -91,6 +100,8 @@ def read_tree(tree, schema):
         # The builder makes a modifier of a graph that no other one of the text calls
         reader.called = t is not tree
         graph = reader.read()
+        if holders is not None:
+            holders.update(reader.holders)
         # The groups its nodes call are exported with it
         for callee in sorted(reader.callees, key=lambda c: c.name):
             module = module_of(callee)
@@ -120,6 +131,8 @@ class GraphReader:
         self.called = False  # another graph of the text calls it
         self.shown = set()  # nodes whose look the text holds
         self.block_frame = {}  # id of a block written for a frame -> that frame's name
+        self.note_frame = {}  # id of a block written for a note -> that frame's name
+        self.holders = {}  # id of an AST object -> (tree or node, slot prefix): see comments.write
         self.state_keys = {}  # repeat or simulate output name -> {state name: the key it goes by}
 
     def warn(self, message):
@@ -170,7 +183,8 @@ class GraphReader:
         self.separates = {}
         for n in reached:
             vector = self.incoming.get(n.name, {}).get("Vector")
-            if n.bl_idname == "ShaderNodeSeparateXYZ" and vector and not self.hand_named(n) and not self.look(n):
+            if n.bl_idname == "ShaderNodeSeparateXYZ" and vector and not self.hand_named(n) and not self.look(n) \
+                    and comments.KEY not in n:
                 self.separates[n.name] = vector[0]
                 src = vector[0][0].name
                 uses[src] = uses.get(src, 0) + uses.get(n.name, 0) - 1
@@ -197,7 +211,7 @@ class GraphReader:
             nested = used_by is not None and self.joins(n) and self.joins(used_by)
             # A node shown otherwise than a new one carries its look on a statement
             if uses.get(n.name, 0) > 1 or self.hand_named(n) or framed_apart or nested or n in self.roots \
-                    or self.look(n) or self.constant(n) is not None:
+                    or self.look(n) or self.constant(n) is not None or comments.KEY in n:
                 self.bound[n.name] = unique(self.binding_name(n), taken)
 
         body = []
@@ -219,7 +233,9 @@ class GraphReader:
         body.append((out, ast.Return(value, 0, 0, self.looked(out))))
         body = self.framed(body)
         self.continuations(body)
+        self.frame_comments(body)
         graph = ast.Graph(self.kind, tree.name, params, outputs, single, body, 0, 0)
+        self.holders[id(graph)] = (tree, "")
         if any(isinstance(i, ast.Panel) for i in param_tree):
             graph.param_tree = param_tree
         if paneled:
@@ -300,6 +316,10 @@ class GraphReader:
             counts["label"] += bool(n.label)
             counts["color"] += n.use_custom_color
             counts["collapsed"] += n.hide
+        lost = [n.name for n in self.tree.nodes if comments.KEY in n
+                and n.bl_idname in ("NodeGroupInput", "NodeReroute", *ZONE_INPUTS)]
+        if lost:
+            self.warn(f"comments not exported, their nodes have no statement: {', '.join(sorted(lost))}")
         for what, counts in looks.items():
             if +counts:
                 self.warn(f"appearance {what}not exported: " + ", ".join(f"{k} ({v})" for k, v in counts.items() if v))
@@ -1228,6 +1248,10 @@ class GraphReader:
         opened = self.opened
         blocks = {}
         for node, stmt in statements:
+            if node is not None:
+                # A zone's return goes with its output node, which its statement holds too
+                zone_return = isinstance(stmt, ast.Return) and node.bl_idname in ZONE_OUTPUTS
+                self.holders[id(stmt)] = (node, "return_" if zone_return else "")
             path = frame_path(node) if node is not None else []
             path = path[len(base):] if [f.name for f in path[:len(base)]] == [f.name for f in base] else []
             names = [f.name for f in path]
@@ -1250,6 +1274,7 @@ class GraphReader:
 
         def note(f):
             block = blocks[f.name] = self.frame(f)
+            self.note_frame[id(block)] = f.name
             block.body = [note(c) for c in frames if frame_name(c) == f.name and c.name not in opened]
             return block
 
@@ -1299,6 +1324,23 @@ class GraphReader:
                 walk(s.body, instance)
 
         walk(body, None)
+
+    def frame_comments(self, body):
+        """The comments of each frame go with the first block written for it."""
+        seen = set()
+
+        def walk(statements):
+            for s in statements:
+                if isinstance(s, ast.Assign) and isinstance(s.value, ZONE_VALUES):
+                    walk(s.value.body)
+                elif isinstance(s, ast.Frame):
+                    name = self.block_frame.get(id(s), self.note_frame.get(id(s)))
+                    if name is not None and name not in seen and not s.continued:
+                        seen.add(name)
+                        self.holders[id(s)] = (self.tree.nodes[name], "")
+                    walk(s.body)
+
+        walk(body)
 
     def frame(self, f):
         label = f.label.replace('"', "'") or None
