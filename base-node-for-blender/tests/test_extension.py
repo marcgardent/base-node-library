@@ -248,6 +248,49 @@ def test_pipe_symbol():
     print("   ✓ Pipe symbol verified")
 
 
+def test_live_apply():
+    """While typing, a valid text is built into its tree; an invalid one changes nothing and keeps the cursor."""
+    print("-> Test: Live apply...")
+    from base_node.host import build_source
+    from base_node.ui import actions, live, prefs
+
+    assert prefs.DEFAULTS.live_apply is True, "on by default"
+    tree = build_source("geometry graph LiveDemo(geometry: Geometry) -> Geometry {\n  return geometry\n}\n")[0]
+    text, _ = actions.open_view(tree)
+    assert actions.is_applied(text)
+
+    text.from_string(text.as_string().replace("return geometry", "return geometry |> SetShadeSmooth("))
+    row = next(i for i, line in enumerate(text.lines) if "return" in line.body)
+    text.cursor_set(row, character=2)
+    try:
+        actions.apply_view(text, live=True)
+        raise AssertionError("an invalid text must not build")
+    except Exception as e:
+        assert type(e).__name__ == "BnError", e
+    assert (text.current_line_index, text.current_character) == (row, 2), "a live build leaves the cursor"
+    assert actions.DIAGNOSTICS.get(text.name), "the errors are listed"
+    assert not any(n.bl_idname == "GeometryNodeSetShadeSmooth" for n in tree.nodes), "the tree keeps what it had"
+
+    text.from_string(text.as_string().replace("SetShadeSmooth(", "SetShadeSmooth()"))
+    actions.apply_view(text, live=True)
+    assert any(n.bl_idname == "GeometryNodeSetShadeSmooth" for n in tree.nodes)
+    assert actions.is_applied(text) and not actions.DIAGNOSTICS.get(text.name)
+
+    # A text is built once it has rested, and only once per source
+    live._seen.clear(), live._tried.clear()
+    assert not live.due("t", "a", 0.0), "first seen"
+    assert not live.due("t", "a", 0.2), "not rested yet"
+    assert live.due("t", "a", 0.2 + live.REST)
+    live._tried["t"] = "a"
+    assert not live.due("t", "a", 5.0), "already built"
+    assert not live.due("t", "ab", 5.0), "changed again: rests anew"
+    live._seen.clear(), live._tried.clear()
+
+    actions.close_view(text)
+    bpy.data.node_groups.remove(tree)
+    print("   ✓ Live apply verified")
+
+
 def test_text_view():
     """5. A tree shown as text is written back into it, and the text goes away."""
     print("-> Test 5: Text view of a tree...")
@@ -637,6 +680,7 @@ def main():
         test_named_constants,
         test_profile_ascent_and_linter,
         test_pipe_symbol,
+        test_live_apply,
         test_text_view,
         test_import_files,
         test_zones_read_back,

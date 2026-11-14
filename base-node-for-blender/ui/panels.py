@@ -100,6 +100,8 @@ class TEXT_PT_base_node(bpy.types.Panel):
             row = layout.row(align=True)
             row.prop(options, "highlight", toggle=True)
             row.prop(options, "auto_complete", text="Auto Suggestions", toggle=True)
+            if actions.is_view(text):
+                layout.prop(options, "live_apply", toggle=True)
 
             box_prof = layout.box()
             box_prof.label(text="Target Profile & Linter", icon="PREFERENCES")

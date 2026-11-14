@@ -1,6 +1,6 @@
 import bpy
 
-from . import completion, highlight, keys, operators, panels, pipes, prefs
+from . import completion, highlight, keys, live, operators, panels, pipes, prefs
 
 classes = prefs.classes + operators.classes + completion.classes + panels.classes
 
@@ -17,11 +17,13 @@ def register():
     bpy.types.NODE_MT_node.append(operators.menu_arrange)
     highlight.register()  # first, so that the popup draws over it
     pipes.register()
+    live.register()
     completion.register()
 
 
 def unregister():
     completion.unregister()
+    live.unregister()
     pipes.unregister()
     highlight.unregister()
     keys.unbind()

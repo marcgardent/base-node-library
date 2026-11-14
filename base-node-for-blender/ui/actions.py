@@ -21,15 +21,20 @@ def is_bn(text):
     return text is not None and text.name.endswith(EXT)
 
 
-def build_text(text):
-    """Build every graph of the text into its tree of the same name. Raises BnError."""
+def build_text(text, live=False):
+    """Build every graph of the text into its tree of the same name. Raises BnError.
+
+    On an error nothing is built, and the cursor goes to it, unless the build is live:
+    then it stays where the user types.
+    """
     DIAGNOSTICS.pop(text.name, None)
     try:
         return build_source(text.as_string(), text.name)
     except BnError as e:
         DIAGNOSTICS[text.name] = e.diagnostics
-        first = e.diagnostics[0]
-        text.cursor_set(first.line - 1, character=max(0, first.col - 1))
+        if not live:
+            first = e.diagnostics[0]
+            text.cursor_set(first.line - 1, character=max(0, first.col - 1))
         raise
 
 
@@ -67,7 +72,12 @@ def open_view(tree):
     return text, warnings
 
 
-def apply_view(text):
+def is_applied(text):
+    """True when the tree already holds what the view text says."""
+    return text.get(VIEW_HASH) == _digest(text.as_string())
+
+
+def apply_view(text, live=False):
     """Write a view text into its tree, keeping the text. Returns the tree; raises BnError.
 
     An unchanged text leaves the tree as it is, so its layout survives a look at the code.
@@ -76,7 +86,7 @@ def apply_view(text):
     source = text.as_string()
     if tree is not None and text.get(VIEW_HASH) == _digest(source):
         return tree
-    trees = build_text(text)
+    trees = build_text(text, live)
     # Callees are written first: when the main graph was renamed in the text, it is the last one
     if trees and tree not in trees:
         tree = trees[-1]

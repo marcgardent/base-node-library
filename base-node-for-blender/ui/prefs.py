@@ -29,7 +29,7 @@ HIGHLIGHT_MODES = (
 
 # When the add-on runs from the sources (tests), it has no preferences entry
 DEFAULTS = SimpleNamespace(
-    complete_key="CTRL", auto_complete=False, signature=True, highlight=True, pipe_symbol=True, module_folder="",
+    complete_key="CTRL", auto_complete=False, live_apply=True, signature=True, highlight=True, pipe_symbol=True, module_folder="",
     target_profile="auto", highlight_mode="standard",
     color_stdlib=(0.0, 0.78, 0.65), color_local=(0.95, 0.75, 0.20), color_warning=(0.95, 0.30, 0.25)
 )
@@ -65,6 +65,10 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
     auto_complete: bpy.props.BoolProperty(
         name="Open after ( , . :", default=False,
         description="Suggestions open automatically after a parenthesis, comma, period, or colon")
+    live_apply: bpy.props.BoolProperty(
+        name="Apply while typing", default=True,
+        description="In the text of a tree, the tree follows the text as soon as it is valid. "
+                    "Otherwise Alt+P applies it")
     signature: bpy.props.BoolProperty(
         name="Show the call's inputs", default=True,
         description="Under the line, the inputs and outputs of the call the cursor is in")
@@ -103,6 +107,7 @@ class BaseNodePreferences(bpy.types.AddonPreferences):
         if self.complete_key == "CTRL":
             box_edit.label(text="In .bn texts, Ctrl+Alt+Space still shows the area full screen", icon="INFO")
         box_edit.prop(self, "auto_complete")
+        box_edit.prop(self, "live_apply")
         box_edit.prop(self, "signature")
         box_edit.prop(self, "highlight")
         box_edit.prop(self, "pipe_symbol")
