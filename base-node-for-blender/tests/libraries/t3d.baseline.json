@@ -1,0 +1,463 @@
+{
+ "library": "T3D GN Presets",
+ "version": "v1.6.0",
+ "sha256": "3a4a1645eb0639d55974f469ec274f6b0ade2055ba2f159b768b2a0693bc6d89",
+ "blender": "5.3.0",
+ "summary": "86 ok, 2 evaluates_otherwise",
+ "groups": {
+  "Align Islands": {
+   "status": "ok",
+   "text": "6ebfad9a4baea834"
+  },
+  "Align To Spline": {
+   "status": "ok",
+   "text": "bb463d049f7232a6"
+  },
+  "Bend": {
+   "status": "ok",
+   "text": "847871d0f7291bb4"
+  },
+  "Boundary Edge Selection": {
+   "status": "ok",
+   "text": "477f7440ff65c807"
+  },
+  "Box Field": {
+   "status": "ok",
+   "text": "39f8a83263ba0a6a"
+  },
+  "Bulge": {
+   "status": "ok",
+   "text": "126f25d084b3bdda"
+  },
+  "Cartesian to Cylindrical": {
+   "status": "ok",
+   "text": "a6ab635a61106c6d"
+  },
+  "Cartesian to Spherical": {
+   "status": "ok",
+   "text": "38476966ab31c2e5"
+  },
+  "Center Elements": {
+   "status": "ok",
+   "text": "f282b8a41589e80a",
+   "warnings": [
+    "frame 'Frame.002' is split: its nodes depend on nodes of another frame that depend on them"
+   ]
+  },
+  "Component Selection": {
+   "status": "ok",
+   "text": "ee761c667fe2d046"
+  },
+  "Curve Ellipse": {
+   "status": "ok",
+   "text": "7de8ebe0259d5721"
+  },
+  "Cylinder Field": {
+   "status": "ok",
+   "text": "a4ce0a8a879aeab4"
+  },
+  "Cylindrical to Cartesian": {
+   "status": "ok",
+   "text": "4f4171be558d89be"
+  },
+  "Delete Islands": {
+   "status": "ok",
+   "text": "badd529c875dc970"
+  },
+  "Diagonal Matrix": {
+   "status": "ok",
+   "text": "9ed5b7c6c29abbb6"
+  },
+  "Displacer": {
+   "status": "ok",
+   "text": "3003af03facc67cc"
+  },
+  "Edge Angle Selection": {
+   "status": "ok",
+   "text": "fd0e5f4253d9f84f"
+  },
+  "Edge Path Selection": {
+   "status": "ok",
+   "text": "d2f417f617b428d8"
+  },
+  "Extend Curve": {
+   "status": "ok",
+   "text": "544145fdc39ca546"
+  },
+  "Face Sides Selection": {
+   "status": "ok",
+   "text": "1b4115430c98689e"
+  },
+  "Flip UV": {
+   "status": "ok",
+   "text": "5bafbb1c9704bf79"
+  },
+  "Geometry Size": {
+   "status": "ok",
+   "text": "70e057b83c3e455c"
+  },
+  "Geometry To Spline": {
+   "status": "ok",
+   "text": "fc1d785ef6677c21"
+  },
+  "Grid Instancer": {
+   "status": "ok",
+   "text": "92a04fb98b4cb2df"
+  },
+  "Inset Faces": {
+   "status": "ok",
+   "text": "a50acfda98721a4b",
+   "warnings": [
+    "frame 'Frame.002' is split: its nodes depend on nodes of another frame that depend on them",
+    "frame 'Frame.004' is split: its nodes depend on nodes of another frame that depend on them"
+   ]
+  },
+  "Is Empty Geometry": {
+   "status": "ok",
+   "text": "fe9ab151c348ce83"
+  },
+  "Is Inside Volume": {
+   "status": "ok",
+   "text": "1afb042cdde61890"
+  },
+  "Is Symmetric Matrix": {
+   "status": "ok",
+   "text": "1d4f4a162bd136db"
+  },
+  "Is Vector Coplanar": {
+   "status": "ok",
+   "text": "4eec8742ef3903ed"
+  },
+  "Island Center": {
+   "status": "ok",
+   "text": "6505f28c63090e7d"
+  },
+  "Lathe Curve": {
+   "status": "ok",
+   "text": "9d1f299e7c507ac6"
+  },
+  "Linear Field": {
+   "status": "ok",
+   "text": "365077aa3b071101"
+  },
+  "Linear Instancer": {
+   "status": "ok",
+   "text": "3bd7cdf7956c26c1"
+  },
+  "Logarithmic Spiral": {
+   "status": "ok",
+   "text": "91152936dbbd71f0"
+  },
+  "Loose Edge Selection": {
+   "status": "ok",
+   "text": "ee8ccc08c3487f65"
+  },
+  "Match Topology": {
+   "status": "ok",
+   "text": "f7f3359d26e83b89"
+  },
+  "Matrix Viewer": {
+   "status": "ok",
+   "text": "43ae7c6941803127",
+   "warnings": [
+    "value of 'String to Curves.001.Font' (FONT) not exported",
+    "value of 'String to Curves.002.Font' (FONT) not exported",
+    "value of 'String to Curves.003.Font' (FONT) not exported",
+    "value of 'String to Curves.004.Font' (FONT) not exported",
+    "value of 'String to Curves.005.Font' (FONT) not exported",
+    "value of 'String to Curves.006.Font' (FONT) not exported",
+    "value of 'String to Curves.007.Font' (FONT) not exported",
+    "value of 'String to Curves.008.Font' (FONT) not exported",
+    "value of 'String to Curves.009.Font' (FONT) not exported",
+    "value of 'String to Curves.010.Font' (FONT) not exported",
+    "value of 'String to Curves.011.Font' (FONT) not exported",
+    "value of 'String to Curves.012.Font' (FONT) not exported",
+    "value of 'String to Curves.013.Font' (FONT) not exported",
+    "value of 'String to Curves.014.Font' (FONT) not exported",
+    "value of 'String to Curves.015.Font' (FONT) not exported",
+    "value of 'String to Curves.Font' (FONT) not exported"
+   ]
+  },
+  "Mesh To Field": {
+   "status": "ok",
+   "text": "f26036762a500dfa"
+  },
+  "Non-Manifold Edge Selection": {
+   "status": "ok",
+   "text": "498219260aba9fff"
+  },
+  "Parent To Object": {
+   "status": "ok",
+   "text": "5dc8f82bae0fa69e"
+  },
+  "Phyllotaxis": {
+   "status": "evaluates_otherwise",
+   "text": "fc13d865fe5fd163",
+   "on": [
+    "mesh",
+    "curves",
+    "mesh caller"
+   ]
+  },
+  "Point Grid": {
+   "status": "ok",
+   "text": "3292545c32de6497"
+  },
+  "Point Honeycomb": {
+   "status": "ok",
+   "text": "6dbe10a566e3bd43"
+  },
+  "Poke Faces": {
+   "status": "ok",
+   "text": "f9e1d56c86e3db19"
+  },
+  "Prism Field": {
+   "status": "ok",
+   "text": "63d558c19edffbae"
+  },
+  "Radial Instancer": {
+   "status": "ok",
+   "text": "11d763e9d730c70d"
+  },
+  "Replace Vector": {
+   "status": "ok",
+   "text": "3d33dd6d072af6cf"
+  },
+  "Scalar Matrix": {
+   "status": "ok",
+   "text": "47696b3e14b38be9"
+  },
+  "Seamless Vector": {
+   "status": "ok",
+   "text": "209a18fd7b8fb244"
+  },
+  "Select Similar Edges": {
+   "status": "ok",
+   "text": "be4b1487a6a11e50"
+  },
+  "Select Similar Faces": {
+   "status": "ok",
+   "text": "d290f017e3ba4d74"
+  },
+  "Select Similar Vertices": {
+   "status": "ok",
+   "text": "9342687bb23498c2"
+  },
+  "Set Geometry Size": {
+   "status": "ok",
+   "text": "d5ecb0e24e490539"
+  },
+  "Set Geometry Visibility": {
+   "status": "ok",
+   "text": "15c5e41cbeac997b"
+  },
+  "Shear": {
+   "status": "ok",
+   "text": "6543eba2ee1549a4"
+  },
+  "Smooth Geometry": {
+   "status": "ok",
+   "text": "8494573da31f32d5",
+   "warnings": [
+    "frame 'Frame' is split: its nodes depend on nodes of another frame that depend on them",
+    "frame 'Frame.003' is split: its nodes depend on nodes of another frame that depend on them"
+   ]
+  },
+  "Spherical Field": {
+   "status": "ok",
+   "text": "3fe0d9498569309d"
+  },
+  "Spherical Instancer": {
+   "status": "ok",
+   "text": "57e6b408704b1b84"
+  },
+  "Spherical to Cartesian": {
+   "status": "ok",
+   "text": "fbe2aaf2e8920643"
+  },
+  "Spherify": {
+   "status": "ok",
+   "text": "d58f0df410ba0a16"
+  },
+  "Spirograph": {
+   "status": "ok",
+   "text": "2ac7fb2895104a91"
+  },
+  "Stretch": {
+   "status": "ok",
+   "text": "7bccfc8ecea480cb",
+   "warnings": [
+    "frame 'Frame' is split: its nodes depend on nodes of another frame that depend on them",
+    "frame 'Frame.001' is split: its nodes depend on nodes of another frame that depend on them",
+    "frame 'Frame.002' is split: its nodes depend on nodes of another frame that depend on them"
+   ]
+  },
+  "Sweep Curve": {
+   "status": "ok",
+   "text": "db98a73dafb6fb08",
+   "warnings": [
+    "frame 'Frame.001' is split: its nodes depend on nodes of another frame that depend on them"
+   ]
+  },
+  "Taper": {
+   "status": "ok",
+   "text": "29453d6e984ec8d4"
+  },
+  "Torus Field": {
+   "status": "ok",
+   "text": "25104df9250bed09"
+  },
+  "Trace Matrix": {
+   "status": "ok",
+   "text": "8dbc07479eab8b76"
+  },
+  "Triangular Matrix": {
+   "status": "ok",
+   "text": "caea7d2c58d6f765"
+  },
+  "Twist": {
+   "status": "ok",
+   "text": "620a0dc972653786"
+  },
+  "UV Deform": {
+   "status": "ok",
+   "text": "12daa9074348588c",
+   "not_compared": [
+    "mesh caller fed"
+   ]
+  },
+  "UV Displace": {
+   "status": "ok",
+   "text": "0b7ef524f2c3699f"
+  },
+  "UV Project": {
+   "status": "ok",
+   "text": "3eb8e2b239e3221d"
+  },
+  "UV To Mesh": {
+   "status": "ok",
+   "text": "3ff296f191d74ad3"
+  },
+  "Vector Clamp": {
+   "status": "ok",
+   "text": "704f47f8f48beb59"
+  },
+  "Vector Mapping": {
+   "status": "ok",
+   "text": "ff9f7e43047c8b6e"
+  },
+  "Vertex Slide": {
+   "status": "ok",
+   "text": "50560a68d9a9a8ba"
+  },
+  "Vertex of Edge": {
+   "status": "ok",
+   "text": "8509eacf95750524"
+  },
+  "Vertices Manifold": {
+   "status": "ok",
+   "text": "5800a1b984a9efe5"
+  },
+  "easeBack": {
+   "status": "ok",
+   "text": "4f73233b3b61440f",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed"
+   ]
+  },
+  "easeBounce": {
+   "status": "evaluates_otherwise",
+   "text": "a989788e5c19e6f5",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed"
+   ],
+   "on": [
+    "mesh caller fed"
+   ]
+  },
+  "easeCirc": {
+   "status": "ok",
+   "text": "0b1158f36cea0135",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed"
+   ]
+  },
+  "easeCubic": {
+   "status": "ok",
+   "text": "1fe9e110a6f70120",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed"
+   ]
+  },
+  "easeElastic": {
+   "status": "ok",
+   "text": "a7ea041a51c12c21",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed"
+   ]
+  },
+  "easeExpo": {
+   "status": "ok",
+   "text": "956b797e5a0cdaa6",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed"
+   ]
+  },
+  "easeQuad": {
+   "status": "ok",
+   "text": "15d73b63ac19e216",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed"
+   ]
+  },
+  "easeQuart": {
+   "status": "ok",
+   "text": "50bbb427a5a886da",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed"
+   ]
+  },
+  "easeQuint": {
+   "status": "ok",
+   "text": "6e0d91a0c740e290",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed"
+   ]
+  },
+  "easeSine": {
+   "status": "ok",
+   "text": "e942db486fcae0bc",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed"
+   ]
+  },
+  "tams3d": {
+   "status": "ok",
+   "text": "9c6b03848b287b15",
+   "warnings": [
+    "appearance of Group Input not exported: collapsed",
+    "frame 'Frame' is split: its nodes depend on nodes of another frame that depend on them",
+    "frame 'Frame.001' is split: its nodes depend on nodes of another frame that depend on them",
+    "frame 'Frame.002' is split: its nodes depend on nodes of another frame that depend on them",
+    "frame 'Frame.003' is split: its nodes depend on nodes of another frame that depend on them",
+    "frame 'Frame.004' is split: its nodes depend on nodes of another frame that depend on them",
+    "value of 'String to Curves.001.Font' (FONT) not exported",
+    "value of 'String to Curves.002.Font' (FONT) not exported",
+    "value of 'String to Curves.003.Font' (FONT) not exported",
+    "value of 'String to Curves.004.Font' (FONT) not exported",
+    "value of 'String to Curves.005.Font' (FONT) not exported",
+    "value of 'String to Curves.006.Font' (FONT) not exported",
+    "value of 'String to Curves.007.Font' (FONT) not exported",
+    "value of 'String to Curves.008.Font' (FONT) not exported",
+    "value of 'String to Curves.009.Font' (FONT) not exported",
+    "value of 'String to Curves.010.Font' (FONT) not exported",
+    "value of 'String to Curves.011.Font' (FONT) not exported",
+    "value of 'String to Curves.012.Font' (FONT) not exported",
+    "value of 'String to Curves.013.Font' (FONT) not exported",
+    "value of 'String to Curves.014.Font' (FONT) not exported",
+    "value of 'String to Curves.015.Font' (FONT) not exported",
+    "value of 'String to Curves.Font' (FONT) not exported"
+   ]
+  }
+ }
+}

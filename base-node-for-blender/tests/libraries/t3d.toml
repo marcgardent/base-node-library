@@ -1,0 +1,17 @@
+# T3D GN Presets: the node groups its add-on appends (t3d_nodes.blend), shipped in its release zip.
+name = "T3D GN Presets"
+author = "Tamil Selvan"
+homepage = "https://github.com/Tams3d/T3D-GN-Presets"
+license = "GPL-3.0-or-later"
+# Compatible with base-node-for-blender (GPL-3.0-or-later), but fetched at test time rather than
+# committed: 10 MB, and a new version is one line here. The baseline keeps names, statuses and hashes.
+version = "v1.6.0"
+url = "https://github.com/Tams3d/T3D-GN-Presets/releases/download/v1.6.0/T3D-GN-Presets.zip"
+member = "T3D-GN-Presets/t3d_nodes.blend"
+sha256 = "3a4a1645eb0639d55974f469ec274f6b0ade2055ba2f159b768b2a0693bc6d89"
+
+# Kinds of evaluation not compared, because the original itself does not give twice the same geometry.
+[nondeterministic]
+# Fed, both UV inputs of its Sample UV Surface get Position: the ico sphere's "UVs" overlap, and which
+# face a sample lands on changes from one evaluation to the next.
+"UV Deform" = ["mesh caller fed"]
