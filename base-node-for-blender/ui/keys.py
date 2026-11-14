@@ -26,8 +26,10 @@ def bind():
     mac = sys.platform == "darwin"
     _items.append((km, km.keymap_items.new("base_node.format", "A", "PRESS", shift=True, ctrl=not mac, oskey=mac)))
     km = kc.keymaps.new("Node Editor", space_type="NODE_EDITOR")
-    # In place of Blender's Ctrl+Tab that leaves a group: Tab still does
-    _items.append((km, km.keymap_items.new("base_node.toggle_view", "TAB", "PRESS", ctrl=True)))
+    # Inside a group, Ctrl+Tab still leaves it; from the top tree, it goes on to the text
+    kmi = km.keymap_items.new("base_node.toggle_view", "TAB", "PRESS", ctrl=True)
+    kmi.properties.leave_groups = True
+    _items.append((km, kmi))
     # Ctrl+Shift+A arranges the nodes, as Node Arrange did; the same keys format a text
     _items.append((km, km.keymap_items.new("base_node.arrange", "A", "PRESS", shift=True, ctrl=not mac, oskey=mac)))
 
