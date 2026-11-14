@@ -16,8 +16,8 @@ def bind():
         return  # no add-on keyconfig in background mode
     km = kc.keymaps.new("Text", space_type="TEXT_EDITOR")
     mac = sys.platform == "darwin"
-    # Ctrl+P applies the text to its tree (Cmd+P on macOS); Alt+P stays Python's
-    _items.append((km, km.keymap_items.new("base_node.apply_view", "P", "PRESS", ctrl=not mac, oskey=mac)))
+    # Alt+P applies a .bn text to its tree, as it runs a Python script; other texts still run
+    _items.append((km, km.keymap_items.new("base_node.apply_view", "P", "PRESS", alt=True)))
     mod = prefs.get().complete_key
     _items.append((km, km.keymap_items.new("base_node.complete", "SPACE", "PRESS",
                                            alt=mod == "ALT", shift=mod == "SHIFT", ctrl=mod == "CTRL")))

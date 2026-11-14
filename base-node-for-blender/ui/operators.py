@@ -27,12 +27,17 @@ class BASE_NODE_OT_apply_view(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        # Every .bn text: Alt+P must not run one as Python
         space = context.space_data
-        return space and space.type == "TEXT_EDITOR" and actions.is_view(space.text)
+        return space and space.type == "TEXT_EDITOR" and actions.is_bn(space.text)
 
     def execute(self, context):
+        text = context.space_data.text
+        if not actions.is_view(text):
+            self.report({"WARNING"}, "Not the text of a tree: Ctrl+Tab in a Node Editor shows one")
+            return {"CANCELLED"}
         try:
-            tree = actions.apply_view(context.space_data.text)
+            tree = actions.apply_view(text)
         except BnError as e:
             report_error(self, e)
             return {"CANCELLED"}
