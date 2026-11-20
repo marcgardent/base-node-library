@@ -15,7 +15,7 @@
         "SPDX:GPL-3.0-or-later"
       ],
       "blender_version_min": "5.2.0",
-      "website": "https://marcgardent.github.io/base-node-library/",
+      "website": "https://marcgardent.github.io/base-node-language/",
       "copyright": [
         "2026 Marc Gardent"
       ],
@@ -31,8 +31,8 @@
         "Import-Export"
       ],
       "archive_url": "https://marcgardent.github.io/base-node-language/extensions/base_node-0.13.1.zip",
-      "archive_size": 235567,
-      "archive_hash": "sha256:6c38dbbb93d3f7e68ce192a3035d91f56687fff478ea12114ad8655523c908f9"
+      "archive_size": 235755,
+      "archive_hash": "sha256:6e361b478fc40769403810141aa7e360665e395f35342ce06625ac9066509126"
     }
   ]
 }
