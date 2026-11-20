@@ -15,7 +15,7 @@
         "SPDX:GPL-3.0-or-later"
       ],
       "blender_version_min": "5.2.0",
-      "website": "https://marcgardent.github.io/base-node-language/",
+      "website": "https://basenode.ludopant.com/",
       "copyright": [
         "2026 Marc Gardent"
       ],
@@ -30,9 +30,9 @@
         "Text Editor",
         "Import-Export"
       ],
-      "archive_url": "https://marcgardent.github.io/base-node-language/extensions/base_node-0.13.1.zip",
-      "archive_size": 235755,
-      "archive_hash": "sha256:6e361b478fc40769403810141aa7e360665e395f35342ce06625ac9066509126"
+      "archive_url": "https://basenode.ludopant.com/extensions/base_node-0.13.1.zip",
+      "archive_size": 235744,
+      "archive_hash": "sha256:bf99b3cb9ff9553506a1ec7fadf5ceb80a762bcbcdc691bedd8ac680306577f3"
     }
   ]
 }
